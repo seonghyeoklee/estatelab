@@ -184,7 +184,7 @@ ANTHROPIC_API_KEY=
 ## Design Principles
 
 - 화이트 배경 + 시그니처 컬러 (라이트 모드 only)
-- 시그니처 컬러: teal 계열 (hsl 168 70% 40%)
+- 시그니처 컬러: emerald 계열 (hsl 152 69% 40%)
 - shadcn/ui + TailwindCSS 기반
 - 반응형 (모바일 사이드바 → 드로어)
 - 상승: 빨강, 하락: 파랑 (한국 부동산 컨벤션)
