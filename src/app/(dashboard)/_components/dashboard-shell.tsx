@@ -6,22 +6,24 @@ import { Header } from '@/components/header';
 import { MobileSidebar } from '@/components/mobile-sidebar';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r bg-sidebar lg:block">
+      <div className="hidden md:flex shrink-0">
         <Sidebar />
-      </aside>
+      </div>
 
       {/* Mobile sidebar */}
-      <MobileSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+      <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} />
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header onMenuClick={() => setMobileOpen(true)} />
+        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
