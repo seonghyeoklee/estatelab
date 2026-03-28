@@ -1,6 +1,7 @@
 /**
  * 카카오 지오코딩 API로 단지 좌표를 채우는 스크립트
  * 실행: npx tsx scripts/geocode-complexes.ts
+ * 재실행: npx tsx scripts/geocode-complexes.ts --force (기존 좌표 덮어쓰기)
  */
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -9,30 +10,14 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 const KAKAO_REST_KEY = (process.env.KAKAO_REST_API_KEY || '').replace(/^"|"$/g, '');
+const forceUpdate = process.argv.includes('--force');
 
-async function geocode(query: string): Promise<{ lat: number; lng: number } | null> {
+async function searchPlace(query: string): Promise<{ lat: number; lng: number } | null> {
   const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=1`;
   const res = await fetch(url, {
     headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
   });
-
-  if (!res.ok) {
-    // JavaScript 키가 아닌 REST API 키가 필요할 수 있음. 주소 검색으로 폴백
-    const addressUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}&size=1`;
-    const addressRes = await fetch(addressUrl, {
-      headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
-    });
-    if (!addressRes.ok) return null;
-    const addressData = await addressRes.json();
-    if (addressData.documents?.length > 0) {
-      return {
-        lat: parseFloat(addressData.documents[0].y),
-        lng: parseFloat(addressData.documents[0].x),
-      };
-    }
-    return null;
-  }
-
+  if (!res.ok) return null;
   const data = await res.json();
   if (data.documents?.length > 0) {
     return {
@@ -43,34 +28,74 @@ async function geocode(query: string): Promise<{ lat: number; lng: number } | nu
   return null;
 }
 
+async function geocode(
+  name: string,
+  dong: string,
+  sido: string,
+  sigungu: string,
+  jibun: string,
+  roadAddress: string | null
+): Promise<{ lat: number; lng: number } | null> {
+  // 1순위: 도로명주소가 있으면 가장 정확
+  if (roadAddress) {
+    const result = await searchPlace(`${sigungu} ${roadAddress}`);
+    if (result) return result;
+  }
+
+  // 2순위: "시군구 단지명+아파트" (아파트 카테고리 매칭률 높음)
+  const aptName = name.includes('아파트') ? name : `${name}아파트`;
+  const result2 = await searchPlace(`${sigungu} ${aptName}`);
+  if (result2) return result2;
+
+  // 3순위: "시군구 동 단지명"
+  if (dong) {
+    const result3 = await searchPlace(`${sigungu} ${dong} ${name}`);
+    if (result3) return result3;
+  }
+
+  // 4순위: "시도 시군구 지번" (지번 주소 직접 검색)
+  if (jibun) {
+    const result4 = await searchPlace(`${sido} ${sigungu} ${dong} ${jibun}`);
+    if (result4) return result4;
+  }
+
+  return null;
+}
+
 async function main() {
   if (!KAKAO_REST_KEY) {
-    console.error('KAKAO_REST_API_KEY가 설정되지 않았습니다. (카카오 개발자 콘솔 → 앱 키 → REST API 키)');
+    console.error('KAKAO_REST_API_KEY가 설정되지 않았습니다.');
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: (process.env.DATABASE_URL_UNPOOLED || '').replace(/^"|"$/g, '') });
+  const pool = new Pool({
+    connectionString: (process.env.DATABASE_URL_UNPOOLED || '').replace(/^"|"$/g, ''),
+  });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 
-  // 좌표가 없는 단지만 조회
+  const where = forceUpdate ? {} : { lat: null };
   const complexes = await prisma.apartmentComplex.findMany({
-    where: { lat: null },
+    where,
     include: { region: true },
     take: 500,
   });
 
-  console.warn(`좌표 미등록 단지: ${complexes.length}개`);
+  console.warn(`대상 단지: ${complexes.length}개 ${forceUpdate ? '(전체 재등록)' : '(좌표 미등록만)'}`);
 
   let updated = 0;
   let failed = 0;
 
   for (const complex of complexes) {
-    // 검색 쿼리: "서울 강남구 수서동 강남 더샵 포레스트"
-    const query = `${complex.region.sigungu} ${complex.dong} ${complex.name}`;
-
     try {
-      const coords = await geocode(query);
+      const coords = await geocode(
+        complex.name,
+        complex.dong,
+        complex.region.sido,
+        complex.region.sigungu,
+        complex.jibun,
+        complex.roadAddress
+      );
 
       if (coords) {
         await prisma.apartmentComplex.update({
@@ -80,23 +105,12 @@ async function main() {
         updated++;
         console.warn(`✅ ${complex.name} (${complex.dong}) → ${coords.lat}, ${coords.lng}`);
       } else {
-        // 단지명만으로 재시도
-        const fallback = await geocode(`${complex.region.sido} ${complex.region.sigungu} ${complex.name}`);
-        if (fallback) {
-          await prisma.apartmentComplex.update({
-            where: { id: complex.id },
-            data: { lat: fallback.lat, lng: fallback.lng },
-          });
-          updated++;
-          console.warn(`✅ ${complex.name} (fallback) → ${fallback.lat}, ${fallback.lng}`);
-        } else {
-          failed++;
-          console.warn(`❌ ${complex.name} (${complex.dong}) — 좌표 찾지 못함`);
-        }
+        failed++;
+        console.warn(`❌ ${complex.name} (${complex.dong})`);
       }
 
-      // 카카오 API rate limit 방지 (초당 10건 제한)
-      await new Promise((r) => setTimeout(r, 150));
+      // rate limit 방지
+      await new Promise((r) => setTimeout(r, 120));
     } catch (e) {
       failed++;
       console.error(`❌ ${complex.name}:`, e instanceof Error ? e.message : e);
