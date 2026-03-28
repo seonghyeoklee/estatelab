@@ -30,8 +30,8 @@ model ApartmentComplex {
   id            String   @id @default(cuid())
   regionCode    String   @map("region_code")    // 법정동코드 5자리
   name          String                          // 단지명 (래미안)
-  dong          String?                         // 법정동 (사직동)
-  jibun         String?                         // 지번
+  dong          String   @default("")              // 법정동 (사직동)
+  jibun         String   @default("")              // 지번
   roadAddress   String?  @map("road_address")   // 도로명주소
   totalUnits    Int?     @map("total_units")    // 총 세대수
   builtYear     Int?     @map("built_year")     // 건축년도
