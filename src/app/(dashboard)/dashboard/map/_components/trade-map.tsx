@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import useSWR from 'swr';
-import Link from 'next/link';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, ChevronRight, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite } from 'lucide-react';
+import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ComplexDetailPanel } from './complex-detail-panel';
 
 interface Complex {
   id: string;
@@ -70,6 +70,13 @@ export function TradeMap() {
   const [zoomLevel, setZoomLevel] = useState(8);
   const [showDistrict, setShowDistrict] = useState(false);
   const [mapType, setMapType] = useState<'road' | 'skyview'>('road');
+
+  // 패널 열림/닫힘 시 지도 리사이즈
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => mapInstanceRef.current?.relayout(), 100);
+    }
+  }, [selectedComplex]);
 
   const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
   const { data: complexData } = useSWR<{ data: Complex[] }>('/api/market/map/complexes', fetcher);
@@ -406,52 +413,18 @@ export function TradeMap() {
       </div>
 
       {/* 지도 */}
-      <div ref={mapRef} className="h-full w-full rounded-xl" />
+      <div
+        ref={mapRef}
+        className={cn('h-full w-full rounded-xl transition-all', selectedComplex && 'ml-[380px]')}
+        style={selectedComplex ? { width: 'calc(100% - 380px)' } : undefined}
+      />
 
-      {/* 선택된 단지 패널 */}
+      {/* 좌측 상세 패널 */}
       {selectedComplex && (
-        <div className="absolute left-3 bottom-14 z-10 w-80 animate-fade-up">
-          <Card className="shadow-lg border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold truncate">{selectedComplex.name}</h3>
-                  <p className="text-xs text-muted-foreground">{selectedComplex.dong}</p>
-                </div>
-                <button
-                  onClick={() => setSelectedComplex(null)}
-                  className="rounded-md p-1 hover:bg-accent transition-colors shrink-0 ml-2"
-                >
-                  <X className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-[10px] text-muted-foreground">평균 매매가</p>
-                  <p className="text-base font-bold text-primary">
-                    {formatPrice(selectedComplex.avgPrice)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground">평당가</p>
-                  <p className="text-base font-bold">
-                    {selectedComplex.avgPricePerPyeong.toLocaleString()}만
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground">거래</p>
-                  <p className="text-base font-bold">{selectedComplex._count.trades}건</p>
-                </div>
-              </div>
-              <Link
-                href={`/dashboard/apartments/${selectedComplex.id}`}
-                className="mt-3 flex items-center justify-center gap-1 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                상세 보기 <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+        <ComplexDetailPanel
+          complexId={selectedComplex.id}
+          onClose={() => setSelectedComplex(null)}
+        />
       )}
 
       {/* 단지 리스트 사이드패널 */}
