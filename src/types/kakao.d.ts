@@ -9,6 +9,10 @@ declare namespace kakao.maps {
     getBounds(): LatLngBounds;
     panTo(latlng: LatLng): void;
     addControl(control: ZoomControl | MapTypeControl, position: ControlPosition): void;
+    addOverlayMapTypeId(mapTypeId: MapTypeId): void;
+    removeOverlayMapTypeId(mapTypeId: MapTypeId): void;
+    setMapTypeId(mapTypeId: MapTypeId): void;
+    getMapTypeId(): MapTypeId;
     relayout(): void;
   }
 
@@ -122,6 +126,18 @@ declare namespace kakao.maps {
     });
     setMap(map: Map | null): void;
     setOptions(options: { fillColor?: string; fillOpacity?: number; strokeColor?: string }): void;
+  }
+
+  enum MapTypeId {
+    ROADMAP = 1,
+    SKYVIEW = 2,
+    HYBRID = 3,
+    OVERLAY = 4,
+    TERRAIN = 5,
+    TRAFFIC = 6,
+    BICYCLE = 7,
+    BICYCLE_HYBRID = 8,
+    USE_DISTRICT = 9,
   }
 
   enum ControlPosition {
