@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   },
   description:
     '아파트 실거래가, 전세가, 청약 정보, 금리 동향을 한눈에. AI 기반 부동산 분석과 알림을 제공하는 종합 부동산 인텔리전스 플랫폼.',
-  metadataBase: new URL('https://estatelab.dev'),
+  metadataBase: new URL('https://estatelab.vercel.app'),
   alternates: { canonical: './' },
   openGraph: {
     siteName: 'EstateLab',
@@ -25,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#15803d" />
         <link
           rel="stylesheet"
           as="style"
