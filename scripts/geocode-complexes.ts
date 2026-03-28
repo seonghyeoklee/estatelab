@@ -1,7 +1,7 @@
 /**
- * 카카오 지오코딩 API로 단지 좌표를 채우는 스크립트
+ * 카카오 주소 검색 API로 단지 좌표를 정확하게 채우는 스크립트
  * 실행: npx tsx scripts/geocode-complexes.ts
- * 재실행: npx tsx scripts/geocode-complexes.ts --force (기존 좌표 덮어쓰기)
+ * 재실행: npx tsx scripts/geocode-complexes.ts --force
  */
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -12,7 +12,25 @@ config({ path: '.env.local' });
 const KAKAO_REST_KEY = (process.env.KAKAO_REST_API_KEY || '').replace(/^"|"$/g, '');
 const forceUpdate = process.argv.includes('--force');
 
-async function searchPlace(query: string): Promise<{ lat: number; lng: number } | null> {
+/** 주소 검색 — 가장 정확 (도로명 또는 지번 주소) */
+async function searchAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}&size=1`;
+  const res = await fetch(url, {
+    headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (data.documents?.length > 0) {
+    return {
+      lat: parseFloat(data.documents[0].y),
+      lng: parseFloat(data.documents[0].x),
+    };
+  }
+  return null;
+}
+
+/** 키워드 검색 — 폴백용 */
+async function searchKeyword(query: string): Promise<{ lat: number; lng: number } | null> {
   const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=1`;
   const res = await fetch(url, {
     headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
@@ -31,33 +49,35 @@ async function searchPlace(query: string): Promise<{ lat: number; lng: number } 
 async function geocode(
   name: string,
   dong: string,
+  jibun: string,
   sido: string,
   sigungu: string,
-  jibun: string,
   roadAddress: string | null
-): Promise<{ lat: number; lng: number } | null> {
-  // 1순위: 도로명주소가 있으면 가장 정확
-  if (roadAddress) {
-    const result = await searchPlace(`${sigungu} ${roadAddress}`);
-    if (result) return result;
+): Promise<{ lat: number; lng: number; method: string } | null> {
+  // 1순위: 도로명주소 (가장 정확 — "서울 강남구 압구정로42길 78")
+  if (roadAddress && roadAddress.includes(' ')) {
+    const fullRoad = `${sido} ${sigungu} ${roadAddress}`;
+    const result = await searchAddress(fullRoad);
+    if (result) return { ...result, method: '도로명주소' };
   }
 
-  // 2순위: "시군구 단지명+아파트" (아파트 카테고리 매칭률 높음)
-  const aptName = name.includes('아파트') ? name : `${name}아파트`;
-  const result2 = await searchPlace(`${sigungu} ${aptName}`);
-  if (result2) return result2;
+  // 2순위: 지번주소 ("서울 강남구 신사동 632")
+  if (dong && jibun) {
+    const fullJibun = `${sido} ${sigungu} ${dong} ${jibun}`;
+    const result = await searchAddress(fullJibun);
+    if (result) return { ...result, method: '지번주소' };
+  }
 
-  // 3순위: "시군구 동 단지명"
+  // 3순위: 동 + 단지명 주소검색 ("서울 강남구 대치동 은마아파트")
   if (dong) {
-    const result3 = await searchPlace(`${sigungu} ${dong} ${name}`);
-    if (result3) return result3;
+    const aptQuery = name.includes('아파트') ? name : `${name}아파트`;
+    const result = await searchKeyword(`${sido} ${sigungu} ${dong} ${aptQuery}`);
+    if (result) return { ...result, method: '동+단지명' };
   }
 
-  // 4순위: "시도 시군구 지번" (지번 주소 직접 검색)
-  if (jibun) {
-    const result4 = await searchPlace(`${sido} ${sigungu} ${dong} ${jibun}`);
-    if (result4) return result4;
-  }
+  // 4순위: 시군구 + 단지명
+  const result = await searchKeyword(`${sigungu} ${name}아파트`);
+  if (result) return { ...result, method: '시군구+단지명' };
 
   return null;
 }
@@ -85,15 +105,16 @@ async function main() {
 
   let updated = 0;
   let failed = 0;
+  const methods: Record<string, number> = {};
 
   for (const complex of complexes) {
     try {
       const coords = await geocode(
         complex.name,
         complex.dong,
+        complex.jibun,
         complex.region.sido,
         complex.region.sigungu,
-        complex.jibun,
         complex.roadAddress
       );
 
@@ -103,13 +124,13 @@ async function main() {
           data: { lat: coords.lat, lng: coords.lng },
         });
         updated++;
-        console.warn(`✅ ${complex.name} (${complex.dong}) → ${coords.lat}, ${coords.lng}`);
+        methods[coords.method] = (methods[coords.method] || 0) + 1;
+        console.warn(`✅ ${complex.name} (${complex.dong}) → ${coords.lat}, ${coords.lng} [${coords.method}]`);
       } else {
         failed++;
-        console.warn(`❌ ${complex.name} (${complex.dong})`);
+        console.warn(`❌ ${complex.name} (${complex.dong} ${complex.jibun}) road=${complex.roadAddress}`);
       }
 
-      // rate limit 방지
       await new Promise((r) => setTimeout(r, 120));
     } catch (e) {
       failed++;
@@ -118,6 +139,7 @@ async function main() {
   }
 
   console.warn(`\n완료: ${updated}개 좌표 등록, ${failed}개 실패`);
+  console.warn('방법별:', methods);
   await prisma.$disconnect();
   await pool.end();
 }

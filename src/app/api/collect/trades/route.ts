@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fetchApartmentTrades } from '@/lib/public-data';
+import { fetchApartmentTrades, buildRoadAddress, buildJibunAddress } from '@/lib/public-data';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
       try {
         // 단지 upsert
         const dong = trade.dong || '';
-        const jibun = trade.jibun || '';
+        const jibun = trade.jibun || buildJibunAddress(trade.bonbun, trade.bubun) || '';
+        const roadAddress = buildRoadAddress(trade.roadName, trade.roadBonbun, trade.roadBubun);
 
         const complex = await prisma.apartmentComplex.upsert({
           where: {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
           },
           update: {
             builtYear: trade.buildYear || undefined,
-            roadAddress: trade.roadAddress || undefined,
+            roadAddress: roadAddress || undefined,
           },
           create: {
             regionCode: lawdCd,
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
             dong,
             jibun,
             builtYear: trade.buildYear || null,
-            roadAddress: trade.roadAddress || null,
+            roadAddress,
           },
         });
 

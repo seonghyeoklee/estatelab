@@ -12,14 +12,18 @@ export interface RawTrade {
   aptName: string;
   dong: string;
   jibun: string;
-  area: number; // 전용면적 (㎡)
+  bonbun: string;
+  bubun: string;
+  area: number;
   floor: number;
-  price: number; // 만원
+  price: number;
   buildYear: number;
   dealType: string | null;
   canceledAt: string | null;
   registeredAt: string | null;
-  roadAddress: string | null;
+  roadName: string | null;
+  roadBonbun: string | null;
+  roadBubun: string | null;
 }
 
 /**
@@ -61,7 +65,6 @@ function parseTradeXml(xml: string): RawTrade[] {
       return m ? m[1].trim() : '';
     };
 
-    // 새 API 태그명: dealAmount, excluUseAr, aptNm, dealYear, dealMonth, dealDay 등
     const priceStr = get('dealAmount') || get('거래금액');
     const price = parseInt(priceStr.replace(/,/g, ''), 10);
     const area = parseFloat(get('excluUseAr') || get('전용면적'));
@@ -79,6 +82,8 @@ function parseTradeXml(xml: string): RawTrade[] {
       aptName: get('aptNm') || get('아파트') || '미상',
       dong: get('umdNm') || get('법정동'),
       jibun: get('jibun') || get('지번'),
+      bonbun: get('bonbun') || '',
+      bubun: get('bubun') || '',
       area,
       floor,
       price,
@@ -86,9 +91,41 @@ function parseTradeXml(xml: string): RawTrade[] {
       dealType: get('dealingGbn') || get('거래유형') || null,
       canceledAt: get('cdealDay') || get('해제사유발생일') || null,
       registeredAt: get('rgstDate') || get('등기일자') || null,
-      roadAddress: get('roadNm') || get('도로명') || null,
+      roadName: get('roadNm') || get('도로명') || null,
+      roadBonbun: get('roadNmBonbun') || null,
+      roadBubun: get('roadNmBubun') || null,
     });
   }
 
   return items;
+}
+
+/**
+ * 완전한 도로명주소를 조합합니다.
+ * 예: "압구정로42길 78" (도로명 + 건물번호)
+ */
+export function buildRoadAddress(
+  roadName: string | null,
+  roadBonbun: string | null,
+  roadBubun: string | null
+): string | null {
+  if (!roadName) return null;
+  const bonbun = parseInt(roadBonbun || '0', 10);
+  const bubun = parseInt(roadBubun || '0', 10);
+  if (!bonbun) return roadName;
+  return bubun ? `${roadName} ${bonbun}-${bubun}` : `${roadName} ${bonbun}`;
+}
+
+/**
+ * 완전한 지번주소를 조합합니다.
+ * 예: "632" 또는 "632-1"
+ */
+export function buildJibunAddress(
+  bonbun: string | null,
+  bubun: string | null
+): string {
+  const bon = parseInt(bonbun || '0', 10);
+  const bu = parseInt(bubun || '0', 10);
+  if (!bon) return '';
+  return bu ? `${bon}-${bu}` : `${bon}`;
 }
