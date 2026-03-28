@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite } from 'lucide-react';
+import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ComplexDetailPanel } from './complex-detail-panel';
 
@@ -70,6 +70,10 @@ export function TradeMap() {
   const [zoomLevel, setZoomLevel] = useState(8);
   const [showDistrict, setShowDistrict] = useState(false);
   const [mapType, setMapType] = useState<'road' | 'skyview'>('road');
+  const [listSearch, setListSearch] = useState('');
+  const [listSort, setListSort] = useState<'price' | 'trades'>('price');
+  const [visibleComplexIds, setVisibleComplexIds] = useState<Set<string>>(new Set());
+  const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // 패널 열림/닫힘 시 지도 리사이즈
   useEffect(() => {
@@ -100,6 +104,12 @@ export function TradeMap() {
     // 줌 변경 이벤트
     kakao.maps.event.addListener(map, 'zoom_changed', () => {
       setZoomLevel(map.getLevel());
+    });
+
+    // 빈 곳 클릭 시 패널 닫기
+    kakao.maps.event.addListener(map, 'click', () => {
+      setSelectedComplex(null);
+      setShowList(false);
     });
 
     // 클러스터러 초기화
@@ -200,15 +210,34 @@ export function TradeMap() {
         <span style="font-size:10px;opacity:0.9;max-width:80px;overflow:hidden;text-overflow:ellipsis">${complex.name}</span>
         <span style="font-weight:800">${priceLabel}</span>
       `;
+      content.dataset.complexId = complex.id;
       content.addEventListener('mouseenter', () => {
-        content.style.transform = 'scale(1.08) translateY(-2px)';
-        content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+        if (selectedOverlayRef.current !== content) {
+          content.style.transform = 'scale(1.08) translateY(-2px)';
+          content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+        }
       });
       content.addEventListener('mouseleave', () => {
-        content.style.transform = 'scale(1)';
-        content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        if (selectedOverlayRef.current !== content) {
+          content.style.transform = 'scale(1)';
+          content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        }
       });
-      content.addEventListener('click', () => {
+      content.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // 이전 선택 마커 리셋
+        if (selectedOverlayRef.current && selectedOverlayRef.current !== content) {
+          selectedOverlayRef.current.style.transform = 'scale(1)';
+          selectedOverlayRef.current.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+          selectedOverlayRef.current.style.outline = 'none';
+        }
+        // 현재 마커 강조
+        content.style.transform = 'scale(1.15) translateY(-3px)';
+        content.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+        content.style.outline = '3px solid #fff';
+        content.style.outlineOffset = '-1px';
+        selectedOverlayRef.current = content;
+
         setSelectedComplex(complex);
         setShowList(false);
         if (mapInstanceRef.current) {
@@ -240,21 +269,24 @@ export function TradeMap() {
     // 클러스터에 마커 추가
     clustererRef.current.addMarkers(markers);
 
-    // 줌 레벨에 따라 오버레이 표시/숨기기
+    // 줌 레벨에 따라 오버레이 표시/숨기기 + 화면 내 단지 추적
     function updateOverlayVisibility() {
       const level = map.getLevel();
       const bounds = map.getBounds();
+      const visible = new Set<string>();
       overlaysRef.current.forEach((overlay, idx) => {
         const complex = withCoords[idx];
         if (!complex?.lat || !complex?.lng) return;
         const pos = new kakao.maps.LatLng(complex.lat, complex.lng);
-        // 줌 레벨 5 이하 + 화면 내 단지만 표시
-        if (level <= 5 && bounds.contain(pos)) {
+        const inBounds = bounds.contain(pos);
+        if (inBounds) visible.add(complex.id);
+        if (level <= 5 && inBounds) {
           overlay.setMap(map);
         } else {
           overlay.setMap(null);
         }
       });
+      setVisibleComplexIds(visible);
     }
 
     updateOverlayVisibility();
@@ -435,10 +467,9 @@ export function TradeMap() {
         <div className="absolute right-3 top-24 z-10 w-80 max-h-[calc(100%-120px)] animate-fade-up">
           <Card className="shadow-lg overflow-hidden">
             <CardContent className="p-0">
-              <div className="flex items-center justify-between border-b px-4 py-3 bg-white sticky top-0">
-                <h3 className="text-sm font-semibold">
-                  수집된 단지
-                </h3>
+              {/* 헤더 */}
+              <div className="flex items-center justify-between border-b px-4 py-2.5 bg-white">
+                <h3 className="text-sm font-semibold">단지 목록</h3>
                 <button
                   onClick={() => setShowList(false)}
                   className="rounded-md p-1 hover:bg-accent transition-colors"
@@ -447,19 +478,72 @@ export function TradeMap() {
                 </button>
               </div>
 
-              {/* 가격 범례 */}
-              <div className="flex items-center gap-2 px-4 py-2 border-b bg-slate-50/80 text-[10px]">
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#7c3aed' }} />20억+</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#0369a1' }} />10억+</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#059669' }} />5억+</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#64748b' }} />~5억</span>
+              {/* 검색 + 정렬 */}
+              <div className="px-3 py-2 border-b space-y-2 bg-slate-50/80">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="단지명 검색..."
+                    value={listSearch}
+                    onChange={(e) => setListSearch(e.target.value)}
+                    className="w-full rounded-md border bg-white py-1.5 pl-8 pr-3 text-[12px] outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setListSort('price')}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+                      listSort === 'price' ? 'bg-primary text-primary-foreground' : 'bg-white border hover:bg-accent'
+                    )}
+                  >
+                    <ArrowUpDown className="h-2.5 w-2.5" />
+                    가격순
+                  </button>
+                  <button
+                    onClick={() => setListSort('trades')}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+                      listSort === 'trades' ? 'bg-primary text-primary-foreground' : 'bg-white border hover:bg-accent'
+                    )}
+                  >
+                    <ArrowUpDown className="h-2.5 w-2.5" />
+                    거래수순
+                  </button>
+                  {/* 범례 */}
+                  <div className="flex items-center gap-1.5 ml-auto text-[9px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#7c3aed' }} />20억+</span>
+                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#0369a1' }} />10억+</span>
+                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#059669' }} />5억+</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="max-h-[400px] overflow-y-auto">
-                {complexes
-                  .sort((a, b) => b.avgPrice - a.avgPrice)
-                  .map((c) => {
+              {/* 리스트 */}
+              <div className="max-h-[350px] overflow-y-auto">
+                {(() => {
+                  const filtered = complexes
+                    .filter((c) => {
+                      if (listSearch && !c.name.includes(listSearch) && !c.dong.includes(listSearch)) return false;
+                      if (visibleComplexIds.size > 0 && !visibleComplexIds.has(c.id)) return false;
+                      return true;
+                    })
+                    .sort((a, b) =>
+                      listSort === 'price' ? b.avgPrice - a.avgPrice : b._count.trades - a._count.trades
+                    );
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-8 text-center text-xs text-muted-foreground">
+                        {listSearch ? `"${listSearch}" 검색 결과 없음` : '현재 지도 영역에 단지가 없습니다'}
+                      </div>
+                    );
+                  }
+
+                  return filtered.map((c) => {
                     const color = getPriceColor(c.avgPrice);
+                    const isSelected = selectedComplex?.id === c.id;
                     return (
                       <button
                         key={c.id}
@@ -471,7 +555,10 @@ export function TradeMap() {
                             mapInstanceRef.current.setLevel(4, { animate: true });
                           }
                         }}
-                        className="flex items-center gap-3 border-b last:border-0 px-4 py-2.5 hover:bg-accent/50 transition-colors w-full text-left"
+                        className={cn(
+                          'flex items-center gap-3 border-b last:border-0 px-4 py-2.5 transition-colors w-full text-left',
+                          isSelected ? 'bg-primary/5' : 'hover:bg-accent/50'
+                        )}
                       >
                         <div
                           className="w-1.5 h-8 rounded-full shrink-0"
@@ -491,7 +578,13 @@ export function TradeMap() {
                         </div>
                       </button>
                     );
-                  })}
+                  });
+                })()}
+              </div>
+
+              {/* 하단 카운트 */}
+              <div className="border-t px-4 py-2 bg-slate-50/80 text-[10px] text-muted-foreground">
+                현재 지도 영역: {visibleComplexIds.size}개 단지
               </div>
             </CardContent>
           </Card>
