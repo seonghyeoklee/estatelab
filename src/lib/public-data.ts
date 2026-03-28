@@ -3,7 +3,7 @@
  * https://www.data.go.kr — 국토교통부 아파트매매 실거래 상세 자료
  */
 
-const API_BASE = 'http://openapi.molit.go.kr/OpenAPI_ToolInstall/service/rest/RTMSOBJSvc';
+const API_BASE = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev';
 
 export interface RawTrade {
   dealYear: number;
@@ -29,7 +29,7 @@ export async function fetchApartmentTrades(
   lawdCd: string,
   dealYmd: string
 ): Promise<RawTrade[]> {
-  const apiKey = process.env.PUBLIC_DATA_API_KEY;
+  const apiKey = (process.env.PUBLIC_DATA_API_KEY || '').replace(/^"|"$/g, '');
   if (!apiKey) throw new Error('PUBLIC_DATA_API_KEY 환경변수가 설정되지 않았습니다.');
 
   const url = new URL(`${API_BASE}/getRTMSDataSvcAptTradeDev`);
@@ -39,7 +39,9 @@ export async function fetchApartmentTrades(
   url.searchParams.set('pageNo', '1');
   url.searchParams.set('numOfRows', '9999');
 
-  const res = await fetch(url.toString());
+  const res = await fetch(url.toString(), {
+    headers: { 'User-Agent': 'EstateLab/1.0' },
+  });
   if (!res.ok) throw new Error(`API 요청 실패: ${res.status}`);
 
   const text = await res.text();
@@ -49,7 +51,6 @@ export async function fetchApartmentTrades(
 function parseTradeXml(xml: string): RawTrade[] {
   const items: RawTrade[] = [];
 
-  // <item> 블록 추출
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
   let match: RegExpExecArray | null;
 
@@ -60,12 +61,14 @@ function parseTradeXml(xml: string): RawTrade[] {
       return m ? m[1].trim() : '';
     };
 
-    const price = parseInt(get('거래금액').replace(/,/g, ''), 10);
-    const area = parseFloat(get('전용면적'));
-    const floor = parseInt(get('층'), 10);
-    const dealYear = parseInt(get('년'), 10);
-    const dealMonth = parseInt(get('월'), 10);
-    const dealDay = parseInt(get('일'), 10);
+    // 새 API 태그명: dealAmount, excluUseAr, aptNm, dealYear, dealMonth, dealDay 등
+    const priceStr = get('dealAmount') || get('거래금액');
+    const price = parseInt(priceStr.replace(/,/g, ''), 10);
+    const area = parseFloat(get('excluUseAr') || get('전용면적'));
+    const floor = parseInt(get('floor') || get('층'), 10);
+    const dealYear = parseInt(get('dealYear') || get('년'), 10);
+    const dealMonth = parseInt(get('dealMonth') || get('월'), 10);
+    const dealDay = parseInt(get('dealDay') || get('일'), 10);
 
     if (!price || !area || isNaN(floor) || !dealYear) continue;
 
@@ -73,17 +76,17 @@ function parseTradeXml(xml: string): RawTrade[] {
       dealYear,
       dealMonth,
       dealDay,
-      aptName: get('아파트') || get('단지명') || '미상',
-      dong: get('법정동'),
-      jibun: get('지번'),
+      aptName: get('aptNm') || get('아파트') || '미상',
+      dong: get('umdNm') || get('법정동'),
+      jibun: get('jibun') || get('지번'),
       area,
       floor,
       price,
-      buildYear: parseInt(get('건축년도'), 10) || 0,
-      dealType: get('거래유형') || null,
-      canceledAt: get('해제사유발생일') || null,
-      registeredAt: get('등기일자') || null,
-      roadAddress: get('도로명') || null,
+      buildYear: parseInt(get('buildYear') || get('건축년도'), 10) || 0,
+      dealType: get('dealingGbn') || get('거래유형') || null,
+      canceledAt: get('cdealDay') || get('해제사유발생일') || null,
+      registeredAt: get('rgstDate') || get('등기일자') || null,
+      roadAddress: get('roadNm') || get('도로명') || null,
     });
   }
 
