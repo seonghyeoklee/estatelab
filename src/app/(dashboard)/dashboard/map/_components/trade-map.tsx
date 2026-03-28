@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { useKakaoLoaded } from '@/components/kakao-map-provider';
+import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, ChevronRight, List, X } from 'lucide-react';
@@ -43,6 +43,7 @@ const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> 
 
 export function TradeMap() {
   const kakaoLoaded = useKakaoLoaded();
+  const kakaoError = useKakaoError();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
@@ -135,15 +136,19 @@ export function TradeMap() {
     }
   }, [withCoords]);
 
-  if (!process.env.NEXT_PUBLIC_KAKAO_APP_KEY) {
+  if (!process.env.NEXT_PUBLIC_KAKAO_APP_KEY || kakaoError) {
     return (
       <div className="flex h-full items-center justify-center">
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center gap-2 py-8 px-12">
             <Building2 className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm font-medium">카카오맵 API 키가 필요합니다</p>
-            <p className="text-xs text-muted-foreground text-center">
-              NEXT_PUBLIC_KAKAO_APP_KEY 환경변수를 설정하세요.
+            <p className="text-sm font-medium">
+              {kakaoError ? '카카오맵 로드에 실패했습니다' : '카카오맵 API 키가 필요합니다'}
+            </p>
+            <p className="text-xs text-muted-foreground text-center max-w-xs">
+              {kakaoError
+                ? '카카오 개발자 콘솔 → 플랫폼 → Web에 도메인을 등록했는지 확인하세요.'
+                : 'NEXT_PUBLIC_KAKAO_APP_KEY 환경변수를 설정하세요.'}
             </p>
           </CardContent>
         </Card>
