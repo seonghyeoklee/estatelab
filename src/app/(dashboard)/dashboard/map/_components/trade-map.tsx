@@ -48,11 +48,11 @@ const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> 
 };
 
 // 가격대별 마커 색상
-function getPriceColor(avgPrice: number): { bg: string; text: string; border: string } {
-  if (avgPrice >= 200000) return { bg: '#dc2626', text: '#fff', border: '#b91c1c' }; // 20억+
-  if (avgPrice >= 100000) return { bg: '#ea580c', text: '#fff', border: '#c2410c' }; // 10억+
-  if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857' };  // 5억+
-  return { bg: '#2563eb', text: '#fff', border: '#1d4ed8' };                         // ~5억
+function getPriceColor(avgPrice: number): { bg: string; text: string; border: string; label: string } {
+  if (avgPrice >= 200000) return { bg: '#7c3aed', text: '#fff', border: '#6d28d9', label: '20억+' };   // 보라 (프리미엄)
+  if (avgPrice >= 100000) return { bg: '#0369a1', text: '#fff', border: '#075985', label: '10억+' };   // 딥블루
+  if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857', label: '5억+' };     // 에메랄드
+  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~5억' };                            // 슬레이트
 }
 
 export function TradeMap() {
@@ -125,7 +125,7 @@ export function TradeMap() {
         {
           width: '60px',
           height: '60px',
-          background: 'rgba(234, 88, 12, 0.85)',
+          background: 'rgba(3, 105, 161, 0.85)',
           borderRadius: '50%',
           color: '#fff',
           textAlign: 'center',
@@ -136,7 +136,7 @@ export function TradeMap() {
         {
           width: '70px',
           height: '70px',
-          background: 'rgba(220, 38, 38, 0.85)',
+          background: 'rgba(124, 58, 237, 0.85)',
           borderRadius: '50%',
           color: '#fff',
           textAlign: 'center',
@@ -449,10 +449,10 @@ export function TradeMap() {
 
               {/* 가격 범례 */}
               <div className="flex items-center gap-2 px-4 py-2 border-b bg-slate-50/80 text-[10px]">
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#dc2626' }} />20억+</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#ea580c' }} />10억+</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#7c3aed' }} />20억+</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#0369a1' }} />10억+</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#059669' }} />5억+</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#2563eb' }} />~5억</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#64748b' }} />~5억</span>
               </div>
 
               <div className="max-h-[400px] overflow-y-auto">
