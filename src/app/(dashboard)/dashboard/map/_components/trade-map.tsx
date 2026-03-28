@@ -62,6 +62,8 @@ export function TradeMap() {
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
+  const initialFitDoneRef = useRef(false);
+  const listenersAttachedRef = useRef(false);
   const [selectedComplex, setSelectedComplex] = useState<Complex | null>(null);
   const [showList, setShowList] = useState(false);
   const [selectedSido, setSelectedSido] = useState('서울특별시');
@@ -247,14 +249,20 @@ export function TradeMap() {
     }
 
     updateOverlayVisibility();
-    kakao.maps.event.addListener(map, 'zoom_changed', updateOverlayVisibility);
-    kakao.maps.event.addListener(map, 'bounds_changed', updateOverlayVisibility);
 
-    // 데이터 있는 영역으로 자동 fit
-    if (withCoords.length > 1) {
+    // 이벤트 리스너는 최초 1회만 등록
+    if (!listenersAttachedRef.current) {
+      kakao.maps.event.addListener(map, 'zoom_changed', updateOverlayVisibility);
+      kakao.maps.event.addListener(map, 'bounds_changed', updateOverlayVisibility);
+      listenersAttachedRef.current = true;
+    }
+
+    // 데이터 있는 영역으로 자동 fit (최초 1회만)
+    if (!initialFitDoneRef.current && withCoords.length > 1) {
       const bounds = new kakao.maps.LatLngBounds();
       withCoords.forEach((c) => bounds.extend(new kakao.maps.LatLng(c.lat!, c.lng!)));
       map.setBounds(bounds, 50, 50, 50, 50);
+      initialFitDoneRef.current = true;
     }
   }, [withCoords]);
 
