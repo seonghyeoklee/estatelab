@@ -74,7 +74,6 @@ export function TradeMap() {
   const [listSort, setListSort] = useState<'price' | 'trades'>('price');
   const [visibleComplexIds, setVisibleComplexIds] = useState<Set<string>>(new Set());
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
-  const markerClickedRef = useRef(false);
 
   // 패널 열림/닫힘 시 지도 리사이즈
   useEffect(() => {
@@ -105,17 +104,6 @@ export function TradeMap() {
     // 줌 변경 이벤트
     kakao.maps.event.addListener(map, 'zoom_changed', () => {
       setZoomLevel(map.getLevel());
-    });
-
-    // 빈 곳 클릭 시 패널 닫기 (마커 클릭과 충돌 방지 — 딜레이)
-    kakao.maps.event.addListener(map, 'click', () => {
-      setTimeout(() => {
-        if (!markerClickedRef.current) {
-          setSelectedComplex(null);
-          setShowList(false);
-        }
-        markerClickedRef.current = false;
-      }, 50);
     });
 
     // 클러스터러 초기화
@@ -218,37 +206,23 @@ export function TradeMap() {
       `;
       content.dataset.complexId = complex.id;
       content.addEventListener('mouseenter', () => {
-        if (selectedOverlayRef.current !== content) {
-          content.style.transform = 'scale(1.08) translateY(-2px)';
-          content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
-        }
+        content.style.transform = 'scale(1.08) translateY(-2px)';
+        content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
       });
       content.addEventListener('mouseleave', () => {
-        if (selectedOverlayRef.current !== content) {
-          content.style.transform = 'scale(1)';
-          content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-        }
+        content.style.transform = 'scale(1)';
+        content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
       });
       content.addEventListener('click', () => {
-        markerClickedRef.current = true;
-        // 이전 선택 마커 리셋
-        if (selectedOverlayRef.current && selectedOverlayRef.current !== content) {
-          selectedOverlayRef.current.style.transform = 'scale(1)';
-          selectedOverlayRef.current.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        // 선택 마커 강조
+        if (selectedOverlayRef.current) {
           selectedOverlayRef.current.style.outline = 'none';
         }
-        // 현재 마커 강조
-        content.style.transform = 'scale(1.15) translateY(-3px)';
-        content.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
         content.style.outline = '3px solid #fff';
-        content.style.outlineOffset = '-1px';
         selectedOverlayRef.current = content;
 
         setSelectedComplex(complex);
         setShowList(false);
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.panTo(position);
-        }
       });
 
       const overlay = new kakao.maps.CustomOverlay({
@@ -268,12 +242,8 @@ export function TradeMap() {
       markers.push(marker);
 
       kakao.maps.event.addListener(marker, 'click', () => {
-        markerClickedRef.current = true;
         setSelectedComplex(complex);
         setShowList(false);
-        if (mapInstanceRef.current && complex.lat && complex.lng) {
-          mapInstanceRef.current.panTo(new kakao.maps.LatLng(complex.lat, complex.lng));
-        }
       });
     }
 
