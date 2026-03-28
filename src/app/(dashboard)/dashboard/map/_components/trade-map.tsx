@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, ChevronRight, List, X, ZoomIn, ZoomOut, Locate } from 'lucide-react';
+import { Building2, ChevronRight, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Complex {
@@ -68,6 +68,8 @@ export function TradeMap() {
   const [showList, setShowList] = useState(false);
   const [selectedSido, setSelectedSido] = useState('서울특별시');
   const [zoomLevel, setZoomLevel] = useState(8);
+  const [showDistrict, setShowDistrict] = useState(false);
+  const [mapType, setMapType] = useState<'road' | 'skyview'>('road');
 
   const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
   const { data: complexData } = useSWR<{ data: Complex[] }>('/api/market/map/complexes', fetcher);
@@ -285,6 +287,29 @@ export function TradeMap() {
     }
   };
 
+  // 지적편집도 토글
+  const toggleDistrict = () => {
+    if (!mapInstanceRef.current) return;
+    if (showDistrict) {
+      mapInstanceRef.current.removeOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
+    } else {
+      mapInstanceRef.current.addOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
+    }
+    setShowDistrict(!showDistrict);
+  };
+
+  // 지도 타입 전환 (일반 ↔ 스카이뷰)
+  const toggleMapType = () => {
+    if (!mapInstanceRef.current) return;
+    if (mapType === 'road') {
+      mapInstanceRef.current.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
+      setMapType('skyview');
+    } else {
+      mapInstanceRef.current.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+      setMapType('road');
+    }
+  };
+
   if (!process.env.NEXT_PUBLIC_KAKAO_APP_KEY || kakaoError) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -338,6 +363,33 @@ export function TradeMap() {
           <List className="h-3.5 w-3.5" />
           {complexes.length}개 단지
         </button>
+
+        {/* 지도 타입 + 지적편집도 */}
+        <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
+          <button
+            onClick={toggleMapType}
+            className={cn(
+              'p-2 transition-colors border-b border-border/30 relative',
+              mapType === 'skyview' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
+            )}
+            title={mapType === 'road' ? '스카이뷰' : '일반지도'}
+          >
+            {mapType === 'road' ? <Satellite className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={toggleDistrict}
+            className={cn(
+              'p-2 transition-colors relative',
+              showDistrict ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
+            )}
+            title="지적편집도"
+          >
+            <Layers className="h-4 w-4" />
+            {showDistrict && (
+              <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
+            )}
+          </button>
+        </div>
 
         {/* 줌 컨트롤 */}
         <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
