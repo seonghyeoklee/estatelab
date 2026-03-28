@@ -205,25 +205,29 @@ export function TradeMap() {
         <span style="font-weight:800">${priceLabel}</span>
       `;
       content.dataset.complexId = complex.id;
-      content.addEventListener('mouseenter', () => {
+      content.onmouseenter = () => {
         content.style.transform = 'scale(1.08) translateY(-2px)';
         content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
-      });
-      content.addEventListener('mouseleave', () => {
+      };
+      content.onmouseleave = () => {
         content.style.transform = 'scale(1)';
         content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-      });
-      content.addEventListener('click', () => {
-        // 선택 마커 강조
+      };
+      // onclick + onpointerup 둘 다 등록 (모바일 + 데스크톱)
+      const handleSelect = () => {
         if (selectedOverlayRef.current) {
           selectedOverlayRef.current.style.outline = 'none';
         }
         content.style.outline = '3px solid #fff';
         selectedOverlayRef.current = content;
-
         setSelectedComplex(complex);
         setShowList(false);
-      });
+      };
+      content.onclick = handleSelect;
+      content.ontouchend = (e) => {
+        e.preventDefault();
+        handleSelect();
+      };
 
       const overlay = new kakao.maps.CustomOverlay({
         position,
