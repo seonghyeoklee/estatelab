@@ -72,7 +72,7 @@ export function TradeMap() {
   const [mapType, setMapType] = useState<'road' | 'skyview'>('road');
   const [listSearch, setListSearch] = useState('');
   const [listSort, setListSort] = useState<'price' | 'trades'>('price');
-  const [visibleComplexIds, setVisibleComplexIds] = useState<Set<string>>(new Set());
+  const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // 패널 열림/닫힘 시 지도 리사이즈
@@ -271,7 +271,11 @@ export function TradeMap() {
           overlay.setMap(null);
         }
       });
-      setVisibleComplexIds(visible);
+      const ids = Array.from(visible).sort();
+      setVisibleIds((prev) => {
+        if (prev.length === ids.length && prev.every((v, i) => v === ids[i])) return prev;
+        return ids;
+      });
     }
 
     updateOverlayVisibility();
@@ -511,7 +515,7 @@ export function TradeMap() {
                   const filtered = complexes
                     .filter((c) => {
                       if (listSearch && !c.name.includes(listSearch) && !c.dong.includes(listSearch)) return false;
-                      if (visibleComplexIds.size > 0 && !visibleComplexIds.has(c.id)) return false;
+                      if (visibleIds.length > 0 && !visibleIds.includes(c.id)) return false;
                       return true;
                     })
                     .sort((a, b) =>
@@ -569,7 +573,7 @@ export function TradeMap() {
 
               {/* 하단 카운트 */}
               <div className="border-t px-4 py-2 bg-slate-50/80 text-[10px] text-muted-foreground">
-                현재 지도 영역: {visibleComplexIds.size}개 단지
+                현재 지도 영역: {visibleIds.length}개 단지
               </div>
             </CardContent>
           </Card>
