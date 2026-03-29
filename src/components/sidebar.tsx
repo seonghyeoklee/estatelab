@@ -11,6 +11,7 @@ import {
   Home,
   CalendarDays,
   Search,
+  Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,12 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/rates', label: '금리 동향', icon: Landmark },
       { href: '/dashboard/indices', label: '가격지수', icon: TrendingUp },
+    ],
+  },
+  {
+    label: 'My',
+    items: [
+      { href: '/dashboard/my', label: '관심 단지', icon: Heart },
     ],
   },
 ];
