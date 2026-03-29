@@ -361,7 +361,7 @@ export function TradeMap() {
   return (
     <div className="relative h-full">
       {/* 시도 선택 탭 */}
-      <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5 max-w-[calc(100%-140px)]">
+      <div className="absolute top-3 left-3 z-10 flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap">
         {sidoList.map((sido) => (
           <button
             key={sido}
@@ -439,16 +439,34 @@ export function TradeMap() {
       {/* 지도 */}
       <div
         ref={mapRef}
-        className={cn('h-full w-full rounded-xl transition-all', selectedComplex && 'ml-[380px]')}
-        style={selectedComplex ? { width: 'calc(100% - 380px)' } : undefined}
+        className={cn(
+          'h-full w-full rounded-xl transition-all',
+          selectedComplex && 'md:ml-[380px]'
+        )}
+        style={selectedComplex ? { width: undefined } : undefined}
       />
 
-      {/* 좌측 상세 패널 */}
+      {/* 상세 패널 — 데스크톱: 좌측, 모바일: 하단 시트 */}
       {selectedComplex && (
-        <ComplexDetailPanel
-          complexId={selectedComplex.id}
-          onClose={() => setSelectedComplex(null)}
-        />
+        <>
+          {/* 데스크톱 */}
+          <div className="hidden md:block">
+            <ComplexDetailPanel
+              complexId={selectedComplex.id}
+              onClose={() => setSelectedComplex(null)}
+            />
+          </div>
+          {/* 모바일 — 하단 시트 */}
+          <div className="md:hidden absolute bottom-0 left-0 right-0 z-20 max-h-[60vh] overflow-y-auto bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] animate-fade-up">
+            <div className="sticky top-0 flex items-center justify-center py-2 bg-white rounded-t-2xl">
+              <div className="w-10 h-1 rounded-full bg-border" />
+            </div>
+            <ComplexDetailPanel
+              complexId={selectedComplex.id}
+              onClose={() => setSelectedComplex(null)}
+            />
+          </div>
+        </>
       )}
 
       {/* 단지 리스트 사이드패널 */}

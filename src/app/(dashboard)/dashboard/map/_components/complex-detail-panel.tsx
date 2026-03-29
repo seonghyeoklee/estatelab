@@ -95,7 +95,7 @@ export function ComplexDetailPanel({ complexId, onClose }: Props) {
   const chartRange = chartMax - chartMin || 1;
 
   return (
-    <div className="absolute left-0 top-0 bottom-0 z-20 w-[380px] bg-white border-r border-border/50 shadow-xl flex flex-col animate-fade-up overflow-hidden">
+    <div className="md:absolute md:left-0 md:top-0 md:bottom-0 z-20 md:w-[380px] w-full bg-white md:border-r border-border/50 md:shadow-xl flex flex-col overflow-hidden">
       {/* 헤더 */}
       {isLoading ? (
         <div className="p-4 space-y-3">
