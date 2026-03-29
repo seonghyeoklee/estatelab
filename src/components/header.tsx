@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { UserMenu } from '@/components/user-menu';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -54,6 +55,9 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       {/* spacer */}
       <div className="flex-1" />
+
+      {/* 유저 메뉴 */}
+      <UserMenu />
     </header>
   );
 }

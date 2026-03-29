@@ -7,6 +7,35 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── 회원 ────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  watchlist     UserWatchlist[]
+
+  @@map("users")
+}
+
+model UserWatchlist {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  complexId   String   @map("complex_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  complex ApartmentComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, complexId])
+  @@index([userId])
+  @@map("user_watchlist")
+}
+
 // ─── 법정동코드 ──────────────────────────────────────────────
 
 model Region {
@@ -42,6 +71,7 @@ model ApartmentComplex {
 
   region        Region @relation(fields: [regionCode], references: [code])
   trades        ApartmentTrade[]
+  watchedBy     UserWatchlist[]
 
   @@unique([regionCode, name, dong, jibun])
   @@index([regionCode])
