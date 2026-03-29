@@ -9,6 +9,7 @@ import { TradeTable } from './_components/trade-table';
 import { AreaComparison } from './_components/area-comparison';
 import { WatchlistButton } from '@/components/watchlist-button';
 import { HistoryTracker } from './_components/history-tracker';
+import { NearbyFacilities } from './_components/nearby-facilities';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,6 +151,9 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
         }))} />
         <AreaComparison areaGroups={areaGroups} />
       </div>
+
+      {/* Nearby facilities */}
+      <NearbyFacilities complexId={id} />
 
       {/* Trade table */}
       <TradeTable trades={complex.trades.map((t) => ({
