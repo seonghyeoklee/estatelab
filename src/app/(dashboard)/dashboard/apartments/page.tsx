@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, ChevronRight, Search } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
+import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
 
 interface ApartmentItem {
   id: string;
@@ -29,18 +31,46 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function ApartmentsPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<FilterValues>({
+    regionCode: '',
+    sido: '',
+    minPrice: '',
+    maxPrice: '',
+    minArea: '',
+    maxArea: '',
+    minYear: '',
+    sort: 'name',
+  });
 
-  const searchParam = query ? `&q=${encodeURIComponent(query)}` : '';
+  // URL 파라미터 조합
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('limit', '20');
+  if (query) params.set('q', query);
+  if (filters.regionCode) params.set('regionCode', filters.regionCode);
+  else if (filters.sido) params.set('sido', filters.sido);
+  if (filters.minPrice) params.set('minPrice', filters.minPrice);
+  if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+  if (filters.minArea) params.set('minArea', filters.minArea);
+  if (filters.maxArea) params.set('maxArea', filters.maxArea);
+  if (filters.minYear) params.set('minYear', filters.minYear);
+  if (filters.sort) params.set('sort', filters.sort);
+
   const { data, isLoading } = useSWR<{
     data: ApartmentItem[];
     meta: { total: number; page: number; totalPages: number };
-  }>(`/api/market/apartments?page=${page}&limit=20${searchParam}`, fetcher);
+  }>(`/api/market/apartments?${params.toString()}`, fetcher);
+
+  const handleFilterChange = (newFilters: FilterValues) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">아파트</h1>
-        <p className="text-muted-foreground">실거래가가 수집된 아파트 단지 목록입니다.</p>
+        <p className="text-muted-foreground">조건에 맞는 아파트 단지를 검색하세요.</p>
       </div>
 
       {/* 검색 */}
@@ -58,6 +88,16 @@ export default function ApartmentsPage() {
         />
       </div>
 
+      {/* 필터 */}
+      <ApartmentFilters filters={filters} onChange={handleFilterChange} />
+
+      {/* 결과 카운트 */}
+      {data?.meta && (
+        <p className="text-xs text-muted-foreground">
+          총 <span className="font-semibold text-foreground">{data.meta.total.toLocaleString()}</span>개 단지
+        </p>
+      )}
+
       {/* 리스트 */}
       {isLoading ? (
         <div className="space-y-3">
@@ -70,7 +110,9 @@ export default function ApartmentsPage() {
           <CardContent className="flex flex-col items-center gap-2 py-8">
             <Building2 className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              {query ? `"${query}" 검색 결과가 없습니다.` : '수집된 단지 데이터가 없습니다.'}
+              {query || Object.values(filters).some(Boolean)
+                ? '조건에 맞는 단지가 없습니다.'
+                : '수집된 단지 데이터가 없습니다.'}
             </p>
           </CardContent>
         </Card>
@@ -100,7 +142,7 @@ export default function ApartmentsPage() {
                     {apt.latestTrade && (
                       <div className="text-right shrink-0">
                         <p className="font-semibold text-primary">
-                          {(apt.latestTrade.price / 10000).toFixed(1)}억
+                          {formatPrice(apt.latestTrade.price)}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층
@@ -114,7 +156,6 @@ export default function ApartmentsPage() {
             ))}
           </div>
 
-          {/* 페이지네이션 */}
           {data.meta.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <Button
