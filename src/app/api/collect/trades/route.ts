@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchApartmentTrades, buildRoadAddress, buildJibunAddress } from '@/lib/public-data';
 import { geocodeComplex } from '@/lib/geocode';
+import { validateCronAuth, unauthorizedResponse } from '@/lib/auth';
+import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -18,10 +20,8 @@ export const maxDuration = 300;
  */
 export async function POST(request: NextRequest) {
   // 인증 확인
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = (process.env.CRON_SECRET || '').replace(/^"|"$/g, '');
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!validateCronAuth(request.headers.get('authorization'))) {
+    return unauthorizedResponse();
   }
 
   const { searchParams } = request.nextUrl;
@@ -125,8 +125,7 @@ export async function POST(request: NextRequest) {
         );
 
         // 평당가 계산 (전용면적 ㎡ → 평)
-        const pyeong = trade.area / 3.3058;
-        const pricePerPyeong = Math.round(trade.price / pyeong);
+        const ppp = pricePerPyeong(trade.price, trade.area);
 
         await prisma.apartmentTrade.upsert({
           where: {
@@ -142,7 +141,7 @@ export async function POST(request: NextRequest) {
             dealType: trade.dealType,
             canceledAt: trade.canceledAt,
             registeredAt: trade.registeredAt,
-            pricePerPyeong,
+            pricePerPyeong: ppp,
           },
           create: {
             complexId: complex.id,
@@ -153,7 +152,7 @@ export async function POST(request: NextRequest) {
             area: trade.area,
             floor: trade.floor,
             price: trade.price,
-            pricePerPyeong,
+            pricePerPyeong: ppp,
             dealType: trade.dealType,
             canceledAt: trade.canceledAt,
             registeredAt: trade.registeredAt,

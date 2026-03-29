@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,8 +34,7 @@ export async function GET(
   for (const trade of complex.trades) {
     const areaKey = Math.round(trade.area);
     const existing = areaGroups.get(areaKey);
-    const pyeong = trade.area / 3.3058;
-    const ppp = Math.round(trade.price / pyeong);
+    const ppp = pricePerPyeong(trade.price, trade.area);
 
     if (existing) {
       existing.count++;

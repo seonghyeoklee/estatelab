@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { pricePerPyeong } from '@/lib/calculations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { PriceChart } from './_components/price-chart';
@@ -33,8 +34,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
   const areaMap = new Map<number, { count: number; totalPrice: number; totalPPP: number }>();
   for (const trade of complex.trades) {
     const areaKey = Math.round(trade.area);
-    const pyeong = trade.area / 3.3058;
-    const ppp = Math.round(trade.price / pyeong);
+    const ppp = pricePerPyeong(trade.price, trade.area);
     const existing = areaMap.get(areaKey);
     if (existing) {
       existing.count++;

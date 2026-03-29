@@ -33,8 +33,8 @@ export async function fetchApartmentTrades(
   lawdCd: string,
   dealYmd: string
 ): Promise<RawTrade[]> {
-  const apiKey = (process.env.PUBLIC_DATA_API_KEY || '').replace(/^"|"$/g, '');
-  if (!apiKey) throw new Error('PUBLIC_DATA_API_KEY 환경변수가 설정되지 않았습니다.');
+  const { envRequired } = await import('@/lib/env');
+  const apiKey = envRequired('PUBLIC_DATA_API_KEY');
 
   const url = new URL(`${API_BASE}/getRTMSDataSvcAptTradeDev`);
   url.searchParams.set('serviceKey', apiKey);

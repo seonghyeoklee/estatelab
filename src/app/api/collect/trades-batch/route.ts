@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchApartmentTrades, buildRoadAddress, buildJibunAddress } from '@/lib/public-data';
 import { geocodeComplex } from '@/lib/geocode';
+import { validateCronAuth, unauthorizedResponse } from '@/lib/auth';
+import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -12,10 +14,8 @@ export const maxDuration = 300;
  * Vercel Cron에서 호출 — offset/limit으로 분할 실행
  */
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = (process.env.CRON_SECRET || '').replace(/^"|"$/g, '');
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!validateCronAuth(request.headers.get('authorization'))) {
+    return unauthorizedResponse();
   }
 
   const sp = request.nextUrl.searchParams;
@@ -106,8 +106,7 @@ export async function POST(request: NextRequest) {
             }
 
             const dealDate = new Date(trade.dealYear, trade.dealMonth - 1, trade.dealDay);
-            const pyeong = trade.area / 3.3058;
-            const pricePerPyeong = Math.round(trade.price / pyeong);
+            const ppp = pricePerPyeong(trade.price, trade.area);
 
             await prisma.apartmentTrade.upsert({
               where: {
@@ -119,7 +118,7 @@ export async function POST(request: NextRequest) {
                   price: trade.price,
                 },
               },
-              update: { dealType: trade.dealType, pricePerPyeong },
+              update: { dealType: trade.dealType, pricePerPyeong: ppp },
               create: {
                 complexId: complex.id,
                 dealYear: trade.dealYear,
@@ -129,7 +128,7 @@ export async function POST(request: NextRequest) {
                 area: trade.area,
                 floor: trade.floor,
                 price: trade.price,
-                pricePerPyeong,
+                pricePerPyeong: ppp,
                 dealType: trade.dealType,
                 canceledAt: trade.canceledAt,
                 registeredAt: trade.registeredAt,
