@@ -7,25 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
+import type { MapComplex, Region } from '@/types/trade';
 import { ComplexDetailPanel } from './complex-detail-panel';
-
-interface Complex {
-  id: string;
-  name: string;
-  dong: string;
-  regionCode: string;
-  lat: number | null;
-  lng: number | null;
-  _count: { trades: number };
-  avgPrice: number;
-  avgPricePerPyeong: number;
-}
-
-interface Region {
-  code: string;
-  sido: string;
-  sigungu: string;
-}
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -59,7 +42,7 @@ export function TradeMap() {
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const initialFitDoneRef = useRef(false);
   const listenersAttachedRef = useRef(false);
-  const [selectedComplex, setSelectedComplex] = useState<Complex | null>(null);
+  const [selectedComplex, setSelectedComplex] = useState<MapComplex | null>(null);
   const [showList, setShowList] = useState(false);
   const [selectedSido, setSelectedSido] = useState('서울특별시');
   const [zoomLevel, setZoomLevel] = useState(8);
@@ -78,7 +61,7 @@ export function TradeMap() {
   }, [selectedComplex]);
 
   const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
-  const { data: complexData } = useSWR<{ data: Complex[] }>('/api/market/map/complexes', fetcher);
+  const { data: complexData } = useSWR<{ data: MapComplex[] }>('/api/market/map/complexes', fetcher);
 
   const complexes = complexData?.data ?? [];
   const withCoords = complexes.filter((c) => c.lat && c.lng);
