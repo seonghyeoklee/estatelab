@@ -6,6 +6,7 @@ import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/format';
 import { ComplexDetailPanel } from './complex-detail-panel';
 
 interface Complex {
@@ -27,12 +28,6 @@ interface Region {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-function formatPrice(price: number): string {
-  if (price >= 100000) return (price / 10000).toFixed(0) + '억';
-  if (price >= 10000) return (price / 10000).toFixed(1) + '억';
-  return price.toLocaleString() + '만';
-}
 
 // 시도별 중심 좌표
 const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> = {

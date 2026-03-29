@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchRates } from '@/lib/ecos';
+import { validateCronAuth, unauthorizedResponse } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,10 +10,8 @@ export const dynamic = 'force-dynamic';
  * ECOS 금리 데이터를 수집합니다.
  */
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = (process.env.CRON_SECRET || '').replace(/^"|"$/g, '');
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!validateCronAuth(request.headers.get('authorization'))) {
+    return unauthorizedResponse();
   }
 
   const months = parseInt(request.nextUrl.searchParams.get('months') || '24', 10);

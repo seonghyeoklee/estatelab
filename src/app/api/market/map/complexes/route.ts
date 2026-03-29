@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,7 @@ export async function GET() {
       : 0;
     const avgPricePerPyeong = c.trades.length
       ? Math.round(
-          c.trades.reduce((s, t) => s + t.price / (t.area / 3.3058), 0) / c.trades.length
+          c.trades.reduce((s, t) => s + pricePerPyeong(t.price, t.area), 0) / c.trades.length
         )
       : 0;
 

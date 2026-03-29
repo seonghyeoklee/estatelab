@@ -5,6 +5,8 @@ import useSWR from 'swr';
 import { X, Building2, MapPin, Calendar, TrendingUp, BarChart3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/format';
+import { toPyeong } from '@/lib/calculations';
 
 interface Trade {
   id: string;
@@ -36,11 +38,6 @@ interface ComplexDetail {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-function formatPrice(price: number): string {
-  if (price >= 10000) return (price / 10000).toFixed(1) + '억';
-  return price.toLocaleString() + '만';
-}
 
 interface Props {
   complexId: string;
@@ -199,7 +196,7 @@ export function ComplexDetailPanel({ complexId, onClose }: Props) {
                   {areaGroups.map((group) => {
                     const maxAreaPrice = Math.max(...areaGroups.map((g) => g.avgPrice));
                     const widthPct = (group.avgPrice / maxAreaPrice) * 100;
-                    const pyeong = Math.round(group.area / 3.3058);
+                    const pyeong = Math.round(toPyeong(group.area));
                     return (
                       <div key={group.area} className="space-y-0.5">
                         <div className="flex items-center justify-between text-[11px]">

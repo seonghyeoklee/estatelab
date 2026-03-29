@@ -59,8 +59,8 @@ async function fetchEcosStat(
   startDate: string,
   endDate: string
 ): Promise<EcosRow[]> {
-  const apiKey = (process.env.ECOS_API_KEY || '').replace(/^"|"$/g, '');
-  if (!apiKey) throw new Error('ECOS_API_KEY 환경변수가 설정되지 않았습니다.');
+  const { envRequired } = await import('@/lib/env');
+  const apiKey = envRequired('ECOS_API_KEY');
 
   const url = `${ECOS_BASE}/${apiKey}/json/kr/1/100/${statCode}/${cycle}/${startDate}/${endDate}/${itemCode}`;
 

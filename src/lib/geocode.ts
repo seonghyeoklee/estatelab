@@ -4,7 +4,9 @@
  * - 실패해도 수집은 중단하지 않음 (좌표만 null)
  */
 
-const KAKAO_REST_KEY = () => (process.env.KAKAO_REST_API_KEY || '').replace(/^"|"$/g, '');
+import { env } from '@/lib/env';
+
+const KAKAO_REST_KEY = () => env('KAKAO_REST_API_KEY');
 
 interface GeoResult {
   lat: number;

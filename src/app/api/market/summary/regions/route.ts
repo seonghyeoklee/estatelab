@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,9 +49,8 @@ export async function GET() {
     const entry = regionMap.get(key)!;
 
     for (const trade of complex.trades) {
-      const pyeong = trade.area / 3.3058;
-      const pricePerPyeong = Math.round(trade.price / pyeong);
-      entry.trades.push({ price: trade.price, area: trade.area, pricePerPyeong });
+      const ppp = pricePerPyeong(trade.price, trade.area);
+      entry.trades.push({ price: trade.price, area: trade.area, pricePerPyeong: ppp });
 
       if (
         !entry.latestTrade ||

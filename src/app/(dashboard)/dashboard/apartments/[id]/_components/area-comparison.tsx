@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toPyeong } from '@/lib/calculations';
 
 interface AreaGroup {
   area: number;
@@ -27,7 +28,7 @@ export function AreaComparison({ areaGroups }: AreaComparisonProps) {
         <div className="space-y-3">
           {areaGroups.map((group) => {
             const widthPct = (group.avgPrice / maxPrice) * 100;
-            const pyeong = Math.round(group.area / 3.3058);
+            const pyeong = Math.round(toPyeong(group.area));
 
             return (
               <div key={group.area} className="space-y-1">
