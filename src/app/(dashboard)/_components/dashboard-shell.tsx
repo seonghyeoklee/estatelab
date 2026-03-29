@@ -1,18 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/sidebar';
 import { Header } from '@/components/header';
 import { MobileSidebar } from '@/components/mobile-sidebar';
+import { CommandPalette } from '@/components/command-palette';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden md:flex shrink-0">
-        <Sidebar />
+        <Sidebar onCommandOpen={() => setCmdOpen(true)} />
       </div>
 
       {/* Mobile sidebar */}
@@ -25,6 +38,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
     </div>
   );
 }
