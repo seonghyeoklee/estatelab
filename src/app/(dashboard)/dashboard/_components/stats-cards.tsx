@@ -3,10 +3,14 @@ import { Building2, TrendingUp, Landmark, MapPin } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 
 export async function StatsCards() {
-  const [regionCount, complexCount, tradeCount] = await Promise.all([
+  const [regionCount, complexCount, tradeCount, baseRate] = await Promise.all([
     prisma.region.count(),
     prisma.apartmentComplex.count(),
     prisma.apartmentTrade.count(),
+    prisma.interestRate.findFirst({
+      where: { name: 'BASE_RATE' },
+      orderBy: { date: 'desc' },
+    }),
   ]);
 
   const stats = [
@@ -30,8 +34,10 @@ export async function StatsCards() {
     },
     {
       label: '기준금리',
-      value: '—',
-      unit: 'ECOS 연동 예정',
+      value: baseRate ? `${baseRate.rate.toFixed(2)}%` : '—',
+      unit: baseRate
+        ? `${baseRate.change > 0 ? '+' : ''}${baseRate.change}bp · ${baseRate.date.toISOString().slice(0, 7)}`
+        : 'ECOS 연동 예정',
       icon: Landmark,
     },
   ];
