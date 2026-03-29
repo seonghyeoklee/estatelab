@@ -7,6 +7,8 @@ import { Building2, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { PriceChart } from './_components/price-chart';
 import { TradeTable } from './_components/trade-table';
 import { AreaComparison } from './_components/area-comparison';
+import { WatchlistButton } from '@/components/watchlist-button';
+import { HistoryTracker } from './_components/history-tracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +65,9 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {/* 히스토리 자동 기록 */}
+      <HistoryTracker complexId={id} />
+
       {/* Back + Header */}
       <div>
         <Link
@@ -76,8 +81,11 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
             <Building2 className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{complex.name}</h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">{complex.name}</h1>
+              <WatchlistButton complexId={id} />
+            </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />

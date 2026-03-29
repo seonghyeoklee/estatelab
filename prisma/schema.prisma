@@ -18,6 +18,8 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   watchlist     UserWatchlist[]
+  history       UserHistory[]
+  settings      UserSettings?
 
   @@map("users")
 }
@@ -34,6 +36,31 @@ model UserWatchlist {
   @@unique([userId, complexId])
   @@index([userId])
   @@map("user_watchlist")
+}
+
+model UserHistory {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  complexId   String   @map("complex_id")
+  viewedAt    DateTime @default(now()) @map("viewed_at")
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  complex ApartmentComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, complexId])
+  @@index([userId, viewedAt])
+  @@map("user_history")
+}
+
+model UserSettings {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  regionCodes String[] @default([]) @map("region_codes")  // 맞춤 지역 코드
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
 }
 
 // ─── 법정동코드 ──────────────────────────────────────────────
@@ -72,6 +99,7 @@ model ApartmentComplex {
   region        Region @relation(fields: [regionCode], references: [code])
   trades        ApartmentTrade[]
   watchedBy     UserWatchlist[]
+  viewedBy      UserHistory[]
 
   @@unique([regionCode, name, dong, jibun])
   @@index([regionCode])
