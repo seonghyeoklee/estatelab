@@ -1,3 +1,37 @@
 {
-  "regions": ["icn1"]
+  "regions": ["icn1"],
+  "crons": [
+    {
+      "path": "/api/collect/trades-batch?offset=0&limit=25",
+      "schedule": "0 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=25&limit=25",
+      "schedule": "5 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=50&limit=25",
+      "schedule": "10 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=75&limit=25",
+      "schedule": "15 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=100&limit=25",
+      "schedule": "20 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=125&limit=25",
+      "schedule": "25 0 16 * *"
+    },
+    {
+      "path": "/api/collect/trades-batch?offset=150&limit=25",
+      "schedule": "30 0 16 * *"
+    },
+    {
+      "path": "/api/collect/rates?months=3",
+      "schedule": "0 1 * * 1"
+    }
+  ]
 }
