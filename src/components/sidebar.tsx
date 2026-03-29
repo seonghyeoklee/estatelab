@@ -38,7 +38,7 @@ const NAV_GROUPS = [
   },
 ];
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void; onCommandOpen?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -61,6 +61,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Search trigger */}
       <div className="px-4 pb-2">
         <button
+          onClick={onCommandOpen}
           className="w-full flex items-center gap-2 rounded-xl h-8 px-2.5 bg-primary/[0.04] border border-primary/20 hover:border-primary/40 hover:bg-primary/[0.07] transition-all text-xs text-foreground/50 hover:text-foreground/80"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
