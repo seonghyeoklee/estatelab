@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchApartmentTrades, buildRoadAddress, buildJibunAddress } from '@/lib/public-data';
+import { geocodeComplex } from '@/lib/geocode';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -48,14 +49,17 @@ export async function POST(request: NextRequest) {
     let created = 0;
     let skipped = 0;
 
+    // 지역 정보 조회 (지오코딩에 필요)
+    const region = await prisma.region.findUnique({ where: { code: lawdCd } });
+
     for (const trade of rawTrades) {
       try {
-        // 단지 upsert
         const dong = trade.dong || '';
         const jibun = trade.jibun || buildJibunAddress(trade.bonbun, trade.bubun) || '';
         const roadAddress = buildRoadAddress(trade.roadName, trade.roadBonbun, trade.roadBubun);
 
-        const complex = await prisma.apartmentComplex.upsert({
+        // 기존 단지 확인
+        let complex = await prisma.apartmentComplex.findUnique({
           where: {
             regionCode_name_dong_jibun: {
               regionCode: lawdCd,
@@ -64,19 +68,54 @@ export async function POST(request: NextRequest) {
               jibun,
             },
           },
-          update: {
-            builtYear: trade.buildYear || undefined,
-            roadAddress: roadAddress || undefined,
-          },
-          create: {
-            regionCode: lawdCd,
-            name: trade.aptName,
-            dong,
-            jibun,
-            builtYear: trade.buildYear || null,
-            roadAddress,
-          },
         });
+
+        if (complex) {
+          // 기존 단지 — 정보 업데이트만 (지오코딩 스킵)
+          complex = await prisma.apartmentComplex.update({
+            where: { id: complex.id },
+            data: {
+              builtYear: trade.buildYear || undefined,
+              roadAddress: roadAddress || undefined,
+            },
+          });
+        } else {
+          // 새 단지 — 지오코딩 시도 (실패해도 단지는 생성)
+          let lat: number | null = null;
+          let lng: number | null = null;
+
+          if (region) {
+            try {
+              const coords = await geocodeComplex({
+                name: trade.aptName,
+                dong,
+                jibun,
+                sido: region.sido,
+                sigungu: region.sigungu,
+                roadAddress,
+              });
+              if (coords) {
+                lat = coords.lat;
+                lng = coords.lng;
+              }
+            } catch {
+              // 지오코딩 실패 — 무시, 좌표 없이 생성
+            }
+          }
+
+          complex = await prisma.apartmentComplex.create({
+            data: {
+              regionCode: lawdCd,
+              name: trade.aptName,
+              dong,
+              jibun,
+              builtYear: trade.buildYear || null,
+              roadAddress,
+              lat,
+              lng,
+            },
+          });
+        }
 
         // 거래 데이터 upsert
         const dealDate = new Date(
