@@ -609,13 +609,19 @@ export function TradeMap() {
         content.style.outline = '3px solid white';
         content.style.border = `2px solid ${color.border}`;
         selectedOverlayRef.current = content;
-        // 선택한 단지를 지도 중앙으로 (패널 폭 감안해 오른쪽으로 오프셋)
+        // 선택한 단지를 보이는 영역 중앙으로 이동
         if (mapInstanceRef.current) {
           const map = mapInstanceRef.current;
+          const isMobile = window.innerWidth < 768;
           const proj = map.getProjection();
           const point = proj.pointFromCoords(position);
-          // 패널 폭(420px)의 절반만큼 왼쪽으로 이동 → 실제 보이는 영역 중앙에 위치
-          point.x -= 210;
+          if (isMobile) {
+            // 모바일: 하단 시트(60vh)가 가리니까 위쪽으로 오프셋
+            point.y += window.innerHeight * 0.2;
+          } else {
+            // 데스크톱: 좌측 패널(420px) 감안해 오른쪽으로 오프셋
+            point.x -= 210;
+          }
           const adjusted = proj.coordsFromPoint(point);
           map.panTo(adjusted);
         }
