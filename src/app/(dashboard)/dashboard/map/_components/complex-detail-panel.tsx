@@ -209,6 +209,19 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
     fetcher
   );
 
+  interface CompareItem {
+    id: string; name: string; dong: string; builtYear: number | null;
+    avgPrice: number; avgPpp: number; diff: number; tradeCount: number;
+  }
+  interface CompareData {
+    mainArea: number; myAvgPrice: number; myAvgPpp: number;
+    complexName: string; comparisons: CompareItem[];
+  }
+  const { data: compareData } = useSWR<{ data: CompareData }>(
+    complexId ? `/api/market/apartments/${complexId}/compare` : null,
+    fetcher
+  );
+
   // ESC 키로 닫기
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -452,6 +465,63 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   </div>
                 )}
 
+                {/* 층별 가격 분석 */}
+                {filteredTrades.length >= 5 && (() => {
+                  const floorGroups = [
+                    { label: '저층 (1~3층)', filter: (t: Trade) => t.floor >= 1 && t.floor <= 3, color: '#93c5fd' },
+                    { label: '중층 (4~10층)', filter: (t: Trade) => t.floor >= 4 && t.floor <= 10, color: '#2563eb' },
+                    { label: '고층 (11층+)', filter: (t: Trade) => t.floor >= 11, color: '#7c3aed' },
+                  ];
+                  const results = floorGroups.map((g) => {
+                    const items = filteredTrades.filter(g.filter);
+                    const avg = items.length > 0 ? Math.round(items.reduce((s, t) => s + t.price, 0) / items.length) : 0;
+                    return { ...g, avg, count: items.length };
+                  }).filter((r) => r.count > 0);
+                  if (results.length < 2) return null;
+                  const maxAvg = Math.max(...results.map((r) => r.avg));
+                  const premium = results.length >= 2
+                    ? Math.round(((results[results.length - 1].avg - results[0].avg) / results[0].avg) * 100)
+                    : 0;
+
+                  return (
+                    <div className="px-5 py-4 border-b">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[14px] font-semibold">층별 가격 분석</h3>
+                        {premium !== 0 && (
+                          <span className={cn(
+                            'text-[12px] font-semibold',
+                            premium > 0 ? 'text-red-500' : 'text-blue-500'
+                          )}>
+                            고층 프리미엄 {premium > 0 ? '+' : ''}{premium}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        {results.map((r) => {
+                          const widthPct = (r.avg / maxAvg) * 100;
+                          return (
+                            <div key={r.label} className="space-y-1">
+                              <div className="flex items-center justify-between text-[13px]">
+                                <span className="font-medium">{r.label}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold">{formatPrice(r.avg)}</span>
+                                  <span className="text-[11px] text-muted-foreground">{r.count}건</span>
+                                </div>
+                              </div>
+                              <div className="h-2 rounded-full bg-muted">
+                                <div
+                                  className="h-2 rounded-full transition-all"
+                                  style={{ width: `${widthPct}%`, backgroundColor: r.color }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* 최근 거래 미리보기 */}
                 <div className="px-5 py-4">
                   <div className="flex items-center justify-between mb-3">
@@ -489,6 +559,55 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                     ))}
                   </div>
                 </div>
+
+                {/* 주변 단지 비교 */}
+                {compareData?.data?.comparisons && compareData.data.comparisons.length > 0 && (
+                  <div className="px-5 py-4 border-t">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[14px] font-semibold">주변 단지 비교</h3>
+                      <span className="text-[12px] text-muted-foreground">
+                        {compareData.data.mainArea}㎡ 기준
+                      </span>
+                    </div>
+
+                    {/* 내 단지 (기준) */}
+                    <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3 mb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold">{compareData.data.complexName}</p>
+                          <p className="text-[11px] text-muted-foreground">기준 단지</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[16px] font-bold text-primary">{formatPrice(compareData.data.myAvgPrice)}</p>
+                          <p className="text-[11px] text-muted-foreground">{compareData.data.myAvgPpp.toLocaleString()}만/평</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 비교 단지 */}
+                    <div className="space-y-1">
+                      {compareData.data.comparisons.slice(0, 5).map((c) => (
+                        <div key={c.id} className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-accent/50 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-medium truncate">{c.name}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {c.dong}{c.builtYear ? ` · ${c.builtYear}년` : ''} · {c.tradeCount}건
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <p className="text-[14px] font-bold">{formatPrice(c.avgPrice)}</p>
+                            <p className={cn(
+                              'text-[11px] font-semibold',
+                              c.diff > 0 ? 'text-red-500' : c.diff < 0 ? 'text-blue-500' : 'text-muted-foreground'
+                            )}>
+                              {c.diff > 0 ? '+' : ''}{c.diff}%
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
