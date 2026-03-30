@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import { toPyeong } from '@/lib/calculations';
+import { PriceChart } from './price-chart';
 
 interface Trade {
   id: string;
@@ -239,28 +240,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
   const priceChange = useMemo(() => calcPriceChange(filteredTrades), [filteredTrades]);
 
   // 월별 차트 데이터
-  const monthly = useMemo(() => {
-    const monthlyMap = new Map<string, { total: number; count: number }>();
-    for (const t of filteredTrades) {
-      const key = t.dealDate.slice(0, 7);
-      const existing = monthlyMap.get(key);
-      if (existing) {
-        existing.total += t.price;
-        existing.count++;
-      } else {
-        monthlyMap.set(key, { total: t.price, count: 1 });
-      }
-    }
-    return Array.from(monthlyMap.entries())
-      .map(([month, { total, count }]) => ({ month, avgPrice: Math.round(total / count) }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-  }, [filteredTrades]);
-
-  // 차트는 최근 12개월만 표시
-  const chartMonthly = monthly.slice(-12);
-  const chartMax = chartMonthly.length ? Math.max(...chartMonthly.map((m) => m.avgPrice)) : 1;
-  const chartMin = chartMonthly.length ? Math.min(...chartMonthly.map((m) => m.avgPrice)) : 0;
-  const chartRange = chartMax - chartMin || 1;
+  // 가격 변동률은 calcPriceChange에서 trades로 직접 계산
 
   // 주변시설 데이터
   const nearbySummary = nearbyData?.data?.summary ?? [];
@@ -417,49 +397,9 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                 )}
 
                 {/* 가격 추이 차트 */}
-                {chartMonthly.length > 0 && (
+                {filteredTrades.length > 0 && (
                   <div className="px-5 py-4 border-b">
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="text-[14px] font-semibold">매매가 추이</h3>
-                      {areaFilter && (
-                        <Badge variant="outline" className="text-[11px] px-2 py-0.5">
-                          {areaFilter}㎡
-                        </Badge>
-                      )}
-                      {monthly.length > 12 && (
-                        <span className="text-[10px] text-muted-foreground ml-auto">최근 12개월</span>
-                      )}
-                    </div>
-                    <div className="flex items-end gap-1 h-28">
-                      {chartMonthly.map((m, idx) => {
-                        const height = ((m.avgPrice - chartMin) / chartRange) * 80 + 20;
-                        const isLast = idx === chartMonthly.length - 1;
-                        return (
-                          <div key={m.month} className="flex flex-1 flex-col items-center gap-0.5 min-w-0">
-                            <span className={cn(
-                              'text-[9px] tabular-nums',
-                              isLast ? 'text-primary font-semibold' : 'text-muted-foreground'
-                            )}>
-                              {formatPrice(m.avgPrice)}
-                            </span>
-                            <div
-                              className={cn(
-                                'w-full rounded-t-sm transition-all min-h-[4px]',
-                                isLast ? 'bg-primary' : 'bg-primary/30'
-                              )}
-                              style={{ height: `${height}%` }}
-                            />
-                            <span className={cn(
-                              'text-[9px]',
-                              isLast ? 'text-foreground font-medium' : 'text-muted-foreground'
-                            )}>
-                              {m.month.slice(5)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <PriceChart trades={filteredTrades} />
                   </div>
                 )}
 
