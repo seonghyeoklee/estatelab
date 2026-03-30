@@ -14,6 +14,12 @@ declare namespace kakao.maps {
     setMapTypeId(mapTypeId: MapTypeId): void;
     getMapTypeId(): MapTypeId;
     relayout(): void;
+    getProjection(): MapProjection;
+  }
+
+  interface MapProjection {
+    pointFromCoords(latlng: LatLng): Point;
+    coordsFromPoint(point: Point): LatLng;
   }
 
   class LatLng {
@@ -57,6 +63,8 @@ declare namespace kakao.maps {
 
   class Point {
     constructor(x: number, y: number);
+    x: number;
+    y: number;
   }
 
   class CustomOverlay {
@@ -113,6 +121,34 @@ declare namespace kakao.maps {
     constructor();
   }
 
+  class Circle {
+    constructor(options: {
+      map?: Map;
+      center: LatLng;
+      radius: number;
+      strokeWeight?: number;
+      strokeColor?: string;
+      strokeOpacity?: number;
+      strokeStyle?: string;
+      fillColor?: string;
+      fillOpacity?: number;
+    });
+    setMap(map: Map | null): void;
+  }
+
+  class Polyline {
+    constructor(options: {
+      map?: Map;
+      path: LatLng[];
+      strokeWeight?: number;
+      strokeColor?: string;
+      strokeOpacity?: number;
+      strokeStyle?: string;
+      endArrow?: boolean;
+    });
+    setMap(map: Map | null): void;
+  }
+
   class Polygon {
     constructor(options: {
       map?: Map;
@@ -126,6 +162,31 @@ declare namespace kakao.maps {
     });
     setMap(map: Map | null): void;
     setOptions(options: { fillColor?: string; fillOpacity?: number; strokeColor?: string }): void;
+  }
+
+  class Roadview {
+    constructor(container: HTMLElement, options?: { panoId?: number; panoX?: number; panoY?: number; pan?: number; tilt?: number; zoom?: number });
+    setPanoId(panoId: number, position: LatLng): void;
+    setViewpoint(viewpoint: RoadviewViewpoint): void;
+    getPosition(): LatLng;
+    getViewpointWithPanoId(): number;
+  }
+
+  class RoadviewClient {
+    constructor();
+    getNearestPanoId(position: LatLng, radius: number, callback: (panoId: number | null) => void): void;
+  }
+
+  class RoadviewViewpoint {
+    constructor(pan: number, tilt: number, zoom: number);
+    pan: number;
+    tilt: number;
+    zoom: number;
+  }
+
+  class RoadviewOverlay {
+    constructor();
+    setMap(map: Map | null): void;
   }
 
   enum MapTypeId {

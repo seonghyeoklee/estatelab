@@ -22,6 +22,10 @@ export async function GET(
         orderBy: { dealDate: 'desc' },
         take: 200,
       },
+      rents: {
+        orderBy: { dealDate: 'desc' },
+        take: 200,
+      },
     },
   });
 

@@ -1,10 +1,11 @@
 'use client';
 
 import useSWR from 'swr';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/format';
 
 interface RegionSummary {
   regionCode: string;
@@ -22,6 +23,21 @@ interface RegionSummary {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+// 가격대별 그라데이션
+function priceGradient(avgPrice: number): string {
+  if (avgPrice >= 200000) return 'from-violet-500/10 to-violet-500/5';
+  if (avgPrice >= 100000) return 'from-blue-500/10 to-blue-500/5';
+  if (avgPrice >= 50000) return 'from-emerald-500/10 to-emerald-500/5';
+  return 'from-slate-500/10 to-slate-500/5';
+}
+
+function priceAccent(avgPrice: number): string {
+  if (avgPrice >= 200000) return 'text-violet-600';
+  if (avgPrice >= 100000) return 'text-blue-600';
+  if (avgPrice >= 50000) return 'text-emerald-600';
+  return 'text-slate-600';
+}
 
 export function RegionSummaryCards() {
   const { data, isLoading } = useSWR<{ data: RegionSummary[] }>(
@@ -54,47 +70,83 @@ export function RegionSummaryCards() {
           <p className="text-sm text-muted-foreground">
             아직 수집된 거래 데이터가 없습니다.
           </p>
-          <p className="text-xs text-muted-foreground">
-            공공데이터 API 키 등록 후 실거래가를 수집하세요.
-          </p>
         </CardContent>
       </Card>
     );
   }
 
+  // 전체 최대값 (바 차트 비율용)
+  const maxPpp = Math.max(...data.data.map((r) => r.avgPricePerPyeong));
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {data.data.map((region, idx) => (
-        <Card
-          key={region.regionCode}
-          className={cn('hover-lift animate-fade-up', `delay-${idx + 1}`)}
-        >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {region.sigungu}
-            </CardTitle>
-            <Badge variant="secondary" className="text-[10px]">
-              {region.sido.replace(/특별시|광역시|특별자치시|특별자치도|도$/, '')}
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <p className="text-2xl font-bold">
-              {region.avgPricePerPyeong.toLocaleString()}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">만원/평</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              거래 {region.tradeCount.toLocaleString()}건
-              · 평균 {(region.avgPrice / 10000).toFixed(1)}억
-            </p>
-            {region.latestTrade && (
-              <p className="text-xs text-muted-foreground">
-                최근: {region.latestTrade.name} {region.latestTrade.area}㎡{' '}
-                {(region.latestTrade.price / 10000).toFixed(1)}억
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {data.data.map((region) => {
+        const barPct = (region.avgPricePerPyeong / maxPpp) * 100;
+        const accent = priceAccent(region.avgPrice);
+
+        return (
+          <Card
+            key={region.regionCode}
+            className={cn('relative overflow-hidden hover:shadow-md transition-shadow group')}
+          >
+            {/* 배경 그라데이션 */}
+            <div className={cn('absolute inset-0 bg-gradient-to-br opacity-50', priceGradient(region.avgPrice))} />
+
+            <CardContent className="relative p-4 space-y-3">
+              {/* 헤더 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold">{region.sigungu}</h3>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-white/60">
+                    {region.sido.replace(/특별시|광역시|특별자치시|특별자치도|도$/, '')}
+                  </Badge>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {region.tradeCount.toLocaleString()}건
+                </span>
+              </div>
+
+              {/* 가격 정보 */}
+              <div className="space-y-1.5">
+                <div className="flex items-baseline gap-2">
+                  <span className={cn('text-xl font-bold', accent)}>
+                    {formatPrice(region.avgPrice)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">평균</span>
+                </div>
+                {/* 평당가 바 */}
+                <div className="space-y-0.5">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground">평당가</span>
+                    <span className="font-semibold">{region.avgPricePerPyeong.toLocaleString()}만/평</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted/60">
+                    <div
+                      className={cn('h-1.5 rounded-full transition-all', accent.replace('text-', 'bg-').replace('600', '500/60'))}
+                      style={{ width: `${barPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 최근 거래 */}
+              {region.latestTrade && (
+                <div className="flex items-center gap-2 pt-1 border-t border-border/30">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground">최근 거래</p>
+                    <p className="text-[11px] font-medium truncate">
+                      {region.latestTrade.name} {region.latestTrade.area}㎡
+                    </p>
+                  </div>
+                  <span className={cn('text-[12px] font-bold shrink-0', accent)}>
+                    {formatPrice(region.latestTrade.price)}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

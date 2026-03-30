@@ -1,16 +1,57 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown } from 'lucide-react';
+import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
 import { ComplexDetailPanel } from './complex-detail-panel';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+// 주변시설 카테고리 설정
+const NEARBY_CATEGORIES: Record<string, { label: string; color: string; border: string }> = {
+  subway: { label: '지하철', color: '#2563eb', border: '#1d4ed8' },
+  school: { label: '학교', color: '#d97706', border: '#b45309' },
+  convenience: { label: '편의점', color: '#059669', border: '#047857' },
+  mart: { label: '마트', color: '#7c3aed', border: '#6d28d9' },
+  hospital: { label: '병원', color: '#dc2626', border: '#b91c1c' },
+  cafe: { label: '카페', color: '#92400e', border: '#78350f' },
+  bank: { label: '은행', color: '#0369a1', border: '#075985' },
+};
+
+// 주변시설 마커 생성
+function createNearbyMarker(opts: {
+  name: string;
+  distance: number;
+  color: string;
+  border: string;
+}): HTMLDivElement {
+  const { name, distance, color, border } = opts;
+  const distLabel = distance >= 1000 ? `${(distance / 1000).toFixed(1)}km` : `${distance}m`;
+  const el = document.createElement('div');
+  el.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    border: 1.5px solid ${border};
+    pointer-events: none;
+  `;
+  el.innerHTML = `
+    <span style="color:#374151;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis">${name}</span>
+    <span style="color:${color};font-weight:700;font-size:10px">${distLabel}</span>
+  `;
+  return el;
+}
 
 // 시도별 중심 좌표
 const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> = {
@@ -27,10 +68,148 @@ const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> 
 
 // 가격대별 마커 색상
 function getPriceColor(avgPrice: number): { bg: string; text: string; border: string; label: string } {
-  if (avgPrice >= 200000) return { bg: '#7c3aed', text: '#fff', border: '#6d28d9', label: '20억+' };   // 보라 (프리미엄)
-  if (avgPrice >= 100000) return { bg: '#0369a1', text: '#fff', border: '#075985', label: '10억+' };   // 딥블루
-  if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857', label: '5억+' };     // 에메랄드
-  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~5억' };                            // 슬레이트
+  if (avgPrice >= 200000) return { bg: '#7c3aed', text: '#fff', border: '#6d28d9', label: '20억+' };
+  if (avgPrice >= 100000) return { bg: '#0369a1', text: '#fff', border: '#075985', label: '10억+' };
+  if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857', label: '5억+' };
+  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~5억' };
+}
+
+// 지역 그룹 (동/구 단위 집계)
+interface AreaCluster {
+  label: string;
+  complexes: MapComplex[];
+  avgPrice: number;
+  lat: number;
+  lng: number;
+  count: number;
+}
+
+function groupByKey(complexes: MapComplex[], keyFn: (c: MapComplex) => string, labelFn: (c: MapComplex) => string): AreaCluster[] {
+  const map = new Map<string, MapComplex[]>();
+  for (const c of complexes) {
+    if (!c.lat || !c.lng) continue;
+    const key = keyFn(c);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(c);
+  }
+  return Array.from(map.values()).map((items) => {
+    const totalPrice = items.reduce((s, c) => s + c.avgPrice, 0);
+    const avgLat = items.reduce((s, c) => s + c.lat!, 0) / items.length;
+    const avgLng = items.reduce((s, c) => s + c.lng!, 0) / items.length;
+    return {
+      label: labelFn(items[0]),
+      complexes: items,
+      avgPrice: Math.round(totalPrice / items.length),
+      lat: avgLat,
+      lng: avgLng,
+      count: items.length,
+    };
+  });
+}
+
+// 동별 그룹
+function groupByDong(complexes: MapComplex[]): AreaCluster[] {
+  return groupByKey(
+    complexes,
+    (c) => `${c.regionCode}:${c.dong}`,
+    (c) => c.dong
+  );
+}
+
+// 구(시군구)별 그룹 — 줌 아웃 시 사용
+function groupByGu(complexes: MapComplex[], regions: Region[]): AreaCluster[] {
+  const regionMap = new Map(regions.map((r) => [r.code, r]));
+  return groupByKey(
+    complexes,
+    (c) => c.regionCode,
+    (c) => {
+      const r = regionMap.get(c.regionCode);
+      return r ? r.sigungu.replace(/시$|군$/, '') : c.regionCode;
+    }
+  );
+}
+
+// 가격 라벨 엘리먼트 생성 (호갱노노 스타일 — 둥근 사각형)
+function createPriceLabel(opts: {
+  title: string;
+  price: string;
+  subtitle?: string;
+  color: ReturnType<typeof getPriceColor>;
+  size: 'sm' | 'md' | 'lg';
+  onClick?: () => void;
+}): HTMLDivElement {
+  const { title, price, subtitle, color, size, onClick } = opts;
+
+  const pad = size === 'lg' ? '6px 14px' : size === 'md' ? '4px 10px' : '3px 8px';
+  const titleSize = size === 'lg' ? '11px' : size === 'md' ? '10px' : '9px';
+  const priceSize = size === 'lg' ? '13px' : size === 'md' ? '12px' : '10px';
+  const radius = size === 'lg' ? '12px' : '10px';
+  const maxTitleWidth = size === 'lg' ? '110px' : '80px';
+
+  const el = document.createElement('div');
+  el.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: ${color.bg};
+    color: ${color.text};
+    padding: ${pad};
+    border-radius: ${radius};
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    border: 1.5px solid ${color.border};
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  `;
+
+  // 텍스트 컨텐츠
+  const titleSpan = document.createElement('span');
+  titleSpan.style.cssText = `font-size:${titleSize};opacity:0.9;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
+  titleSpan.textContent = title;
+  el.appendChild(titleSpan);
+
+  const priceSpan = document.createElement('span');
+  priceSpan.style.cssText = `font-size:${priceSize};font-weight:800;line-height:1.2`;
+  priceSpan.textContent = price;
+  el.appendChild(priceSpan);
+
+  if (subtitle) {
+    const subSpan = document.createElement('span');
+    subSpan.style.cssText = 'font-size:9px;opacity:0.75;line-height:1';
+    subSpan.textContent = subtitle;
+    el.appendChild(subSpan);
+  }
+
+  // 하단 꼬리 (말풍선)
+  const tail = document.createElement('div');
+  tail.style.cssText = `position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid ${color.border};`;
+  el.appendChild(tail);
+
+  const tailInner = document.createElement('div');
+  tailInner.style.cssText = `position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid ${color.bg};`;
+  el.appendChild(tailInner);
+
+  // 이벤트 — 모두 appendChild 이후에 등록
+  el.onmouseenter = () => {
+    el.style.transform = 'scale(1.08) translateY(-2px)';
+    el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+    el.style.zIndex = '10';
+  };
+  el.onmouseleave = () => {
+    if (!el.classList.contains('marker-selected')) {
+      el.style.transform = 'scale(1)';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+      el.style.zIndex = '';
+    }
+  };
+
+  if (onClick) {
+    el.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); onClick(); });
+  }
+
+  return el;
 }
 
 export function TradeMap() {
@@ -38,11 +217,29 @@ export function TradeMap() {
   const kakaoError = useKakaoError();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
-  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
-  const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
+  // 단지별 오버레이 (줌 ≤ 5)
+  const complexOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  // 동별 집계 오버레이 (줌 6~7)
+  const dongOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  // 구별 집계 오버레이 (줌 ≥ 8)
+  const guOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const initialFitDoneRef = useRef(false);
   const listenersAttachedRef = useRef(false);
+  // 주변시설 오버레이 + 반경 원
+  const nearbyOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const radiusCircleRef = useRef<kakao.maps.Circle | null>(null);
+  // 학군 시각화
+  const schoolOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const schoolCirclesRef = useRef<kakao.maps.Circle[]>([]);
+  const schoolLinesRef = useRef<kakao.maps.Polyline[]>([]);
+  const [activeDetailTab, setActiveDetailTab] = useState<string>('overview');
+  // 로드뷰
+  const roadviewRef = useRef<HTMLDivElement>(null);
+  const roadviewInstanceRef = useRef<kakao.maps.Roadview | null>(null);
+  const [showRoadview, setShowRoadview] = useState(false);
+  const [roadviewAvailable, setRoadviewAvailable] = useState(false);
   const [selectedComplex, setSelectedComplex] = useState<MapComplex | null>(null);
+  const [showNearby, setShowNearby] = useState(false);
   const [showList, setShowList] = useState(false);
   const [selectedSido, setSelectedSido] = useState('서울특별시');
   const [zoomLevel, setZoomLevel] = useState(8);
@@ -58,15 +255,289 @@ export function TradeMap() {
     if (mapInstanceRef.current) {
       setTimeout(() => mapInstanceRef.current?.relayout(), 100);
     }
-  }, [selectedComplex]);
+  }, [selectedComplex, showRoadview]);
+
+  // 로드뷰: 선택 단지 변경 시 panoId 확인
+  const prevComplexIdRef = useRef<string | null>(null);
+  if (selectedComplex?.id !== prevComplexIdRef.current) {
+    prevComplexIdRef.current = selectedComplex?.id ?? null;
+    // 단지 변경 시 로드뷰 리셋 (렌더 중 setState 허용 — 조건부)
+    if (showRoadview) setShowRoadview(false);
+    if (roadviewAvailable) setRoadviewAvailable(false);
+  }
+  useEffect(() => {
+    if (!selectedComplex?.lat || !selectedComplex?.lng || !kakaoLoaded) return;
+    const client = new kakao.maps.RoadviewClient();
+    const pos = new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng);
+    client.getNearestPanoId(pos, 150, (panoId) => {
+      setRoadviewAvailable(panoId !== null && panoId > 0);
+    });
+  }, [selectedComplex, kakaoLoaded]);
+
+  // 로드뷰: 열기/닫기
+  useEffect(() => {
+    if (!showRoadview || !roadviewRef.current || !selectedComplex?.lat || !selectedComplex?.lng) {
+      roadviewInstanceRef.current = null;
+      return;
+    }
+
+    const pos = new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng);
+    const rv = new kakao.maps.Roadview(roadviewRef.current);
+    roadviewInstanceRef.current = rv;
+
+    const client = new kakao.maps.RoadviewClient();
+    client.getNearestPanoId(pos, 150, (panoId) => {
+      if (panoId) {
+        rv.setPanoId(panoId, pos);
+      } else {
+        setShowRoadview(false);
+        setRoadviewAvailable(false);
+      }
+    });
+  }, [showRoadview, selectedComplex]);
 
   const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
   const { data: complexData } = useSWR<{ data: MapComplex[] }>('/api/market/map/complexes', fetcher);
 
-  const complexes = complexData?.data ?? [];
-  const withCoords = complexes.filter((c) => c.lat && c.lng);
+  // 선택된 단지 주변시설 데이터
+  interface NearbyPlace { id: string; name: string; category: string; distance: number; lat: number; lng: number; }
+  interface NearbySummary { key: string; label: string; count: number; nearest: NearbyPlace | null; }
+  const { data: nearbyData } = useSWR<{ data: { summary: NearbySummary[]; places: Record<string, NearbyPlace[]> } }>(
+    selectedComplex ? `/api/market/apartments/${selectedComplex.id}/nearby?radius=1000` : null,
+    fetcher
+  );
+
+  const complexes = useMemo(() => complexData?.data ?? [], [complexData?.data]);
+  const withCoords = useMemo(() => complexes.filter((c) => c.lat && c.lng), [complexes]);
 
   const sidoList = regionData?.data ? [...new Set(regionData.data.map((r) => r.sido))] : [];
+
+  const regions = useMemo(() => regionData?.data ?? [], [regionData?.data]);
+
+  // 동별/구별 그룹 메모이제이션
+  const dongGroups = useMemo(() => groupByDong(withCoords), [withCoords]);
+  const guGroups = useMemo(() => groupByGu(withCoords, regions), [withCoords, regions]);
+
+  // 주변시설 오버레이 표시/제거
+  useEffect(() => {
+    // 기존 오버레이 정리
+    nearbyOverlaysRef.current.forEach((o) => o.setMap(null));
+    nearbyOverlaysRef.current = [];
+    if (radiusCircleRef.current) {
+      radiusCircleRef.current.setMap(null);
+      radiusCircleRef.current = null;
+    }
+
+    const map = mapInstanceRef.current;
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !nearbyData?.data || (!showNearby && activeDetailTab !== 'nearby')) return;
+
+    const places = nearbyData.data.places;
+    const complexPos = new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng);
+
+    // 반경 원 (1km)
+    const circle = new kakao.maps.Circle({
+      center: complexPos,
+      radius: 1000,
+      strokeWeight: 1.5,
+      strokeColor: '#059669',
+      strokeOpacity: 0.4,
+      strokeStyle: 'dashed',
+      fillColor: '#059669',
+      fillOpacity: 0.04,
+    });
+    circle.setMap(map);
+    radiusCircleRef.current = circle;
+
+    // 카테고리별 주요 시설만 표시 (가까운 순 최대 3개씩)
+    for (const [key, items] of Object.entries(places)) {
+      const cat = NEARBY_CATEGORIES[key];
+      if (!cat || !items) continue;
+
+      const top = (items as NearbyPlace[]).slice(0, 3);
+      for (const place of top) {
+        const position = new kakao.maps.LatLng(place.lat, place.lng);
+        const content = createNearbyMarker({
+          name: place.name,
+          distance: place.distance,
+          color: cat.color,
+          border: cat.border,
+        });
+
+        const overlay = new kakao.maps.CustomOverlay({
+          position,
+          content,
+          clickable: false,
+          yAnchor: 1.3,
+          zIndex: 5,
+        });
+        overlay.setMap(map);
+        nearbyOverlaysRef.current.push(overlay);
+      }
+    }
+  }, [selectedComplex, nearbyData, showNearby, activeDetailTab]);
+
+  // 학군 지도 데이터
+  interface SchoolPlace { id: string; name: string; distance: number; lat: number; lng: number; schoolType: 'elementary' | 'middle' | 'high'; }
+  const { data: schoolMapData } = useSWR<{ data: { schools: { elementary: SchoolPlace[]; middle: SchoolPlace[]; high: SchoolPlace[] }; grade: string } }>(
+    selectedComplex ? `/api/market/apartments/${selectedComplex.id}/schools?radius=1500` : null,
+    fetcher
+  );
+
+  // 학군 시각화 — 동심원 + 연결선 + 학교 마커
+  useEffect(() => {
+    // 정리
+    schoolOverlaysRef.current.forEach((o) => o.setMap(null));
+    schoolOverlaysRef.current = [];
+    schoolCirclesRef.current.forEach((c) => c.setMap(null));
+    schoolCirclesRef.current = [];
+    schoolLinesRef.current.forEach((l) => l.setMap(null));
+    schoolLinesRef.current = [];
+
+    const map = mapInstanceRef.current;
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !schoolMapData?.data) return;
+
+    const complexPos = new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng);
+
+    // 통일 컬러: primary emerald 계열
+    const SCHOOL_COLOR = '#059669';
+
+    // 1) 동심원 — 300m / 500m / 800m (같은 색, 굵기+투명도로 구분)
+    const rings = [
+      { radius: 300, weight: 3, opacity: 0.7, fill: 0.06, label: '300m · 도보 4분' },
+      { radius: 500, weight: 2.5, opacity: 0.5, fill: 0.04, label: '500m · 도보 7분' },
+      { radius: 800, weight: 2, opacity: 0.35, fill: 0.02, label: '800m · 도보 10분' },
+    ];
+
+    for (const ring of rings) {
+      const circle = new kakao.maps.Circle({
+        center: complexPos,
+        radius: ring.radius,
+        strokeWeight: ring.weight,
+        strokeColor: SCHOOL_COLOR,
+        strokeOpacity: ring.opacity,
+        strokeStyle: 'solid',
+        fillColor: SCHOOL_COLOR,
+        fillOpacity: ring.fill,
+      });
+      circle.setMap(map);
+      schoolCirclesRef.current.push(circle);
+
+      // 거리 라벨 — 배경 없이 텍스트만
+      const labelEl = document.createElement('div');
+      labelEl.style.cssText = `
+        color: ${SCHOOL_COLOR};
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        border: 1.5px solid ${SCHOOL_COLOR};
+        opacity: ${ring.opacity + 0.2};
+      `;
+      labelEl.textContent = ring.label;
+      const labelPos = new kakao.maps.LatLng(
+        selectedComplex.lat + (ring.radius / 111320),
+        selectedComplex.lng
+      );
+      const labelOverlay = new kakao.maps.CustomOverlay({
+        position: labelPos,
+        content: labelEl,
+        clickable: false,
+        yAnchor: 0.5,
+        zIndex: 4,
+      });
+      labelOverlay.setMap(map);
+      schoolOverlaysRef.current.push(labelOverlay);
+    }
+
+    // 2) 학교 마커 + 연결선 (모두 같은 컬러, 거리에 따라 굵기/투명도 차이)
+    const allSchools = [
+      ...schoolMapData.data.schools.elementary,
+      ...schoolMapData.data.schools.middle,
+      ...schoolMapData.data.schools.high,
+    ];
+
+    for (const school of allSchools) {
+      const pos = new kakao.maps.LatLng(school.lat, school.lng);
+      const walkMin = Math.ceil(school.distance / 80);
+      const isNear = school.distance <= 500;
+
+      // 연결선 — 실선, 거리에 따라 굵기 차이
+      const line = new kakao.maps.Polyline({
+        path: [complexPos, pos],
+        strokeWeight: isNear ? 3 : 2,
+        strokeColor: SCHOOL_COLOR,
+        strokeOpacity: isNear ? 0.7 : 0.3,
+        strokeStyle: 'solid',
+      });
+      line.setMap(map);
+      schoolLinesRef.current.push(line);
+
+      // 학교 마커 — 흰 배경 + emerald 테두리
+      const el = document.createElement('div');
+      el.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: white;
+        color: #374151;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+        border: 2px solid ${isNear ? SCHOOL_COLOR : '#94a3b8'};
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+      `;
+      const shortName = school.name.replace(/^서울/, '').replace(/초등학교$/, '초').replace(/중학교$/, '중').replace(/고등학교$/, '고');
+      el.innerHTML = `
+        <span style="color:${SCHOOL_COLOR};font-weight:700">${shortName}</span>
+        <span style="color:${isNear ? SCHOOL_COLOR : '#94a3b8'};font-size:10px;font-weight:600">도보 ${walkMin}분</span>
+      `;
+
+      el.onmouseenter = () => {
+        el.style.transform = 'scale(1.05) translateY(-1px)';
+        el.style.boxShadow = '0 3px 12px rgba(0,0,0,0.2)';
+      };
+      el.onmouseleave = () => {
+        if (!el.classList.contains('marker-selected')) {
+          el.style.transform = 'scale(1)';
+          el.style.boxShadow = '0 1px 6px rgba(0,0,0,0.15)';
+        }
+      };
+      el.onmousedown = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.school-marker-active').forEach((prev) => {
+          prev.classList.remove('school-marker-active', 'marker-selected');
+          (prev as HTMLElement).style.outline = '';
+          (prev as HTMLElement).style.transform = 'scale(1)';
+        });
+        el.classList.add('school-marker-active', 'marker-bounce');
+        el.style.outline = `3px solid ${SCHOOL_COLOR}`;
+        el.style.outlineOffset = '2px';
+        setTimeout(() => {
+          el.classList.remove('marker-bounce');
+          el.classList.add('marker-selected');
+        }, 600);
+      };
+      el.classList.add('school-marker');
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: el,
+        clickable: true,
+        yAnchor: 1.3,
+        zIndex: 5,
+      });
+      overlay.setMap(map);
+      schoolOverlaysRef.current.push(overlay);
+    }
+
+  }, [selectedComplex, schoolMapData]);
 
   // 지도 초기화
   useEffect(() => {
@@ -79,55 +550,8 @@ export function TradeMap() {
     });
     mapInstanceRef.current = map;
 
-    // 줌 변경 이벤트
     kakao.maps.event.addListener(map, 'zoom_changed', () => {
       setZoomLevel(map.getLevel());
-    });
-
-    // 클러스터러 초기화
-    clustererRef.current = new kakao.maps.MarkerClusterer({
-      map,
-      gridSize: 60,
-      averageCenter: true,
-      minLevel: 6,
-      minClusterSize: 3,
-      disableClickZoom: false,
-      styles: [
-        {
-          width: '52px',
-          height: '52px',
-          background: 'rgba(5, 150, 105, 0.85)',
-          borderRadius: '50%',
-          color: '#fff',
-          textAlign: 'center',
-          fontWeight: '700',
-          fontSize: '13px',
-          lineHeight: '52px',
-        },
-        {
-          width: '60px',
-          height: '60px',
-          background: 'rgba(3, 105, 161, 0.85)',
-          borderRadius: '50%',
-          color: '#fff',
-          textAlign: 'center',
-          fontWeight: '700',
-          fontSize: '14px',
-          lineHeight: '60px',
-        },
-        {
-          width: '70px',
-          height: '70px',
-          background: 'rgba(124, 58, 237, 0.85)',
-          borderRadius: '50%',
-          color: '#fff',
-          textAlign: 'center',
-          fontWeight: '700',
-          fontSize: '15px',
-          lineHeight: '70px',
-        },
-      ],
-      calculator: [10, 30],
     });
   }, [kakaoLoaded, selectedSido]);
 
@@ -143,101 +567,149 @@ export function TradeMap() {
     }
   }, []);
 
-  // 마커 표시
+  // 오버레이 생성 (데이터 변경 시)
   useEffect(() => {
-    if (!mapInstanceRef.current || !clustererRef.current || withCoords.length === 0) return;
+    if (!mapInstanceRef.current || withCoords.length === 0) return;
     const map = mapInstanceRef.current;
 
-    // 기존 오버레이 + 클러스터 제거
-    overlaysRef.current.forEach((o) => o.setMap(null));
-    overlaysRef.current = [];
-    clustererRef.current.clear();
+    // 기존 오버레이 정리
+    complexOverlaysRef.current.forEach((o) => o.setMap(null));
+    complexOverlaysRef.current = [];
+    dongOverlaysRef.current.forEach((o) => o.setMap(null));
+    dongOverlaysRef.current = [];
+    guOverlaysRef.current.forEach((o) => o.setMap(null));
+    guOverlaysRef.current = [];
 
-    const markers: kakao.maps.Marker[] = [];
-
+    // 1) 단지별 가격 라벨 오버레이 (줌 ≤ 5)
     for (const complex of withCoords) {
       const position = new kakao.maps.LatLng(complex.lat!, complex.lng!);
       const color = getPriceColor(complex.avgPrice);
       const priceLabel = formatPrice(complex.avgPrice);
 
-      // 커스텀 오버레이 (상세 가격 마커 — 줌 레벨 5 이하)
-      const content = document.createElement('div');
-      content.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        background: ${color.bg};
-        color: ${color.text};
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        border: 2px solid ${color.border};
-        transition: transform 0.15s, box-shadow 0.15s;
-      `;
-      content.innerHTML = `
-        <span style="font-size:10px;opacity:0.9;max-width:80px;overflow:hidden;text-overflow:ellipsis">${complex.name}</span>
-        <span style="font-weight:800">${priceLabel}</span>
-      `;
-      content.dataset.complexId = complex.id;
-      content.onmouseenter = () => {
-        content.style.transform = 'scale(1.08) translateY(-2px)';
-        content.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
-      };
-      content.onmouseleave = () => {
-        content.style.transform = 'scale(1)';
-        content.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-      };
-      // onclick + onpointerup 둘 다 등록 (모바일 + 데스크톱)
       const handleSelect = () => {
+        // 이전 선택 해제
         if (selectedOverlayRef.current) {
+          selectedOverlayRef.current.classList.remove('marker-selected');
           selectedOverlayRef.current.style.outline = 'none';
+          selectedOverlayRef.current.style.border = '';
         }
-        content.style.outline = '3px solid #fff';
-        selectedOverlayRef.current = content;
         setSelectedComplex(complex);
         setShowList(false);
+        setActiveDetailTab('overview');
+        // 바운스 + 선택 표시
+        content.classList.remove('marker-bounce');
+        void content.offsetWidth; // reflow trigger
+        content.classList.add('marker-bounce');
+        setTimeout(() => {
+          content.classList.remove('marker-bounce');
+          content.classList.add('marker-selected');
+        }, 600);
+        content.style.outline = '3px solid white';
+        content.style.border = `2px solid ${color.border}`;
+        selectedOverlayRef.current = content;
+        // 선택한 단지를 지도 중앙으로 (패널 폭 감안해 오른쪽으로 오프셋)
+        if (mapInstanceRef.current) {
+          const map = mapInstanceRef.current;
+          const proj = map.getProjection();
+          const point = proj.pointFromCoords(position);
+          // 패널 폭(420px)의 절반만큼 왼쪽으로 이동 → 실제 보이는 영역 중앙에 위치
+          point.x -= 210;
+          const adjusted = proj.coordsFromPoint(point);
+          map.panTo(adjusted);
+        }
       };
-      content.onclick = handleSelect;
-      content.ontouchend = (e) => {
-        e.preventDefault();
-        handleSelect();
-      };
+
+      const content = createPriceLabel({
+        title: complex.name,
+        price: priceLabel,
+        color,
+        size: 'md',
+        onClick: handleSelect,
+      });
+      content.dataset.complexId = complex.id;
 
       const overlay = new kakao.maps.CustomOverlay({
         position,
         content,
         clickable: true,
-        yAnchor: 1.5,
+        yAnchor: 1.6,
         zIndex: 3,
       });
-      overlaysRef.current.push(overlay);
-
-      // 클러스터용 마커 (항상 존재, 줌 아웃 시 클러스터링)
-      const marker = new kakao.maps.Marker({
-        position,
-        clickable: true,
-      });
-      markers.push(marker);
-
-      kakao.maps.event.addListener(marker, 'click', () => {
-        setSelectedComplex(complex);
-        setShowList(false);
-      });
+      complexOverlaysRef.current.push(overlay);
     }
 
-    // 클러스터에 마커 추가
-    clustererRef.current.addMarkers(markers);
+    // 2) 동별 집계 가격 라벨 오버레이 (줌 6~7)
+    for (const group of dongGroups) {
+      const position = new kakao.maps.LatLng(group.lat, group.lng);
+      const color = getPriceColor(group.avgPrice);
+      const priceLabel = formatPrice(group.avgPrice);
 
-    // 줌 레벨에 따라 오버레이 표시/숨기기 + 화면 내 단지 추적
+      const handleClick = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.panTo(position);
+          mapInstanceRef.current.setLevel(5, { animate: true });
+        }
+      };
+
+      const content = createPriceLabel({
+        title: group.label,
+        price: priceLabel,
+        subtitle: `${group.count}개 단지`,
+        color,
+        size: 'md',
+        onClick: handleClick,
+      });
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position,
+        content,
+        clickable: true,
+        yAnchor: 1.6,
+        zIndex: 2,
+      });
+      dongOverlaysRef.current.push(overlay);
+    }
+
+    // 3) 구별 집계 오버레이 (줌 ≥ 8) — 큰 라벨로 구 평균가 + 총 단지 수
+    for (const group of guGroups) {
+      const position = new kakao.maps.LatLng(group.lat, group.lng);
+      const color = getPriceColor(group.avgPrice);
+      const priceLabel = formatPrice(group.avgPrice);
+
+      const handleClick = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.panTo(position);
+          mapInstanceRef.current.setLevel(6, { animate: true });
+        }
+      };
+
+      const content = createPriceLabel({
+        title: group.label,
+        price: priceLabel,
+        subtitle: `${group.count}개 단지`,
+        color,
+        size: 'lg',
+        onClick: handleClick,
+      });
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position,
+        content,
+        clickable: true,
+        yAnchor: 1.3,
+        zIndex: 1,
+      });
+      guOverlaysRef.current.push(overlay);
+    }
+
+    // 줌 레벨에 따라 3단계 오버레이 전환
     function updateOverlayVisibility() {
       const level = map.getLevel();
       const bounds = map.getBounds();
       const visible = new Set<string>();
-      overlaysRef.current.forEach((overlay, idx) => {
+
+      // 줌 ≤ 5: 단지별 라벨
+      complexOverlaysRef.current.forEach((overlay, idx) => {
         const complex = withCoords[idx];
         if (!complex?.lat || !complex?.lng) return;
         const pos = new kakao.maps.LatLng(complex.lat, complex.lng);
@@ -249,6 +721,33 @@ export function TradeMap() {
           overlay.setMap(null);
         }
       });
+
+      // 줌 6~7: 동별 집계 라벨
+      dongOverlaysRef.current.forEach((overlay, idx) => {
+        const group = dongGroups[idx];
+        if (!group) return;
+        const pos = new kakao.maps.LatLng(group.lat, group.lng);
+        const inBounds = bounds.contain(pos);
+        if (level >= 6 && level <= 7 && inBounds) {
+          overlay.setMap(map);
+        } else {
+          overlay.setMap(null);
+        }
+      });
+
+      // 줌 ≥ 8: 구별 집계 라벨
+      guOverlaysRef.current.forEach((overlay, idx) => {
+        const group = guGroups[idx];
+        if (!group) return;
+        const pos = new kakao.maps.LatLng(group.lat, group.lng);
+        const inBounds = bounds.contain(pos);
+        if (level >= 8 && inBounds) {
+          overlay.setMap(map);
+        } else {
+          overlay.setMap(null);
+        }
+      });
+
       const ids = Array.from(visible).sort();
       setVisibleIds((prev) => {
         if (prev.length === ids.length && prev.every((v, i) => v === ids[i])) return prev;
@@ -258,7 +757,6 @@ export function TradeMap() {
 
     updateOverlayVisibility();
 
-    // 이벤트 리스너는 최초 1회만 등록
     if (!listenersAttachedRef.current) {
       kakao.maps.event.addListener(map, 'zoom_changed', updateOverlayVisibility);
       kakao.maps.event.addListener(map, 'bounds_changed', updateOverlayVisibility);
@@ -272,7 +770,7 @@ export function TradeMap() {
       map.setBounds(bounds, 50, 50, 50, 50);
       initialFitDoneRef.current = true;
     }
-  }, [withCoords]);
+  }, [withCoords, dongGroups, guGroups]);
 
   // 줌 컨트롤
   const handleZoomIn = () => {
@@ -339,7 +837,7 @@ export function TradeMap() {
   return (
     <div className="relative h-full">
       {/* 시도 선택 탭 */}
-      <div className="absolute top-3 left-3 z-10 flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap">
+      <div className="absolute top-3 left-3 z-[20] flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap">
         {sidoList.map((sido) => (
           <button
             key={sido}
@@ -357,7 +855,7 @@ export function TradeMap() {
       </div>
 
       {/* 우측 컨트롤 */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
+      <div className="absolute top-3 right-3 z-[20] flex flex-col gap-1.5">
         {/* 단지 리스트 */}
         <button
           onClick={() => {
@@ -395,6 +893,34 @@ export function TradeMap() {
               <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
             )}
           </button>
+          <button
+            onClick={() => setShowNearby(!showNearby)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-t border-border/30',
+              showNearby && selectedComplex ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
+            )}
+          >
+            <MapPinned className="h-3.5 w-3.5" />
+            주변시설
+            {showNearby && selectedComplex && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+            )}
+          </button>
+          {selectedComplex && roadviewAvailable && (
+            <button
+              onClick={() => setShowRoadview(!showRoadview)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-t border-border/30',
+                showRoadview ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
+              )}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              로드뷰
+              {showRoadview && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* 줌 컨트롤 */}
@@ -414,34 +940,58 @@ export function TradeMap() {
         </div>
       </div>
 
-      {/* 지도 */}
-      <div
-        ref={mapRef}
-        className={cn(
-          'h-full w-full rounded-xl transition-all',
-          selectedComplex && 'md:ml-[380px]'
+      {/* 지도 + 로드뷰 */}
+      <div className="h-full w-full flex flex-col">
+        <div
+          ref={mapRef}
+          className={cn(
+            'w-full transition-all',
+            showRoadview ? 'h-[60%]' : 'h-full'
+          )}
+        />
+        {showRoadview && (
+          <div className="relative h-[40%] border-t-2 border-primary">
+            <div
+              ref={roadviewRef}
+              className="w-full h-full"
+            />
+            <button
+              onClick={() => setShowRoadview(false)}
+              className="absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1.5 hover:bg-black/80 transition-colors"
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+            <div className="absolute top-2 left-2 z-10 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] text-white font-medium">
+              <Eye className="h-3 w-3 inline mr-1" />
+              로드뷰 · {selectedComplex?.name}
+            </div>
+          </div>
         )}
-        style={selectedComplex ? { width: undefined } : undefined}
-      />
+      </div>
 
-      {/* 상세 패널 — 데스크톱: 좌측, 모바일: 하단 시트 */}
+      {/* 상세 패널 — 지도 위 오버레이 카드 */}
       {selectedComplex && (
         <>
-          {/* 데스크톱 */}
-          <div className="hidden md:block">
-            <ComplexDetailPanel
-              complexId={selectedComplex.id}
-              onClose={() => setSelectedComplex(null)}
-            />
+          {/* 데스크톱 — 좌측 오버레이 */}
+          <div className="hidden md:block absolute left-3 top-14 bottom-12 z-[25] w-[420px] animate-fade-up">
+            <div className="h-full bg-white rounded-2xl shadow-2xl border border-border/50 overflow-hidden">
+              <ComplexDetailPanel
+                complexId={selectedComplex.id}
+                onClose={() => setSelectedComplex(null)}
+                onTabChange={setActiveDetailTab}
+              />
+            </div>
           </div>
           {/* 모바일 — 하단 시트 */}
-          <div className="md:hidden absolute bottom-0 left-0 right-0 z-20 max-h-[60vh] overflow-y-auto bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] animate-fade-up">
+          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[25] max-h-[60vh] overflow-y-auto bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] animate-fade-up">
             <div className="sticky top-0 flex items-center justify-center py-2 bg-white rounded-t-2xl">
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
             <ComplexDetailPanel
+              key={selectedComplex.id}
               complexId={selectedComplex.id}
               onClose={() => setSelectedComplex(null)}
+              onTabChange={setActiveDetailTab}
             />
           </div>
         </>
@@ -577,25 +1127,29 @@ export function TradeMap() {
       )}
 
       {/* 하단 상태바 */}
-      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2">
+      <div className="absolute bottom-8 left-3 z-[20] flex items-center gap-2">
         <div className="rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 shadow-sm text-[11px] flex items-center gap-3">
           <span>
             <span className="font-semibold text-primary">{withCoords.length}</span> 단지
           </span>
           <span className="text-border">|</span>
           <span>줌 {zoomLevel}</span>
-          {zoomLevel > 5 && (
-            <>
-              <span className="text-border">|</span>
-              <span className="text-muted-foreground">줌인하면 상세 마커 표시</span>
-            </>
+          <span className="text-border">|</span>
+          {zoomLevel >= 8 && (
+            <span className="text-muted-foreground">구 단위 · 클릭하면 동별 보기</span>
+          )}
+          {zoomLevel >= 6 && zoomLevel <= 7 && (
+            <span className="text-muted-foreground">동 단위 · 클릭하면 단지별 보기</span>
+          )}
+          {zoomLevel <= 5 && (
+            <span className="text-muted-foreground">단지별 · 클릭하면 상세 보기</span>
           )}
         </div>
       </div>
 
       {/* 로딩 */}
       {!kakaoLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-muted/60">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/60">
           <div className="flex flex-col items-center gap-2">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             <p className="text-sm text-muted-foreground">지도 로딩 중...</p>

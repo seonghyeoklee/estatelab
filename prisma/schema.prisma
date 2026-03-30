@@ -93,11 +93,13 @@ model ApartmentComplex {
   builtYear     Int?     @map("built_year")     // 건축년도
   lat           Float?                          // 위도
   lng           Float?                          // 경도
+  bjdongCd      String?  @map("bjdong_cd")      // 법정동코드 뒤 5자리 (건축물대장용)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   region        Region @relation(fields: [regionCode], references: [code])
   trades        ApartmentTrade[]
+  rents         ApartmentRent[]
   watchedBy     UserWatchlist[]
   viewedBy      UserHistory[]
 
@@ -133,6 +135,36 @@ model ApartmentTrade {
   @@index([complexId, dealDate])
   @@index([dealDate, price])
   @@map("apartment_trades")
+}
+
+// ─── 아파트 전월세 ───────────────────────────────────────────
+
+model ApartmentRent {
+  id              String   @id @default(cuid())
+  complexId       String   @map("complex_id")
+  dealYear        Int      @map("deal_year")
+  dealMonth       Int      @map("deal_month")
+  dealDay         Int      @map("deal_day")
+  dealDate        DateTime @map("deal_date") @db.Date
+  area            Float                              // 전용면적 (㎡)
+  floor           Int                                // 층
+  rentType        String   @map("rent_type")         // 전세 | 월세
+  deposit         Int                                // 보증금 (만원)
+  monthlyRent     Int      @default(0) @map("monthly_rent") // 월세 (만원, 전세면 0)
+  prevDeposit     Int?     @map("prev_deposit")      // 종전 보증금
+  prevMonthlyRent Int?     @map("prev_monthly_rent") // 종전 월세
+  contractTerm    String?  @map("contract_term")     // 계약기간
+  contractType    String?  @map("contract_type")     // 신규 | 갱신
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  complex         ApartmentComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+
+  @@unique([complexId, dealDate, area, floor, deposit, monthlyRent])
+  @@index([complexId])
+  @@index([dealDate])
+  @@index([complexId, dealDate])
+  @@index([rentType])
+  @@map("apartment_rents")
 }
 
 // ─── 금리 ────────────────────────────────────────────────────

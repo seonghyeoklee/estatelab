@@ -100,6 +100,105 @@ function parseTradeXml(xml: string): RawTrade[] {
   return items;
 }
 
+// ─── 전월세 실거래가 ─────────────────────────────────────────
+
+const RENT_API_BASE = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptRent';
+
+export interface RawRent {
+  dealYear: number;
+  dealMonth: number;
+  dealDay: number;
+  aptName: string;
+  dong: string;
+  jibun: string;
+  bonbun: string;
+  bubun: string;
+  area: number;
+  floor: number;
+  deposit: number;       // 보증금 (만원)
+  monthlyRent: number;   // 월세 (만원, 전세면 0)
+  prevDeposit: number | null;
+  prevMonthlyRent: number | null;
+  contractTerm: string | null;
+  contractType: string | null;
+  buildYear: number;
+}
+
+/**
+ * 특정 지역+년월의 아파트 전월세 실거래가를 조회합니다.
+ */
+export async function fetchApartmentRents(
+  lawdCd: string,
+  dealYmd: string
+): Promise<RawRent[]> {
+  const { envRequired } = await import('@/lib/env');
+  const apiKey = envRequired('PUBLIC_DATA_API_KEY');
+
+  const url = new URL(`${RENT_API_BASE}/getRTMSDataSvcAptRent`);
+  url.searchParams.set('serviceKey', apiKey);
+  url.searchParams.set('LAWD_CD', lawdCd);
+  url.searchParams.set('DEAL_YMD', dealYmd);
+  url.searchParams.set('pageNo', '1');
+  url.searchParams.set('numOfRows', '9999');
+
+  const res = await fetch(url.toString(), {
+    headers: { 'User-Agent': 'EstateLab/1.0' },
+  });
+  if (!res.ok) throw new Error(`전월세 API 요청 실패: ${res.status}`);
+
+  const text = await res.text();
+  return parseRentXml(text);
+}
+
+function parseRentXml(xml: string): RawRent[] {
+  const items: RawRent[] = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1];
+    const get = (tag: string): string => {
+      const m = block.match(new RegExp(`<${tag}>([^<]*)</${tag}>`));
+      return m ? m[1].trim() : '';
+    };
+
+    const deposit = parseInt((get('deposit') || get('보증금액') || '').replace(/,/g, ''), 10);
+    const monthlyRent = parseInt((get('monthlyRent') || get('월세금액') || '0').replace(/,/g, ''), 10) || 0;
+    const area = parseFloat(get('excluUseAr') || get('전용면적'));
+    const floor = parseInt(get('floor') || get('층'), 10);
+    const dealYear = parseInt(get('dealYear') || get('년'), 10);
+    const dealMonth = parseInt(get('dealMonth') || get('월'), 10);
+    const dealDay = parseInt(get('dealDay') || get('일'), 10);
+
+    if (!deposit || !area || isNaN(floor) || !dealYear) continue;
+
+    const prevDepStr = (get('preDeposit') || get('종전계약보증금') || '').replace(/,/g, '');
+    const prevRentStr = (get('preMonthlyRent') || get('종전계약월세') || '').replace(/,/g, '');
+
+    items.push({
+      dealYear,
+      dealMonth,
+      dealDay,
+      aptName: get('aptNm') || get('아파트') || '미상',
+      dong: get('umdNm') || get('법정동'),
+      jibun: get('jibun') || get('지번'),
+      bonbun: get('bonbun') || '',
+      bubun: get('bubun') || '',
+      area,
+      floor,
+      deposit,
+      monthlyRent,
+      prevDeposit: prevDepStr ? parseInt(prevDepStr, 10) || null : null,
+      prevMonthlyRent: prevRentStr ? parseInt(prevRentStr, 10) || null : null,
+      contractTerm: get('contractTerm') || get('계약기간') || null,
+      contractType: get('contractType') || get('갱신요구권사용') || null,
+      buildYear: parseInt(get('buildYear') || get('건축년도'), 10) || 0,
+    });
+  }
+
+  return items;
+}
+
 /**
  * 완전한 도로명주소를 조합합니다.
  * 예: "압구정로42길 78" (도로명 + 건물번호)

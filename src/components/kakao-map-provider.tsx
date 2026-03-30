@@ -34,7 +34,7 @@ export function KakaoMapProvider({ children }: { children: React.ReactNode }) {
   return (
     <KakaoContext.Provider value={{ loaded, error }}>
       <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&libraries=clusterer`}
+        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&libraries=clusterer,services`}
         strategy="afterInteractive"
         onLoad={() => {
           try {
