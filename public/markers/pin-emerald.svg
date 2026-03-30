@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46" fill="none">
+  <!-- 핀 드롭 쉐도우 -->
+  <ellipse cx="18" cy="43" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)"/>
+  <!-- 핀 바디 -->
+  <path d="M18 0C8.06 0 0 7.82 0 17.47c0 4.9 2.1 9.32 5.4 12.6L18 43l12.6-12.93C33.9 26.79 36 22.37 36 17.47 36 7.82 27.94 0 18 0z" fill="#059669"/>
+  <path d="M18 0C8.06 0 0 7.82 0 17.47c0 4.9 2.1 9.32 5.4 12.6L18 43l12.6-12.93C33.9 26.79 36 22.37 36 17.47 36 7.82 27.94 0 18 0z" fill="url(#ge)" opacity="0.3"/>
+  <!-- 내부 원 -->
+  <circle cx="18" cy="17" r="10" fill="white" opacity="0.95"/>
+  <!-- 집 아이콘 -->
+  <path d="M18 10l-6.5 5.5h2v5h3.5v-3h2v3h3.5v-5h2L18 10z" fill="#059669" stroke="#047857" stroke-width="0.5" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="ge" x1="18" y1="0" x2="18" y2="43">
+      <stop offset="0" stop-color="white"/>
+      <stop offset="1" stop-color="black"/>
+    </linearGradient>
+  </defs>
+</svg>

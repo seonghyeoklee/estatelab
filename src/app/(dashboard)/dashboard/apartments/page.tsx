@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, ChevronRight, Search } from 'lucide-react';
+import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
 
@@ -28,6 +29,13 @@ interface ApartmentItem {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+function priceColor(price: number): { bg: string; text: string } {
+  if (price >= 200000) return { bg: 'bg-violet-500/10', text: 'text-violet-600' };
+  if (price >= 100000) return { bg: 'bg-blue-500/10', text: 'text-blue-600' };
+  if (price >= 50000) return { bg: 'bg-emerald-500/10', text: 'text-emerald-600' };
+  return { bg: 'bg-slate-500/10', text: 'text-slate-600' };
+}
+
 export default function ApartmentsPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -42,7 +50,6 @@ export default function ApartmentsPage() {
     sort: 'name',
   });
 
-  // URL 파라미터 조합
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('limit', '20');
@@ -67,24 +74,21 @@ export default function ApartmentsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">아파트</h1>
         <p className="text-muted-foreground">조건에 맞는 아파트 단지를 검색하세요.</p>
       </div>
 
       {/* 검색 */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative max-w-lg">
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
           placeholder="단지명으로 검색..."
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setPage(1);
-          }}
-          className="w-full rounded-lg border bg-background py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+          className="w-full rounded-xl border bg-background py-2.5 pl-10 pr-4 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
@@ -93,23 +97,28 @@ export default function ApartmentsPage() {
 
       {/* 결과 카운트 */}
       {data?.meta && (
-        <p className="text-xs text-muted-foreground">
-          총 <span className="font-semibold text-foreground">{data.meta.total.toLocaleString()}</span>개 단지
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] text-muted-foreground">
+            총 <span className="font-bold text-foreground">{data.meta.total.toLocaleString()}</span>개 단지
+          </p>
+          <p className="text-[12px] text-muted-foreground">
+            {page} / {data.meta.totalPages} 페이지
+          </p>
+        </div>
       )}
 
       {/* 리스트 */}
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted/60" />
+            <div key={i} className="h-[140px] animate-pulse rounded-2xl bg-muted/60" />
           ))}
         </div>
       ) : !data?.data?.length ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-2 py-8">
-            <Building2 className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="flex flex-col items-center gap-3 py-12">
+            <Building2 className="h-10 w-10 text-muted-foreground" />
+            <p className="text-[15px] text-muted-foreground">
               {query || Object.values(filters).some(Boolean)
                 ? '조건에 맞는 단지가 없습니다.'
                 : '수집된 단지 데이터가 없습니다.'}
@@ -118,62 +127,99 @@ export default function ApartmentsPage() {
         </Card>
       ) : (
         <>
-          <div className="space-y-2">
-            {data.data.map((apt, idx) => (
-              <Link key={apt.id} href={`/dashboard/apartments/${apt.id}`}>
-                <Card className={`hover-lift animate-fade-up cursor-pointer delay-${Math.min(idx + 1, 8)}`}>
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Building2 className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate">{apt.name}</span>
-                        {apt.builtYear && (
-                          <Badge variant="outline" className="text-[10px] shrink-0">
-                            {apt.builtYear}년
-                          </Badge>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {data.data.map((apt) => {
+              const color = apt.latestTrade ? priceColor(apt.latestTrade.price) : { bg: 'bg-muted/50', text: 'text-muted-foreground' };
+              return (
+                <Link key={apt.id} href={`/dashboard/apartments/${apt.id}`}>
+                  <Card className="hover:shadow-md transition-all cursor-pointer h-full">
+                    <CardContent className="p-5 flex flex-col justify-between h-full gap-3">
+                      {/* 상단: 이름 + 위치 */}
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-[16px] font-bold leading-tight line-clamp-1">{apt.name}</h3>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-1.5 text-[13px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {apt.region.sigungu} {apt.dong}
+                          </span>
+                          {apt.builtYear && (
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {apt.builtYear}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 하단: 가격 + 거래 정보 */}
+                      <div className="flex items-end justify-between">
+                        {apt.latestTrade ? (
+                          <div>
+                            <p className={cn('text-xl font-bold', color.text)}>
+                              {formatPrice(apt.latestTrade.price)}
+                            </p>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층 · {apt.latestTrade.dealDate.slice(0, 10)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-[14px] text-muted-foreground">거래 정보 없음</p>
                         )}
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5', color.bg, color.text, 'border-0')}>
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                            {apt.tradeCount}건
+                          </Badge>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {apt.region.sigungu} {apt.dong} · 거래 {apt.tradeCount}건
-                      </p>
-                    </div>
-                    {apt.latestTrade && (
-                      <div className="text-right shrink-0">
-                        <p className="font-semibold text-primary">
-                          {formatPrice(apt.latestTrade.price)}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층
-                        </p>
-                      </div>
-                    )}
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
 
+          {/* 페이지네이션 */}
           {data.meta.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-3 pt-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
+                className="px-4"
               >
                 이전
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {page} / {data.meta.totalPages}
-              </span>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(data.meta.totalPages, 5) }, (_, i) => {
+                  const pageNum = page <= 3 ? i + 1
+                    : page >= data.meta.totalPages - 2 ? data.meta.totalPages - 4 + i
+                    : page - 2 + i;
+                  if (pageNum < 1 || pageNum > data.meta.totalPages) return null;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={cn(
+                        'h-8 w-8 rounded-lg text-[13px] font-medium transition-colors',
+                        page === pageNum ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+                      )}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage((p) => Math.min(data.meta.totalPages, p + 1))}
                 disabled={page >= data.meta.totalPages}
+                className="px-4"
               >
                 다음
               </Button>

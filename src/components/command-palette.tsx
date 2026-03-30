@@ -26,8 +26,8 @@ interface SearchResult {
 }
 
 const MENU_ITEMS = [
-  { label: '시장 개요', href: '/dashboard', icon: LayoutDashboard },
   { label: '지도 탐색', href: '/dashboard/map', icon: Map },
+  { label: '시장 개요', href: '/dashboard/overview', icon: LayoutDashboard },
   { label: '아파트', href: '/dashboard/apartments', icon: Building2 },
   { label: '금리 동향', href: '/dashboard/rates', icon: Landmark },
   { label: '가격지수', href: '/dashboard/indices', icon: TrendingUp },

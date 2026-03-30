@@ -19,8 +19,8 @@ const NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { href: '/dashboard', label: '시장 개요', icon: LayoutDashboard, exact: true },
       { href: '/dashboard/map', label: '지도 탐색', icon: Map },
+      { href: '/dashboard/overview', label: '시장 개요', icon: LayoutDashboard },
     ],
   },
   {
