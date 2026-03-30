@@ -419,11 +419,11 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                 {/* 면적별 비교 */}
                 {areaGroups.length > 0 && (
                   <div className="px-5 py-4 border-b">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-4">
                       <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="text-[14px] font-semibold">면적별 평균</h3>
+                      <h3 className="text-[15px] font-bold">면적별 평균</h3>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {areaGroups.map((group) => {
                         const maxAreaPrice = Math.max(...areaGroups.map((g) => g.avgPrice));
                         const widthPct = (group.avgPrice / maxAreaPrice) * 100;
@@ -434,26 +434,26 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                             key={group.area}
                             onClick={() => setAreaFilter(isActive ? null : group.area)}
                             className={cn(
-                              'w-full text-left space-y-0.5 rounded-md px-2 py-1 transition-colors',
-                              isActive ? 'bg-primary/5' : 'hover:bg-accent/50'
+                              'w-full text-left space-y-1.5 rounded-xl px-3 py-2.5 transition-colors',
+                              isActive ? 'bg-primary/5 ring-1 ring-primary/30' : 'hover:bg-accent/50'
                             )}
                           >
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[14px] font-medium">
                                 {group.area}㎡ <span className="text-muted-foreground">({pyeong}평)</span>
                               </span>
-                              <span className="font-semibold">
+                              <span className="text-[15px] font-bold">
                                 {formatPrice(group.avgPrice)}
-                                <span className="text-[10px] font-normal text-muted-foreground ml-1">
-                                  ({group.count}건)
+                                <span className="text-[12px] font-normal text-muted-foreground ml-1.5">
+                                  {group.count}건
                                 </span>
                               </span>
                             </div>
-                            <div className="h-1.5 rounded-full bg-muted">
+                            <div className="h-2.5 rounded-full bg-muted">
                               <div
                                 className={cn(
-                                  'h-1.5 rounded-full transition-colors',
-                                  isActive ? 'bg-primary' : 'bg-primary/50'
+                                  'h-2.5 rounded-full transition-colors',
+                                  isActive ? 'bg-primary' : 'bg-primary/40'
                                 )}
                                 style={{ width: `${widthPct}%` }}
                               />
@@ -484,33 +484,33 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                     : 0;
 
                   return (
-                    <div className="px-5 py-4 border-b">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[14px] font-semibold">층별 가격 분석</h3>
+                    <div className="px-5 py-4 border-b bg-muted/20">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[15px] font-bold">층별 가격 분석</h3>
                         {premium !== 0 && (
                           <span className={cn(
-                            'text-[12px] font-semibold',
-                            premium > 0 ? 'text-red-500' : 'text-blue-500'
+                            'rounded-full px-3 py-1 text-[13px] font-semibold',
+                            premium > 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
                           )}>
                             고층 프리미엄 {premium > 0 ? '+' : ''}{premium}%
                           </span>
                         )}
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {results.map((r) => {
                           const widthPct = (r.avg / maxAvg) * 100;
                           return (
-                            <div key={r.label} className="space-y-1">
-                              <div className="flex items-center justify-between text-[13px]">
-                                <span className="font-medium">{r.label}</span>
+                            <div key={r.label} className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[14px] font-medium">{r.label}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold">{formatPrice(r.avg)}</span>
-                                  <span className="text-[11px] text-muted-foreground">{r.count}건</span>
+                                  <span className="text-[15px] font-bold">{formatPrice(r.avg)}</span>
+                                  <span className="text-[12px] text-muted-foreground">{r.count}건</span>
                                 </div>
                               </div>
-                              <div className="h-2 rounded-full bg-muted">
+                              <div className="h-3 rounded-full bg-muted">
                                 <div
-                                  className="h-2 rounded-full transition-all"
+                                  className="h-3 rounded-full transition-all"
                                   style={{ width: `${widthPct}%`, backgroundColor: r.color }}
                                 />
                               </div>
@@ -562,46 +562,43 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
 
                 {/* 주변 단지 비교 */}
                 {compareData?.data?.comparisons && compareData.data.comparisons.length > 0 && (
-                  <div className="px-5 py-4 border-t">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[14px] font-semibold">주변 단지 비교</h3>
-                      <span className="text-[12px] text-muted-foreground">
+                  <div className="px-5 py-4 border-t bg-muted/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[15px] font-bold">주변 단지 비교</h3>
+                      <Badge variant="outline" className="text-[11px]">
                         {compareData.data.mainArea}㎡ 기준
-                      </span>
+                      </Badge>
                     </div>
 
                     {/* 내 단지 (기준) */}
-                    <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3 mb-2">
+                    <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 mb-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[13px] font-bold">{compareData.data.complexName}</p>
-                          <p className="text-[11px] text-muted-foreground">기준 단지</p>
+                          <p className="text-[14px] font-bold">{compareData.data.complexName}</p>
+                          <p className="text-[12px] text-muted-foreground">기준 단지 · {compareData.data.myAvgPpp.toLocaleString()}만/평</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[16px] font-bold text-primary">{formatPrice(compareData.data.myAvgPrice)}</p>
-                          <p className="text-[11px] text-muted-foreground">{compareData.data.myAvgPpp.toLocaleString()}만/평</p>
-                        </div>
+                        <p className="text-xl font-bold text-primary">{formatPrice(compareData.data.myAvgPrice)}</p>
                       </div>
                     </div>
 
                     {/* 비교 단지 */}
                     <div className="space-y-1">
                       {compareData.data.comparisons.slice(0, 5).map((c) => (
-                        <div key={c.id} className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-accent/50 transition-colors">
+                        <div key={c.id} className="flex items-center justify-between rounded-xl px-4 py-3 hover:bg-accent/50 transition-colors">
                           <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-medium truncate">{c.name}</p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-[14px] font-medium truncate">{c.name}</p>
+                            <p className="text-[12px] text-muted-foreground">
                               {c.dong}{c.builtYear ? ` · ${c.builtYear}년` : ''} · {c.tradeCount}건
                             </p>
                           </div>
                           <div className="text-right shrink-0 ml-3">
-                            <p className="text-[14px] font-bold">{formatPrice(c.avgPrice)}</p>
-                            <p className={cn(
-                              'text-[11px] font-semibold',
-                              c.diff > 0 ? 'text-red-500' : c.diff < 0 ? 'text-blue-500' : 'text-muted-foreground'
+                            <p className="text-[16px] font-bold">{formatPrice(c.avgPrice)}</p>
+                            <span className={cn(
+                              'inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold mt-0.5',
+                              c.diff > 0 ? 'bg-red-50 text-red-600' : c.diff < 0 ? 'bg-blue-50 text-blue-600' : 'bg-muted text-muted-foreground'
                             )}>
                               {c.diff > 0 ? '+' : ''}{c.diff}%
-                            </p>
+                            </span>
                           </div>
                         </div>
                       ))}

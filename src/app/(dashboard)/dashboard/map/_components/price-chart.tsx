@@ -129,12 +129,12 @@ export function PriceChart({ trades, className }: Props) {
       {latest && (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[12px] text-muted-foreground">최근 1개월 평균</p>
-            <p className="text-xl font-bold text-primary">{formatPrice(latest.avg)}</p>
+            <p className="text-[13px] text-muted-foreground">최근 1개월 평균</p>
+            <p className="text-2xl font-bold text-primary">{formatPrice(latest.avg)}</p>
           </div>
           <div className="text-right">
-            <p className="text-[12px] text-muted-foreground">{latest.month.slice(2).replace('-', '.')} 기준</p>
-            <p className="text-[13px] font-medium">{latest.count}건 거래</p>
+            <p className="text-[13px] text-muted-foreground">{latest.month.slice(2).replace('-', '.')} 기준</p>
+            <p className="text-[14px] font-semibold">{latest.count}건 거래</p>
           </div>
         </div>
       )}
@@ -144,7 +144,7 @@ export function PriceChart({ trades, className }: Props) {
         {/* Y축 라벨 */}
         <div className="absolute left-0 top-0 bottom-[40px] w-[44px] flex flex-col justify-between pointer-events-none">
           {yLabels.slice().reverse().map((label, i) => (
-            <span key={i} className="text-[10px] text-muted-foreground tabular-nums leading-none">
+            <span key={i} className="text-[11px] text-muted-foreground tabular-nums leading-none">
               {formatPrice(label.price)}
             </span>
           ))}
@@ -152,7 +152,7 @@ export function PriceChart({ trades, className }: Props) {
 
         {/* SVG 차트 */}
         <div className="ml-[48px]">
-          <svg viewBox="0 0 100 80" className="w-full h-[180px]" preserveAspectRatio="none">
+          <svg viewBox="0 0 100 80" className="w-full h-[200px]" preserveAspectRatio="none">
             {/* 가로 그리드 */}
             {[0, 25, 50, 75, 100].map((y) => (
               <line key={y} x1="0" y1={y * 0.65} x2="100" y2={y * 0.65} stroke="#e5e7eb" strokeWidth="0.15" />
