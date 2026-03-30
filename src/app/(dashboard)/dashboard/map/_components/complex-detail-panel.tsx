@@ -222,6 +222,17 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
     fetcher
   );
 
+  interface RankData {
+    myRank: number; totalInRegion: number; percentile: number; myAvgPpp: number;
+    turnoverRate: number | null; recentTrades: number; totalUnits: number | null;
+    top3: { id: string; name: string; avgPpp: number }[];
+    nearMe: { id: string; name: string; avgPpp: number }[];
+  }
+  const { data: rankData } = useSWR<{ data: RankData | null }>(
+    complexId ? `/api/market/apartments/${complexId}/rank` : null,
+    fetcher
+  );
+
   // ESC 키로 닫기
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -379,6 +390,45 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
             {/* === 개요 탭 === */}
             {activeTab === 'overview' && (
               <>
+                {/* 순위 + 회전율 */}
+                {rankData?.data && (
+                  <div className="px-5 py-4 border-b bg-muted/20">
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* 시세 순위 */}
+                      <div className="text-center">
+                        <p className="text-[12px] text-muted-foreground">시세 순위</p>
+                        <p className="text-xl font-bold mt-0.5">
+                          <span className="text-primary">{rankData.data.myRank}</span>
+                          <span className="text-[13px] font-normal text-muted-foreground">/{rankData.data.totalInRegion}</span>
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">상위 {rankData.data.percentile}%</p>
+                      </div>
+                      {/* 평당가 */}
+                      <div className="text-center">
+                        <p className="text-[12px] text-muted-foreground">평당가</p>
+                        <p className="text-xl font-bold mt-0.5">
+                          {rankData.data.myAvgPpp.toLocaleString()}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">만원/평</p>
+                      </div>
+                      {/* 회전율 */}
+                      <div className="text-center">
+                        <p className="text-[12px] text-muted-foreground">회전율</p>
+                        {rankData.data.turnoverRate !== null ? (
+                          <>
+                            <p className="text-xl font-bold mt-0.5">{rankData.data.turnoverRate}%</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {rankData.data.recentTrades}건/{rankData.data.totalUnits}세대
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-[14px] font-medium text-muted-foreground mt-1">—</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 면적별 필터 칩 */}
                 {areaGroups.length > 1 && (
                   <div className="px-5 py-3 border-b">

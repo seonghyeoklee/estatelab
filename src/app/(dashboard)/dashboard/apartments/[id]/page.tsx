@@ -13,6 +13,7 @@ import { AreaComparison } from './_components/area-comparison';
 import { WatchlistButton } from '@/components/watchlist-button';
 import { HistoryTracker } from './_components/history-tracker';
 import { NearbyFacilities } from './_components/nearby-facilities';
+import { RankCard } from './_components/rank-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -246,6 +247,9 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* 동네 시세 순위 + 회전율 */}
+      <RankCard complexId={id} />
 
       {/* Nearby facilities */}
       <NearbyFacilities complexId={id} />
