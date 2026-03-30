@@ -837,13 +837,13 @@ export function TradeMap() {
   return (
     <div className="relative h-full">
       {/* 시도 선택 탭 */}
-      <div className="absolute top-3 left-3 z-[20] flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap">
+      <div className="absolute top-3 left-3 z-[20] flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap pointer-events-none">
         {sidoList.map((sido) => (
           <button
             key={sido}
             onClick={() => moveTo(sido)}
             className={cn(
-              'rounded-lg px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition-all',
+              'rounded-lg px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition-all pointer-events-auto',
               selectedSido === sido
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
@@ -855,7 +855,7 @@ export function TradeMap() {
       </div>
 
       {/* 우측 컨트롤 */}
-      <div className="absolute top-3 right-3 z-[20] flex flex-col gap-1.5">
+      <div className="absolute top-3 right-3 z-[20] flex flex-col gap-1.5 pointer-events-none [&>*]:pointer-events-auto">
         {/* 단지 리스트 */}
         <button
           onClick={() => {
@@ -1127,7 +1127,7 @@ export function TradeMap() {
       )}
 
       {/* 하단 상태바 */}
-      <div className="absolute bottom-8 left-3 z-[20] flex items-center gap-2">
+      <div className="absolute bottom-8 left-3 z-[20] flex items-center gap-2 pointer-events-none [&>*]:pointer-events-auto">
         <div className="rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 shadow-sm text-[11px] flex items-center gap-3">
           <span>
             <span className="font-semibold text-primary">{withCoords.length}</span> 단지
