@@ -592,14 +592,16 @@ export function TradeMap() {
           selectedOverlayRef.current.classList.remove('marker-selected');
           selectedOverlayRef.current.style.outline = 'none';
           selectedOverlayRef.current.style.border = '';
+          selectedOverlayRef.current.style.zIndex = '';
         }
         setSelectedComplex(complex);
         setShowList(false);
         setActiveDetailTab('overview');
-        // 바운스 + 선택 표시
+        // 바운스 + 선택 표시 + z-index 최상위
         content.classList.remove('marker-bounce');
-        void content.offsetWidth; // reflow trigger
+        void content.offsetWidth;
         content.classList.add('marker-bounce');
+        content.style.zIndex = '100';
         setTimeout(() => {
           content.classList.remove('marker-bounce');
           content.classList.add('marker-selected');
