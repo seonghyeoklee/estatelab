@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
   if (sido) complexWhere.region = { sido };
   if (q) complexWhere.name = { contains: q, mode: 'insensitive' };
   if (minYear) complexWhere.builtYear = { ...(complexWhere.builtYear as object || {}), gte: minYear };
+  // 지번 형태 이름 제외 — (숫자 로 시작하는 소규모 빌라/연립
+  complexWhere.NOT = { name: { startsWith: '(' } };
   complexWhere.trades = { some: {} };
 
   // 가격/면적 필터는 거래 데이터 기반
@@ -71,6 +73,8 @@ export async function GET(request: NextRequest) {
     regionCode: c.regionCode,
     region: c.region,
     builtYear: c.builtYear,
+    lat: c.lat,
+    lng: c.lng,
     tradeCount: c._count.trades,
     latestTrade: c.trades[0] || null,
   }));

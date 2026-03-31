@@ -14,6 +14,7 @@ export async function GET() {
       lat: { not: null },
       lng: { not: null },
       trades: { some: {} },
+      NOT: { name: { startsWith: '(' } },
     },
     select: {
       id: true,

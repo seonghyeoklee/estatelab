@@ -6,10 +6,12 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar } from 'lucide-react';
+import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
+import { KakaoMapProvider } from '@/components/kakao-map-provider';
 import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
+import { ApartmentsMiniMap } from './_components/apartments-mini-map';
 
 interface ApartmentItem {
   id: string;
@@ -18,6 +20,8 @@ interface ApartmentItem {
   regionCode: string;
   region: { sido: string; sigungu: string };
   builtYear: number | null;
+  lat: number | null;
+  lng: number | null;
   tradeCount: number;
   latestTrade: {
     price: number;
@@ -39,6 +43,7 @@ function priceColor(price: number): { bg: string; text: string } {
 export default function ApartmentsPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [showMap, setShowMap] = useState(true);
   const [filters, setFilters] = useState<FilterValues>({
     regionCode: '',
     sido: '',
@@ -95,16 +100,38 @@ export default function ApartmentsPage() {
       {/* 필터 */}
       <ApartmentFilters filters={filters} onChange={handleFilterChange} />
 
-      {/* 결과 카운트 */}
+      {/* 결과 카운트 + 지도 토글 */}
       {data?.meta && (
         <div className="flex items-center justify-between">
           <p className="text-[13px] text-muted-foreground">
             총 <span className="font-bold text-foreground">{data.meta.total.toLocaleString()}</span>개 단지
           </p>
-          <p className="text-[12px] text-muted-foreground">
-            {page} / {data.meta.totalPages} 페이지
-          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors',
+                showMap ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
+              )}
+            >
+              <MapIcon className="h-3 w-3" />
+              지도
+            </button>
+            <p className="text-[12px] text-muted-foreground">
+              {page} / {data.meta.totalPages} 페이지
+            </p>
+          </div>
         </div>
+      )}
+
+      {/* 미니맵 */}
+      {showMap && data?.data && data.data.length > 0 && (
+        <KakaoMapProvider>
+          <ApartmentsMiniMap
+            items={data.data}
+            className="h-[280px] rounded-xl overflow-hidden border"
+          />
+        </KakaoMapProvider>
       )}
 
       {/* 리스트 */}
