@@ -1,70 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  parseSearchParams,
+  buildWhereClause,
+  buildOrderBy,
+  getRecentTradeDate,
+} from '@/lib/apartment-search';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/market/apartments?regionCode=11680&q=래미안&minPrice=50000&maxPrice=100000&minArea=59&maxArea=84&minYear=2010&page=1&limit=20
+ * GET /api/market/apartments
+ * 통합 검색: 단지명 + 동 + 도로명 + 시군구
+ * 필터: regionCode, sido, dong, minPrice, maxPrice, minArea, maxArea, minYear
+ * 정렬: name, price, trades, year, ppp (평당가)
  */
 export async function GET(request: NextRequest) {
-  const sp = request.nextUrl.searchParams;
-  const regionCode = sp.get('regionCode');
-  const sido = sp.get('sido');
-  const q = sp.get('q');
-  const minPrice = sp.get('minPrice') ? parseInt(sp.get('minPrice')!, 10) : undefined;
-  const maxPrice = sp.get('maxPrice') ? parseInt(sp.get('maxPrice')!, 10) : undefined;
-  const minArea = sp.get('minArea') ? parseFloat(sp.get('minArea')!) : undefined;
-  const maxArea = sp.get('maxArea') ? parseFloat(sp.get('maxArea')!) : undefined;
-  const minYear = sp.get('minYear') ? parseInt(sp.get('minYear')!, 10) : undefined;
-  const page = Math.max(1, parseInt(sp.get('page') || '1', 10));
-  const limit = Math.min(Math.max(1, parseInt(sp.get('limit') || '20', 10)), 100);
+  const params = parseSearchParams(request.nextUrl.searchParams);
+  const where = buildWhereClause(params);
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 20;
   const skip = (page - 1) * limit;
-  const sort = sp.get('sort') || 'name'; // name, price, trades, year
+  const sort = params.sort || 'name';
 
-  // where 조건 구성
-  const complexWhere: Record<string, unknown> = {};
-  if (regionCode) complexWhere.regionCode = regionCode;
-  if (sido) complexWhere.region = { sido };
-  if (q) complexWhere.name = { contains: q, mode: 'insensitive' };
-  if (minYear) complexWhere.builtYear = { ...(complexWhere.builtYear as object || {}), gte: minYear };
-  // 지번 형태 이름 제외 — (숫자 로 시작하는 소규모 빌라/연립
-  complexWhere.NOT = { name: { startsWith: '(' } };
-  complexWhere.trades = { some: {} };
+  // 평당가순/가격순은 raw query 필요 — Prisma에서 집계 기반 정렬 불가
+  const needsRawSort = sort === 'ppp' || sort === 'price';
 
-  // 가격/면적 필터는 거래 데이터 기반
-  if (minPrice || maxPrice || minArea || maxArea) {
-    const tradeFilter: Record<string, unknown> = {};
-    if (minPrice) tradeFilter.price = { ...(tradeFilter.price as object || {}), gte: minPrice };
-    if (maxPrice) tradeFilter.price = { ...(tradeFilter.price as object || {}), lte: maxPrice };
-    if (minArea) tradeFilter.area = { ...(tradeFilter.area as object || {}), gte: minArea };
-    if (maxArea) tradeFilter.area = { ...(tradeFilter.area as object || {}), lte: maxArea };
-    complexWhere.trades = { some: tradeFilter };
+  if (needsRawSort) {
+    return handleRawSortQuery(where, sort, page, limit, skip);
   }
 
-  // 정렬
-  const orderBy: Record<string, unknown> =
-    sort === 'year' ? { builtYear: 'desc' } :
-    sort === 'trades' ? { trades: { _count: 'desc' } } :
-    { name: 'asc' };
+  const orderBy = buildOrderBy(sort);
+  const recentDate = getRecentTradeDate(30);
 
   const [complexes, total] = await Promise.all([
     prisma.apartmentComplex.findMany({
-      where: complexWhere,
+      where,
       include: {
         region: { select: { sido: true, sigungu: true } },
         _count: { select: { trades: true } },
         trades: {
           orderBy: { dealDate: 'desc' },
           take: 1,
-          select: { price: true, area: true, floor: true, dealDate: true },
+          select: { price: true, area: true, floor: true, dealDate: true, pricePerPyeong: true },
         },
       },
       orderBy,
       skip,
       take: limit,
     }),
-    prisma.apartmentComplex.count({ where: complexWhere }),
+    prisma.apartmentComplex.count({ where }),
   ]);
+
+  // 최근 30일 거래 건수 일괄 조회
+  const complexIds = complexes.map((c) => c.id);
+  const recentCounts = await getRecentTradeCounts(complexIds, recentDate);
+
+  // 동별 집계 (필터 결과 기반)
+  const dongCounts = await getDongCounts(where);
 
   const data = complexes.map((c) => ({
     id: c.id,
@@ -76,11 +69,144 @@ export async function GET(request: NextRequest) {
     lat: c.lat,
     lng: c.lng,
     tradeCount: c._count.trades,
+    recentTradeCount: recentCounts.get(c.id) ?? 0,
     latestTrade: c.trades[0] || null,
   }));
 
   return NextResponse.json({
     data,
     meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    dongCounts,
   });
+}
+
+/**
+ * 평당가/가격 기준 정렬 — raw SQL 사용
+ */
+async function handleRawSortQuery(
+  where: Record<string, unknown>,
+  sort: string,
+  page: number,
+  limit: number,
+  skip: number
+) {
+  const total = await prisma.apartmentComplex.count({ where });
+  const recentDate = getRecentTradeDate(30);
+
+  const complexes = await prisma.$queryRaw<
+    {
+      id: string; name: string; dong: string; region_code: string;
+      built_year: number | null; lat: number | null; lng: number | null;
+      sido: string; sigungu: string; trade_count: number;
+      latest_price: number | null; latest_area: number | null;
+      latest_floor: number | null; latest_date: string | null;
+      latest_ppp: number | null; avg_price: number; avg_ppp: number;
+      recent_count: number;
+    }[]
+  >`
+    WITH ranked AS (
+      SELECT
+        c.id, c.name, c.dong, c.region_code, c.built_year, c.lat, c.lng,
+        r.sido, r.sigungu,
+        COUNT(t.id)::int AS trade_count,
+        ROUND(AVG(t.price))::int AS avg_price,
+        ROUND(AVG(t.price_per_pyeong))::int AS avg_ppp,
+        COUNT(t.id) FILTER (WHERE t.deal_date >= ${recentDate})::int AS recent_count
+      FROM apartment_complexes c
+      JOIN regions r ON r.code = c.region_code
+      JOIN apartment_trades t ON t.complex_id = c.id
+      WHERE c.name NOT LIKE '(%'
+      GROUP BY c.id, r.sido, r.sigungu
+    )
+    SELECT
+      ranked.*,
+      lt.price::int AS latest_price,
+      lt.area AS latest_area,
+      lt.floor::int AS latest_floor,
+      lt.deal_date::text AS latest_date,
+      lt.price_per_pyeong AS latest_ppp
+    FROM ranked
+    LEFT JOIN LATERAL (
+      SELECT price, area, floor, deal_date, price_per_pyeong
+      FROM apartment_trades
+      WHERE complex_id = ranked.id
+      ORDER BY deal_date DESC
+      LIMIT 1
+    ) lt ON true
+    ORDER BY ${sort === 'ppp' ? prisma.$queryRaw`avg_ppp` : prisma.$queryRaw`avg_price`} DESC NULLS LAST
+    OFFSET ${skip} LIMIT ${limit}
+  `;
+
+  // raw query에서 ORDER BY를 동적으로 하기 어려우므로 JS에서 정렬
+  const sorted = [...complexes].sort((a, b) =>
+    sort === 'ppp' ? (b.avg_ppp ?? 0) - (a.avg_ppp ?? 0) : (b.avg_price ?? 0) - (a.avg_price ?? 0)
+  );
+
+  const dongCounts = await getDongCounts(where);
+
+  const data = sorted.map((c) => ({
+    id: c.id,
+    name: c.name,
+    dong: c.dong,
+    regionCode: c.region_code,
+    region: { sido: c.sido, sigungu: c.sigungu },
+    builtYear: c.built_year,
+    lat: c.lat,
+    lng: c.lng,
+    tradeCount: c.trade_count,
+    recentTradeCount: c.recent_count,
+    latestTrade: c.latest_price ? {
+      price: c.latest_price,
+      area: c.latest_area!,
+      floor: c.latest_floor!,
+      dealDate: c.latest_date!,
+      pricePerPyeong: c.latest_ppp,
+    } : null,
+  }));
+
+  return NextResponse.json({
+    data,
+    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    dongCounts,
+  });
+}
+
+/**
+ * 최근 N일 거래 건수 조회
+ */
+async function getRecentTradeCounts(
+  complexIds: string[],
+  since: Date
+): Promise<Map<string, number>> {
+  if (complexIds.length === 0) return new Map();
+
+  const counts = await prisma.apartmentTrade.groupBy({
+    by: ['complexId'],
+    where: {
+      complexId: { in: complexIds },
+      dealDate: { gte: since },
+    },
+    _count: true,
+  });
+
+  return new Map(counts.map((c) => [c.complexId, c._count]));
+}
+
+/**
+ * 동별 단지 수 집계 (필터 칩용)
+ */
+async function getDongCounts(
+  where: Record<string, unknown>
+): Promise<{ dong: string; count: number }[]> {
+  const groups = await prisma.apartmentComplex.groupBy({
+    by: ['dong'],
+    where,
+    _count: true,
+    orderBy: { _count: { dong: 'desc' } },
+    take: 20,
+  });
+
+  return groups
+    .filter((g) => g.dong)
+    .map((g) => ({ dong: g.dong, count: g._count }));
 }

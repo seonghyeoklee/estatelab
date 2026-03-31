@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon } from 'lucide-react';
+import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import { KakaoMapProvider } from '@/components/kakao-map-provider';
@@ -23,12 +23,19 @@ interface ApartmentItem {
   lat: number | null;
   lng: number | null;
   tradeCount: number;
+  recentTradeCount: number;
   latestTrade: {
     price: number;
     area: number;
     floor: number;
     dealDate: string;
+    pricePerPyeong: number | null;
   } | null;
+}
+
+interface DongCount {
+  dong: string;
+  count: number;
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -44,6 +51,7 @@ export default function ApartmentsPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(true);
+  const [dongFilter, setDongFilter] = useState('');
   const [filters, setFilters] = useState<FilterValues>({
     regionCode: '',
     sido: '',
@@ -59,6 +67,7 @@ export default function ApartmentsPage() {
   params.set('page', String(page));
   params.set('limit', '20');
   if (query) params.set('q', query);
+  if (dongFilter) params.set('dong', dongFilter);
   if (filters.regionCode) params.set('regionCode', filters.regionCode);
   else if (filters.sido) params.set('sido', filters.sido);
   if (filters.minPrice) params.set('minPrice', filters.minPrice);
@@ -71,6 +80,7 @@ export default function ApartmentsPage() {
   const { data, isLoading } = useSWR<{
     data: ApartmentItem[];
     meta: { total: number; page: number; totalPages: number };
+    dongCounts: DongCount[];
   }>(`/api/market/apartments?${params.toString()}`, fetcher);
 
   const handleFilterChange = (newFilters: FilterValues) => {
@@ -82,7 +92,7 @@ export default function ApartmentsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">아파트</h1>
-        <p className="text-muted-foreground">조건에 맞는 아파트 단지를 검색하세요.</p>
+        <p className="text-muted-foreground">단지명, 동, 지역을 검색하세요.</p>
       </div>
 
       {/* 검색 */}
@@ -90,15 +100,43 @@ export default function ApartmentsPage() {
         <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
-          placeholder="단지명으로 검색..."
+          placeholder="단지명, 동, 지역 검색... (예: 강남 래미안)"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+          onChange={(e) => { setQuery(e.target.value); setPage(1); setDongFilter(''); }}
           className="w-full rounded-xl border bg-background py-2.5 pl-10 pr-4 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
       {/* 필터 */}
       <ApartmentFilters filters={filters} onChange={handleFilterChange} />
+
+      {/* 동 필터 칩 */}
+      {data?.dongCounts && data.dongCounts.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => { setDongFilter(''); setPage(1); }}
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+              !dongFilter ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
+            )}
+          >
+            전체
+          </button>
+          {data.dongCounts.map((d) => (
+            <button
+              key={d.dong}
+              onClick={() => { setDongFilter(d.dong); setPage(1); }}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+                dongFilter === d.dong ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
+              )}
+            >
+              {d.dong}
+              <span className="ml-1 opacity-60">{d.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 결과 카운트 + 지도 토글 */}
       {data?.meta && (
@@ -146,7 +184,7 @@ export default function ApartmentsPage() {
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <Building2 className="h-10 w-10 text-muted-foreground" />
             <p className="text-[15px] text-muted-foreground">
-              {query || Object.values(filters).some(Boolean)
+              {query || dongFilter || Object.values(filters).some(Boolean)
                 ? '조건에 맞는 단지가 없습니다.'
                 : '수집된 단지 데이터가 없습니다.'}
             </p>
@@ -157,6 +195,7 @@ export default function ApartmentsPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             {data.data.map((apt) => {
               const color = apt.latestTrade ? priceColor(apt.latestTrade.price) : { bg: 'bg-muted/50', text: 'text-muted-foreground' };
+              const isHot = apt.recentTradeCount >= 3;
               return (
                 <Link key={apt.id} href={`/dashboard/apartments/${apt.id}`}>
                   <Card className="hover:shadow-md transition-all cursor-pointer h-full">
@@ -164,7 +203,15 @@ export default function ApartmentsPage() {
                       {/* 상단: 이름 + 위치 */}
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-[16px] font-bold leading-tight line-clamp-1">{apt.name}</h3>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <h3 className="text-[16px] font-bold leading-tight line-clamp-1">{apt.name}</h3>
+                            {isHot && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-600 shrink-0">
+                                <Flame className="h-2.5 w-2.5" />
+                                활발
+                              </span>
+                            )}
+                          </div>
                           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                         </div>
                         <div className="flex items-center gap-2 mt-1.5 text-[13px] text-muted-foreground">
@@ -189,13 +236,21 @@ export default function ApartmentsPage() {
                               {formatPrice(apt.latestTrade.price)}
                             </p>
                             <p className="text-[12px] text-muted-foreground mt-0.5">
-                              {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층 · {apt.latestTrade.dealDate.slice(0, 10)}
+                              {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층ㅤ
+                              {apt.latestTrade.pricePerPyeong
+                                ? `${apt.latestTrade.pricePerPyeong.toLocaleString()}만/평`
+                                : ''}
                             </p>
                           </div>
                         ) : (
                           <p className="text-[14px] text-muted-foreground">거래 정보 없음</p>
                         )}
                         <div className="flex items-center gap-1.5">
+                          {apt.recentTradeCount > 0 && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 text-muted-foreground border-muted-foreground/20">
+                              최근 {apt.recentTradeCount}건
+                            </Badge>
+                          )}
                           <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5', color.bg, color.text, 'border-0')}>
                             <TrendingUp className="h-3 w-3 mr-1" />
                             {apt.tradeCount}건

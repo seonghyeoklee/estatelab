@@ -52,6 +52,7 @@ const YEAR_OPTIONS = [
 const SORT_OPTIONS = [
   { label: '이름순', value: 'name' },
   { label: '가격순', value: 'price' },
+  { label: '평당가순', value: 'ppp' },
   { label: '거래수순', value: 'trades' },
   { label: '연식순', value: 'year' },
 ];
