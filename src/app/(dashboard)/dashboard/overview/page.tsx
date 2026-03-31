@@ -3,6 +3,7 @@ import { StatsCards } from '../_components/stats-cards';
 import { RegionSummaryCards } from '../_components/region-summary-card';
 import { RecentTradesCard } from '../_components/recent-trades-card';
 import { RateSummaryCard } from '../_components/rate-summary-card';
+import { InsightsCards } from '../_components/insights-cards';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,12 @@ export default function OverviewPage() {
       >
         <StatsCards />
       </Suspense>
+
+      {/* 인사이트 */}
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">시장 인사이트</h2>
+        <InsightsCards />
+      </div>
 
       {/* Region summaries */}
       <div>

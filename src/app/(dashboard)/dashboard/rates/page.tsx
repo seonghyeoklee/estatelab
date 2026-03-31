@@ -5,6 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Landmark, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ReferenceLine,
+} from 'recharts';
 
 interface Rate {
   name: string;
@@ -21,6 +31,14 @@ function RateIcon({ change }: { change: number }) {
   if (change < 0) return <TrendingDown className="h-4 w-4 text-price-down" />;
   return <Minus className="h-4 w-4 text-muted-foreground" />;
 }
+
+// 차트 색상 (금리 종류별)
+const CHART_COLORS: Record<string, string> = {
+  BASE_RATE: '#059669',
+  CD_91D: '#0369a1',
+  MORTGAGE_MIXED: '#7c3aed',
+  MORTGAGE_FIXED: '#dc2626',
+};
 
 export default function RatesPage() {
   const { data: latestData, isLoading: latestLoading } = useSWR<{ data: Rate[] }>(
@@ -103,62 +121,86 @@ export default function RatesPage() {
         </div>
       )}
 
-      {/* 금리 추이 차트 */}
+      {/* 금리 추이 차트 — recharts */}
       {!historyLoading && historyByName.size > 0 && (
         <div className="grid gap-4 lg:grid-cols-2">
           {Array.from(historyByName.entries()).map(([name, rates]) => {
             const sorted = rates.sort((a, b) => a.date.localeCompare(b.date));
+            const chartData = sorted.map((r) => ({
+              date: r.date.slice(0, 7),
+              rate: r.rate,
+            }));
             const maxRate = Math.max(...sorted.map((r) => r.rate));
             const minRate = Math.min(...sorted.map((r) => r.rate));
-            const range = maxRate - minRate || 0.1;
             const nameKr = sorted[0]?.nameKr || name;
             const latestRate = sorted[sorted.length - 1];
+            const color = CHART_COLORS[name] || '#059669';
 
             return (
               <Card key={name}>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">{nameKr}</CardTitle>
                     {latestRate && (
-                      <span className="text-lg font-bold text-primary">
+                      <span className="text-lg font-bold" style={{ color }}>
                         {latestRate.rate.toFixed(2)}%
                       </span>
                     )}
                   </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {sorted[0]?.date.slice(0, 7)} ~ {sorted[sorted.length - 1]?.date.slice(0, 7)} · 최저 {minRate.toFixed(2)}% · 최고 {maxRate.toFixed(2)}%
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-end gap-[2px] h-32">
-                    {sorted.map((r, idx) => {
-                      const height = ((r.rate - minRate) / range) * 80 + 20;
-                      const isLast = idx === sorted.length - 1;
-                      const month = r.date.slice(5, 7);
-
-                      return (
-                        <div key={r.date} className="flex flex-1 flex-col items-center gap-0.5">
-                          {isLast && (
-                            <span className="text-[9px] font-semibold text-primary">
-                              {r.rate.toFixed(1)}
-                            </span>
-                          )}
-                          <div
-                            className={cn(
-                              'w-full rounded-t transition-all min-h-[4px]',
-                              isLast ? 'bg-primary' : 'bg-primary/20'
-                            )}
-                            style={{ height: `${height}%` }}
-                          />
-                          {(idx === 0 || idx === sorted.length - 1 || idx % 6 === 0) && (
-                            <span className="text-[8px] text-muted-foreground">{month}월</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                    <span>{sorted[0]?.date.slice(0, 7)}</span>
-                    <span>최저 {minRate.toFixed(2)}% · 최고 {maxRate.toFixed(2)}%</span>
-                    <span>{sorted[sorted.length - 1]?.date.slice(0, 7)}</span>
-                  </div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 10, fill: '#94a3b8' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e2e8f0' }}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        domain={[
+                          Math.floor(minRate * 10 - 1) / 10,
+                          Math.ceil(maxRate * 10 + 1) / 10,
+                        ]}
+                        tick={{ fontSize: 10, fill: '#94a3b8' }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                        width={45}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '12px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        }}
+                        formatter={(value) => [`${Number(value).toFixed(2)}%`, nameKr]}
+                        labelFormatter={(label) => String(label)}
+                      />
+                      {latestRate && (
+                        <ReferenceLine
+                          y={latestRate.rate}
+                          stroke={color}
+                          strokeDasharray="3 3"
+                          strokeOpacity={0.3}
+                        />
+                      )}
+                      <Line
+                        type="monotone"
+                        dataKey="rate"
+                        stroke={color}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             );
