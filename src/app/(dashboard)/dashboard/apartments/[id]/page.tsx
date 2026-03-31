@@ -14,6 +14,9 @@ import { WatchlistButton } from '@/components/watchlist-button';
 import { HistoryTracker } from './_components/history-tracker';
 import { NearbyFacilities } from './_components/nearby-facilities';
 import { RankCard } from './_components/rank-card';
+import { DetailMap } from './_components/detail-map';
+import { JeonseRatioCard } from './_components/jeonse-ratio-card';
+import { KakaoMapProvider } from '@/components/kakao-map-provider';
 
 export const dynamic = 'force-dynamic';
 
@@ -187,6 +190,18 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
         </Card>
       </div>
 
+      {/* 지도 */}
+      {complex.lat && complex.lng && (
+        <KakaoMapProvider>
+          <DetailMap
+            complexId={id}
+            lat={complex.lat}
+            lng={complex.lng}
+            name={complex.name}
+          />
+        </KakaoMapProvider>
+      )}
+
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -247,6 +262,9 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* 전월세 현황 + 전세가율 */}
+      <JeonseRatioCard complexId={id} />
 
       {/* 동네 시세 순위 + 회전율 */}
       <RankCard complexId={id} />
