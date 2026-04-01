@@ -5,6 +5,31 @@
 
 const API_BASE = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev';
 
+const FETCH_TIMEOUT = 30_000; // 30초
+const MAX_RETRIES = 3;
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'EstateLab/1.0' },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      const delay = attempt * 2000;
+      console.warn(`[retry ${attempt}/${retries}] ${delay}ms 후 재시도...`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error('unreachable');
+}
+
 export interface RawTrade {
   dealYear: number;
   dealMonth: number;
@@ -43,11 +68,7 @@ export async function fetchApartmentTrades(
   url.searchParams.set('pageNo', '1');
   url.searchParams.set('numOfRows', '9999');
 
-  const res = await fetch(url.toString(), {
-    headers: { 'User-Agent': 'EstateLab/1.0' },
-  });
-  if (!res.ok) throw new Error(`API 요청 실패: ${res.status}`);
-
+  const res = await fetchWithRetry(url.toString());
   const text = await res.text();
   return parseTradeXml(text);
 }
@@ -141,11 +162,7 @@ export async function fetchApartmentRents(
   url.searchParams.set('pageNo', '1');
   url.searchParams.set('numOfRows', '9999');
 
-  const res = await fetch(url.toString(), {
-    headers: { 'User-Agent': 'EstateLab/1.0' },
-  });
-  if (!res.ok) throw new Error(`전월세 API 요청 실패: ${res.status}`);
-
+  const res = await fetchWithRetry(url.toString());
   const text = await res.text();
   return parseRentXml(text);
 }

@@ -33,67 +33,99 @@ const CAT_COLORS: Record<string, { color: string; label: string }> = {
   bank: { color: '#0369a1', label: '은행' },
 };
 
-interface Props {
-  complexId: string;
-  lat: number;
-  lng: number;
-  name: string;
+function addCenterMarker(map: kakao.maps.Map, lat: number, lng: number, name: string) {
+  const markerEl = document.createElement('div');
+  markerEl.style.cssText = `
+    display: flex; flex-direction: column; align-items: center;
+    background: #059669; color: white; padding: 4px 10px; border-radius: 10px;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 2px solid #047857;
+    position: relative;
+  `;
+  markerEl.innerHTML = `<span style="font-size:10px;opacity:0.85">📍</span><span>${name}</span>`;
+
+  const tail = document.createElement('div');
+  tail.style.cssText = `position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #047857;`;
+  markerEl.appendChild(tail);
+
+  new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(lat, lng),
+    content: markerEl,
+    yAnchor: 1.5,
+    zIndex: 10,
+  }).setMap(map);
+
+  new kakao.maps.Circle({
+    center: new kakao.maps.LatLng(lat, lng),
+    radius: 1000,
+    strokeWeight: 1.5,
+    strokeColor: '#059669',
+    strokeOpacity: 0.3,
+    strokeStyle: 'dashed',
+    fillColor: '#059669',
+    fillOpacity: 0.03,
+  }).setMap(map);
 }
 
-export function DetailMap({ complexId, lat, lng, name }: Props) {
+interface Props {
+  complexId: string;
+  lat: number | null;
+  lng: number | null;
+  name: string;
+  address: string;
+}
+
+export function DetailMap({ complexId, lat, lng, name, address }: Props) {
   const kakaoLoaded = useKakaoLoaded();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
+  const resolvedCoordsRef = useRef<{ lat: number; lng: number } | null>(
+    lat && lng ? { lat, lng } : null
+  );
 
+  const hasCoords = lat !== null && lng !== null;
   const { data: nearbyData } = useSWR<{ data: NearbyData }>(
-    `/api/market/apartments/${complexId}/nearby?radius=1000`,
+    hasCoords ? `/api/market/apartments/${complexId}/nearby?radius=1000` : null,
     fetcher
   );
 
-  // 지도 초기화
+  // 지도 초기화 — 좌표 있으면 바로, 없으면 주소 검색
   useEffect(() => {
     if (!kakaoLoaded || !mapRef.current || mapInstanceRef.current) return;
 
-    const map = new kakao.maps.Map(mapRef.current, {
-      center: new kakao.maps.LatLng(lat, lng),
-      level: 4,
-    });
-    mapInstanceRef.current = map;
+    const initMap = (centerLat: number, centerLng: number) => {
+      const map = new kakao.maps.Map(mapRef.current!, {
+        center: new kakao.maps.LatLng(centerLat, centerLng),
+        level: 4,
+      });
+      mapInstanceRef.current = map;
+      resolvedCoordsRef.current = { lat: centerLat, lng: centerLng };
+      addCenterMarker(map, centerLat, centerLng, name);
+    };
 
-    // 단지 마커 (중앙)
-    const markerEl = document.createElement('div');
-    markerEl.style.cssText = `
-      display: flex; flex-direction: column; align-items: center;
-      background: #059669; color: white; padding: 4px 10px; border-radius: 10px;
-      font-size: 11px; font-weight: 700; white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 2px solid #047857;
-    `;
-    markerEl.innerHTML = `<span style="font-size:10px;opacity:0.85">📍</span><span>${name}</span>`;
-
-    const tail = document.createElement('div');
-    tail.style.cssText = `position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #047857;`;
-    markerEl.style.position = 'relative';
-    markerEl.appendChild(tail);
-
-    new kakao.maps.CustomOverlay({
-      position: new kakao.maps.LatLng(lat, lng),
-      content: markerEl,
-      yAnchor: 1.5,
-      zIndex: 10,
-    }).setMap(map);
-
-    // 반경 원
-    new kakao.maps.Circle({
-      center: new kakao.maps.LatLng(lat, lng),
-      radius: 1000,
-      strokeWeight: 1.5,
-      strokeColor: '#059669',
-      strokeOpacity: 0.3,
-      strokeStyle: 'dashed',
-      fillColor: '#059669',
-      fillOpacity: 0.03,
-    }).setMap(map);
-  }, [kakaoLoaded, lat, lng, name]);
+    if (lat && lng) {
+      initMap(lat, lng);
+    } else {
+      // 주소 검색으로 좌표 획득
+      const geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(address, (result, status) => {
+        if (status === kakao.maps.services.Status.OK && result.length > 0) {
+          initMap(parseFloat(result[0].y), parseFloat(result[0].x));
+        } else {
+          // 키워드 검색 폴백
+          const ps = new kakao.maps.services.Places();
+          ps.keywordSearch(`${name} 아파트`, (places, psStatus) => {
+            if (psStatus === kakao.maps.services.Status.OK && places.length > 0) {
+              initMap(parseFloat(places[0].y), parseFloat(places[0].x));
+            } else {
+              // 서울 기본 좌표
+              initMap(37.5665, 126.978);
+            }
+          });
+        }
+      });
+    }
+  }, [kakaoLoaded, lat, lng, name, address]);
 
   // 주변시설 마커
   useEffect(() => {

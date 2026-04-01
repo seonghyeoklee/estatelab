@@ -191,16 +191,15 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
       </div>
 
       {/* 지도 */}
-      {complex.lat && complex.lng && (
-        <KakaoMapProvider>
-          <DetailMap
-            complexId={id}
-            lat={complex.lat}
-            lng={complex.lng}
-            name={complex.name}
-          />
-        </KakaoMapProvider>
-      )}
+      <KakaoMapProvider>
+        <DetailMap
+          complexId={id}
+          lat={complex.lat}
+          lng={complex.lng}
+          name={complex.name}
+          address={`${complex.region.sido} ${complex.region.sigungu} ${complex.dong} ${complex.jibun}`}
+        />
+      </KakaoMapProvider>
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">

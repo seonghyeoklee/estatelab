@@ -225,6 +225,43 @@ declare namespace kakao.maps {
   }
 
   function load(callback: () => void): void;
+
+  namespace services {
+    enum Status {
+      OK = 'OK',
+      ZERO_RESULT = 'ZERO_RESULT',
+      ERROR = 'ERROR',
+    }
+
+    interface AddressResult {
+      address_name: string;
+      x: string;
+      y: string;
+    }
+
+    interface PlaceResult {
+      id: string;
+      place_name: string;
+      address_name: string;
+      x: string;
+      y: string;
+    }
+
+    class Geocoder {
+      addressSearch(
+        addr: string,
+        callback: (result: AddressResult[], status: Status) => void,
+      ): void;
+    }
+
+    class Places {
+      keywordSearch(
+        keyword: string,
+        callback: (result: PlaceResult[], status: Status) => void,
+        options?: { location?: LatLng; radius?: number; size?: number },
+      ): void;
+    }
+  }
 }
 
 interface Window {
