@@ -29,7 +29,7 @@ export function parseSearchParams(sp: URLSearchParams): ApartmentSearchParams {
     minArea: sp.get('minArea') ? parseFloat(sp.get('minArea')!) : undefined,
     maxArea: sp.get('maxArea') ? parseFloat(sp.get('maxArea')!) : undefined,
     minYear: sp.get('minYear') ? parseInt(sp.get('minYear')!, 10) : undefined,
-    sort: sp.get('sort') || 'name',
+    sort: sp.get('sort') || 'trades',
     page: Math.max(1, parseInt(sp.get('page') || '1', 10)),
     limit: Math.min(Math.max(1, parseInt(sp.get('limit') || '20', 10)), 100),
   };
@@ -136,8 +136,23 @@ export function buildOrderBy(sort: string): Record<string, unknown> {
     case 'trades':
       return { trades: { _count: 'desc' } };
     default:
+      // 이름순은 Prisma에서 기본 정렬 후 JS에서 한글 우선 재정렬
       return { name: 'asc' };
   }
+}
+
+/**
+ * 한글 시작 이름을 우선 정렬
+ * - 한글(가~힣) → 영문/숫자 순
+ */
+export function sortKoreanFirst<T extends { name: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const aIsKorean = /^[가-힣]/.test(a.name);
+    const bIsKorean = /^[가-힣]/.test(b.name);
+    if (aIsKorean && !bIsKorean) return -1;
+    if (!aIsKorean && bIsKorean) return 1;
+    return a.name.localeCompare(b.name, 'ko');
+  });
 }
 
 /**

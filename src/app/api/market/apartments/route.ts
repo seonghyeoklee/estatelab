@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   const skip = (page - 1) * limit;
   const sort = params.sort || 'name';
 
-  // 평당가순/가격순은 raw query 필요 — Prisma에서 집계 기반 정렬 불가
-  const needsRawSort = sort === 'ppp' || sort === 'price';
+  // 평당가순/가격순/이름순(한글 우선)은 raw query 필요
+  const needsRawSort = sort === 'ppp' || sort === 'price' || sort === 'name';
 
   if (needsRawSort) {
     return handleRawSortQuery(where, sort, page, limit, skip);
@@ -93,17 +93,17 @@ async function handleRawSortQuery(
   const total = await prisma.apartmentComplex.count({ where });
   const recentDate = getRecentTradeDate(30);
 
-  const complexes = await prisma.$queryRaw<
-    {
-      id: string; name: string; dong: string; region_code: string;
-      built_year: number | null; lat: number | null; lng: number | null;
-      sido: string; sigungu: string; trade_count: number;
-      latest_price: number | null; latest_area: number | null;
-      latest_floor: number | null; latest_date: string | null;
-      latest_ppp: number | null; avg_price: number; avg_ppp: number;
-      recent_count: number;
-    }[]
-  >`
+  type RawComplex = {
+    id: string; name: string; dong: string; region_code: string;
+    built_year: number | null; lat: number | null; lng: number | null;
+    sido: string; sigungu: string; trade_count: number;
+    latest_price: number | null; latest_area: number | null;
+    latest_floor: number | null; latest_date: string | null;
+    latest_ppp: number | null; avg_price: number; avg_ppp: number;
+    recent_count: number;
+  };
+
+  const baseQuery = `
     WITH ranked AS (
       SELECT
         c.id, c.name, c.dong, c.region_code, c.built_year, c.lat, c.lng,
@@ -111,7 +111,7 @@ async function handleRawSortQuery(
         COUNT(t.id)::int AS trade_count,
         ROUND(AVG(t.price))::int AS avg_price,
         ROUND(AVG(t.price_per_pyeong))::int AS avg_ppp,
-        COUNT(t.id) FILTER (WHERE t.deal_date >= ${recentDate})::int AS recent_count
+        COUNT(t.id) FILTER (WHERE t.deal_date >= $1)::int AS recent_count
       FROM apartment_complexes c
       JOIN regions r ON r.code = c.region_code
       JOIN apartment_trades t ON t.complex_id = c.id
@@ -133,14 +133,19 @@ async function handleRawSortQuery(
       ORDER BY deal_date DESC
       LIMIT 1
     ) lt ON true
-    ORDER BY ${sort === 'ppp' ? prisma.$queryRaw`avg_ppp` : prisma.$queryRaw`avg_price`} DESC NULLS LAST
-    OFFSET ${skip} LIMIT ${limit}
   `;
 
-  // raw query에서 ORDER BY를 동적으로 하기 어려우므로 JS에서 정렬
-  const sorted = [...complexes].sort((a, b) =>
-    sort === 'ppp' ? (b.avg_ppp ?? 0) - (a.avg_ppp ?? 0) : (b.avg_price ?? 0) - (a.avg_price ?? 0)
+  const orderClause =
+    sort === 'ppp' ? 'ORDER BY avg_ppp DESC NULLS LAST' :
+    sort === 'name' ? "ORDER BY CASE WHEN ranked.name ~ '^[가-힣]' THEN 0 ELSE 1 END, ranked.name" :
+    'ORDER BY avg_price DESC NULLS LAST';
+
+  const complexes = await prisma.$queryRawUnsafe<RawComplex[]>(
+    `${baseQuery} ${orderClause} OFFSET $2 LIMIT $3`,
+    recentDate, skip, limit
   );
+
+  const sorted = complexes;
 
   const dongCounts = await getDongCounts(where);
 

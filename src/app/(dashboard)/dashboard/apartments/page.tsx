@@ -60,7 +60,7 @@ export default function ApartmentsPage() {
     minArea: '',
     maxArea: '',
     minYear: '',
-    sort: 'name',
+    sort: 'trades',
   });
 
   const params = new URLSearchParams();

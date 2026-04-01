@@ -5,6 +5,7 @@ import {
   buildWhereClause,
   buildOrderBy,
   getRecentTradeDate,
+  sortKoreanFirst,
 } from '../apartment-search';
 
 describe('parseSearchParams', () => {
@@ -13,7 +14,7 @@ describe('parseSearchParams', () => {
     const result = parseSearchParams(sp);
     expect(result.page).toBe(1);
     expect(result.limit).toBe(20);
-    expect(result.sort).toBe('name');
+    expect(result.sort).toBe('trades');
     expect(result.q).toBeUndefined();
   });
 
@@ -208,5 +209,36 @@ describe('getRecentTradeDate', () => {
     expected.setDate(expected.getDate() - 7);
     expected.setHours(0, 0, 0, 0);
     expect(result.getTime()).toBe(expected.getTime());
+  });
+});
+
+describe('sortKoreanFirst', () => {
+  it('한글 이름이 영문/숫자보다 먼저 나온다', () => {
+    const items = [
+      { name: 'DMC래미안' },
+      { name: '래미안' },
+      { name: '3RU-City' },
+      { name: '힐스테이트' },
+      { name: 'APELBAUM' },
+    ];
+    const sorted = sortKoreanFirst(items);
+    expect(sorted[0].name).toBe('래미안');
+    expect(sorted[1].name).toBe('힐스테이트');
+    // 나머지는 영문/숫자
+    expect(/^[가-힣]/.test(sorted[2].name)).toBe(false);
+  });
+
+  it('한글끼리는 가나다순으로 정렬된다', () => {
+    const items = [
+      { name: '힐스테이트' },
+      { name: '가락쌍용' },
+      { name: '래미안' },
+    ];
+    const sorted = sortKoreanFirst(items);
+    expect(sorted.map((i) => i.name)).toEqual(['가락쌍용', '래미안', '힐스테이트']);
+  });
+
+  it('빈 배열을 처리한다', () => {
+    expect(sortKoreanFirst([])).toEqual([]);
   });
 });
