@@ -66,15 +66,10 @@ const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> 
   세종특별자치시: { lat: 36.48, lng: 127.0, level: 9 },
 };
 
-// 가격대별 마커 색상 (6단계)
-function getPriceColor(avgPrice: number): { bg: string; text: string; border: string; label: string } {
-  if (avgPrice >= 300000) return { bg: '#9333ea', text: '#fff', border: '#7e22ce', label: '30억+' };
-  if (avgPrice >= 200000) return { bg: '#7c3aed', text: '#fff', border: '#6d28d9', label: '20억+' };
-  if (avgPrice >= 100000) return { bg: '#0369a1', text: '#fff', border: '#075985', label: '10억+' };
-  if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857', label: '5억+' };
-  if (avgPrice >= 30000) return { bg: '#0d9488', text: '#fff', border: '#0f766e', label: '3억+' };
-  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~3억' };
-}
+// 단일 컬러 마커 — 시그니처 emerald
+const MARKER_COLOR = { bg: '#059669', text: '#fff', border: '#047857' };
+const MARKER_COLOR_CLUSTER = { bg: '#065f46', text: '#fff', border: '#064e3b' };
+
 
 // 지역 그룹 (동/구 단위 집계)
 interface AreaCluster {
@@ -131,21 +126,21 @@ function groupByGu(complexes: MapComplex[], regions: Region[]): AreaCluster[] {
   );
 }
 
-// 가격 라벨 엘리먼트 생성 (호갱노노 스타일 — 둥근 사각형)
+// 가격 라벨 엘리먼트 생성 — 단일 컬러, 가격 텍스트 강조
 function createPriceLabel(opts: {
   title: string;
   price: string;
   subtitle?: string;
-  color: ReturnType<typeof getPriceColor>;
+  color: { bg: string; text: string; border: string };
   size: 'sm' | 'md' | 'lg';
   onClick?: () => void;
 }): HTMLDivElement {
   const { title, price, subtitle, color, size, onClick } = opts;
 
-  const pad = size === 'lg' ? '6px 14px' : size === 'md' ? '4px 10px' : '3px 8px';
-  const titleSize = size === 'lg' ? '11px' : size === 'md' ? '10px' : '9px';
-  const priceSize = size === 'lg' ? '13px' : size === 'md' ? '12px' : '10px';
-  const radius = size === 'lg' ? '12px' : '10px';
+  const pad = size === 'lg' ? '5px 12px' : size === 'md' ? '3px 9px' : '2px 7px';
+  const titleSize = size === 'lg' ? '10px' : size === 'md' ? '9px' : '8px';
+  const priceSize = size === 'lg' ? '14px' : size === 'md' ? '13px' : '11px';
+  const radius = '10px';
   const maxTitleWidth = size === 'lg' ? '110px' : '80px';
 
   const el = document.createElement('div');
@@ -159,40 +154,37 @@ function createPriceLabel(opts: {
     border-radius: ${radius};
     cursor: pointer;
     white-space: nowrap;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.18);
     border: 1.5px solid ${color.border};
     transition: transform 0.15s, box-shadow 0.15s;
     position: relative;
   `;
 
-  // 텍스트 컨텐츠
   const titleSpan = document.createElement('span');
-  titleSpan.style.cssText = `font-size:${titleSize};opacity:0.9;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
+  titleSpan.style.cssText = `font-size:${titleSize};opacity:0.8;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
   titleSpan.textContent = title;
   el.appendChild(titleSpan);
 
   const priceSpan = document.createElement('span');
-  priceSpan.style.cssText = `font-size:${priceSize};font-weight:800;line-height:1.2`;
+  priceSpan.style.cssText = `font-size:${priceSize};font-weight:800;line-height:1.3;letter-spacing:-0.02em`;
   priceSpan.textContent = price;
   el.appendChild(priceSpan);
 
   if (subtitle) {
     const subSpan = document.createElement('span');
-    subSpan.style.cssText = 'font-size:9px;opacity:0.75;line-height:1';
+    subSpan.style.cssText = 'font-size:8px;opacity:0.65;line-height:1';
     subSpan.textContent = subtitle;
     el.appendChild(subSpan);
   }
 
-  // 하단 꼬리 (말풍선)
+  // 하단 꼬리
   const tail = document.createElement('div');
-  tail.style.cssText = `position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid ${color.border};`;
+  tail.style.cssText = `position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid ${color.border};`;
   el.appendChild(tail);
-
   const tailInner = document.createElement('div');
-  tailInner.style.cssText = `position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid ${color.bg};`;
+  tailInner.style.cssText = `position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid ${color.bg};`;
   el.appendChild(tailInner);
 
-  // 이벤트 — 모두 appendChild 이후에 등록
   el.onmouseenter = () => {
     el.style.transform = 'scale(1.08) translateY(-2px)';
     el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
@@ -201,7 +193,7 @@ function createPriceLabel(opts: {
   el.onmouseleave = () => {
     if (!el.classList.contains('marker-selected')) {
       el.style.transform = 'scale(1)';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+      el.style.boxShadow = '0 1px 6px rgba(0,0,0,0.18)';
       el.style.zIndex = '';
     }
   };
@@ -610,7 +602,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     // 1) 단지별 가격 라벨 오버레이 (줌 ≤ 5)
     for (const complex of withCoords) {
       const position = new kakao.maps.LatLng(complex.lat!, complex.lng!);
-      const color = getPriceColor(complex.avgPrice);
+      const color = MARKER_COLOR;
       const priceLabel = formatPrice(complex.avgPrice);
 
       const handleSelect = () => {
@@ -681,7 +673,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     // 2) 동별 집계 가격 라벨 오버레이 (줌 6~7)
     for (const group of dongGroups) {
       const position = new kakao.maps.LatLng(group.lat, group.lng);
-      const color = getPriceColor(group.avgPrice);
+      const color = MARKER_COLOR_CLUSTER;
       const priceLabel = formatPrice(group.avgPrice);
 
       const handleClick = () => {
@@ -713,7 +705,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     // 3) 구별 집계 오버레이 (줌 ≥ 8) — 큰 라벨로 구 평균가 + 총 단지 수
     for (const group of guGroups) {
       const position = new kakao.maps.LatLng(group.lat, group.lng);
-      const color = getPriceColor(group.avgPrice);
+      const color = MARKER_COLOR_CLUSTER;
       const priceLabel = formatPrice(group.avgPrice);
 
       const handleClick = () => {
@@ -980,31 +972,18 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         </div>
       </div>
 
-      {/* 좌측 하단: 줌 레벨 + 뷰포트 단지 수 + 범례 */}
-      <div className="absolute bottom-3 left-3 z-[20] flex flex-col gap-1.5 pointer-events-none">
+      {/* 좌측 하단: 뷰 모드 + 단지 수 */}
+      <div className="absolute bottom-3 left-3 z-[20] pointer-events-none">
         <div className="flex items-center gap-2 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm px-3 py-1.5 pointer-events-auto">
-          <span className="text-[10px] text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="text-[10px] font-medium text-foreground">
             {zoomLevel <= 5 ? '단지별' : zoomLevel <= 7 ? '동별' : '구별'}
           </span>
-          <span className="text-[10px] font-semibold text-foreground">
-            {visibleIds.length > 0 ? `${visibleIds.length}개 단지` : ''}
-          </span>
-        </div>
-        {/* 가격 범례 */}
-        <div className="flex flex-wrap gap-1 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm px-2.5 py-1.5 pointer-events-auto">
-          {[
-            { color: '#9333ea', label: '30억+' },
-            { color: '#7c3aed', label: '20억+' },
-            { color: '#0369a1', label: '10억+' },
-            { color: '#059669', label: '5억+' },
-            { color: '#0d9488', label: '3억+' },
-            { color: '#64748b', label: '~3억' },
-          ].map((item) => (
-            <span key={item.label} className="flex items-center gap-0.5 text-[8px] text-muted-foreground">
-              <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: item.color }} />
-              {item.label}
+          {visibleIds.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">
+              · {visibleIds.length}개
             </span>
-          ))}
+          )}
         </div>
       </div>
 
@@ -1114,13 +1093,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                     <ArrowUpDown className="h-2.5 w-2.5" />
                     거래수순
                   </button>
-                  {/* 범례 */}
-                  <div className="flex items-center gap-1.5 ml-auto text-[9px] text-muted-foreground">
-                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#9333ea' }} />30억+</span>
-                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#0369a1' }} />10억+</span>
-                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#059669' }} />5억+</span>
-                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#64748b' }} />~3억</span>
-                  </div>
+                  <span className="ml-auto text-[9px] text-muted-foreground">
+                    {visibleIds.length}개 표시
+                  </span>
                 </div>
               </div>
 
@@ -1146,7 +1121,6 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                   }
 
                   return filtered.map((c) => {
-                    const color = getPriceColor(c.avgPrice);
                     const isSelected = selectedComplex?.id === c.id;
                     return (
                       <button
@@ -1165,15 +1139,14 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                         )}
                       >
                         <div
-                          className="w-1.5 h-8 rounded-full shrink-0"
-                          style={{ background: color.bg }}
+                          className="w-1.5 h-8 rounded-full shrink-0 bg-primary"
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{c.name}</p>
                           <p className="text-[11px] text-muted-foreground">{c.dong} · {c._count.trades}건</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-bold" style={{ color: color.bg }}>
+                          <p className="text-sm font-bold text-primary">
                             {formatPrice(c.avgPrice)}
                           </p>
                           <p className="text-[10px] text-muted-foreground">
