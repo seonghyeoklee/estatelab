@@ -51,7 +51,7 @@ export function RegionSummaryCards() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <div className="h-4 w-24 rounded bg-muted" />
               <div className="mt-3 h-8 w-32 rounded bg-muted" />
               <div className="mt-2 h-3 w-40 rounded bg-muted" />

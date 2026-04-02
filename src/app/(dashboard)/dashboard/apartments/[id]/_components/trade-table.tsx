@@ -48,7 +48,7 @@ export function TradeTable({ trades }: TradeTableProps) {
             <button
               onClick={() => setAreaFilter(null)}
               className={cn(
-                'rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors',
+                'rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors',
                 !areaFilter ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
               )}
             >
@@ -59,7 +59,7 @@ export function TradeTable({ trades }: TradeTableProps) {
                 key={area}
                 onClick={() => setAreaFilter(area)}
                 className={cn(
-                  'rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors',
+                  'rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors',
                   areaFilter === area ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                 )}
               >

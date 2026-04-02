@@ -182,7 +182,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                   <button
                     onClick={() => onChange({ ...filters, regionCode: '' })}
                     className={cn(
-                      'rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors',
+                      'rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors',
                       !filters.regionCode ? 'bg-primary/80 text-primary-foreground' : 'bg-muted/80 hover:bg-accent'
                     )}
                   >
@@ -193,7 +193,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                       key={r.code}
                       onClick={() => onChange({ ...filters, regionCode: r.code })}
                       className={cn(
-                        'rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors',
+                        'rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors',
                         filters.regionCode === r.code ? 'bg-primary/80 text-primary-foreground' : 'bg-muted/80 hover:bg-accent'
                       )}
                     >

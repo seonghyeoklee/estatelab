@@ -70,7 +70,7 @@ export async function StatsCards() {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.label} className="relative overflow-hidden">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[12px] font-medium text-muted-foreground">{stat.label}</span>
               <div className={cn('rounded-lg p-2', stat.iconBg)}>
