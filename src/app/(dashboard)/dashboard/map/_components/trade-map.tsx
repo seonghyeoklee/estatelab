@@ -212,7 +212,7 @@ function createPriceLabel(opts: {
   return el;
 }
 
-export function TradeMap() {
+export function TradeMap({ focusComplexId }: { focusComplexId?: string | null }) {
   const kakaoLoaded = useKakaoLoaded();
   const kakaoError = useKakaoError();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -317,6 +317,31 @@ export function TradeMap() {
   // 동별/구별 그룹 메모이제이션
   const dongGroups = useMemo(() => groupByDong(withCoords), [withCoords]);
   const guGroups = useMemo(() => groupByGu(withCoords, regions), [withCoords, regions]);
+
+  // focusComplexId로 진입 시 해당 단지 선택 + 포커싱
+  const [focusApplied, setFocusApplied] = useState(false);
+  const handleFocusComplex = useCallback((target: MapComplex) => {
+    setSelectedComplex(target);
+    setShowList(false);
+    const map = mapInstanceRef.current;
+    if (map && target.lat && target.lng) {
+      map.setLevel(4, { animate: false });
+      map.panTo(new kakao.maps.LatLng(target.lat, target.lng));
+    }
+  }, []);
+
+  // focusComplexId effect — 데이터 로드 후 1회 실행
+  useEffect(() => {
+    if (!focusComplexId || focusApplied || withCoords.length === 0) return;
+    const target = withCoords.find((c) => c.id === focusComplexId);
+    if (target?.lat && target?.lng) {
+      const timer = setTimeout(() => {
+        setFocusApplied(true);
+        handleFocusComplex(target);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [focusComplexId, focusApplied, withCoords, handleFocusComplex]);
 
   // 주변시설 오버레이 표시/제거
   useEffect(() => {

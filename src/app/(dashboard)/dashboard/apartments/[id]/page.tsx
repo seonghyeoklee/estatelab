@@ -131,15 +131,13 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
                   {complex.builtYear}년 건축
                 </span>
               )}
-              {complex.lat && complex.lng && (
-                <Link
-                  href="/dashboard/map"
-                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
-                >
-                  <Map className="h-4 w-4" />
-                  지도에서 보기
-                </Link>
-              )}
+              <Link
+                href={`/dashboard/map?complexId=${id}`}
+                className="inline-flex items-center gap-1.5 text-primary hover:underline"
+              >
+                <Map className="h-4 w-4" />
+                지도에서 보기
+              </Link>
             </div>
             {complex.roadAddress && (
               <p className="text-[13px] text-muted-foreground mt-1">{complex.roadAddress}</p>

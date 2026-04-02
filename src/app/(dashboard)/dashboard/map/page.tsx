@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { KakaoMapProvider } from '@/components/kakao-map-provider';
 import { TradeMap } from './_components/trade-map';
 
-export default function MapPage() {
+function MapContent() {
+  const searchParams = useSearchParams();
+  const complexId = searchParams.get('complexId');
+
   // 지도 페이지에서는 main 패딩 제거
   useEffect(() => {
     const main = document.querySelector('main');
@@ -21,8 +25,16 @@ export default function MapPage() {
   return (
     <div className="h-[calc(100vh-56px)] w-full">
       <KakaoMapProvider>
-        <TradeMap />
+        <TradeMap focusComplexId={complexId} />
       </KakaoMapProvider>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense>
+      <MapContent />
+    </Suspense>
   );
 }
