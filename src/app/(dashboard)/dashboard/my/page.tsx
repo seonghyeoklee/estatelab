@@ -166,8 +166,8 @@ export default function MyPage() {
                         {formatPrice(latest.price)}
                       </Badge>
                     )}
-                    <span className="text-[10px] text-muted-foreground shrink-0">
-                      {new Date(item.viewedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                    <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                      {item.viewedAt.slice(5, 10)}
                     </span>
                   </Link>
                 );

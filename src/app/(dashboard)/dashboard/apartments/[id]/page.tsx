@@ -211,11 +211,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
             }))} />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-5">
-            <AreaComparison areaGroups={areaGroups} />
-          </CardContent>
-        </Card>
+        <AreaComparison areaGroups={areaGroups} />
       </div>
 
       {/* 층별 분석 */}
