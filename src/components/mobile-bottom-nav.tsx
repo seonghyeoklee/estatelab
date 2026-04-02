@@ -28,6 +28,8 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors min-w-[48px]',
                 isActive ? 'text-primary' : 'text-muted-foreground'

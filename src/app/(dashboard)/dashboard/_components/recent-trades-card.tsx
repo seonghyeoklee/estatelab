@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, priceColorClass } from '@/lib/format';
 
 interface Trade {
   id: string;
@@ -22,13 +22,6 @@ interface Trade {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-function priceColor(price: number): string {
-  if (price >= 200000) return 'text-violet-600 bg-violet-500/10';
-  if (price >= 100000) return 'text-blue-600 bg-blue-500/10';
-  if (price >= 50000) return 'text-emerald-600 bg-emerald-500/10';
-  return 'text-slate-600 bg-slate-500/10';
-}
 
 export function RecentTradesCard() {
   const { data, isLoading } = useSWR<{ data: Trade[] }>(
@@ -69,7 +62,8 @@ export function RecentTradesCard() {
         ) : (
           <div className="space-y-1">
             {data.data.map((trade) => {
-              const colors = priceColor(trade.price);
+              const colors = priceColorClass(trade.price);
+              const colorStr = `${colors.text} ${colors.bg}`;
               const date = trade.dealDate.slice(0, 10);
 
               return (
@@ -78,7 +72,7 @@ export function RecentTradesCard() {
                   className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/50 transition-colors"
                 >
                   {/* 순번 + 가격 뱃지 */}
-                  <div className={cn('flex items-center justify-center h-9 w-9 rounded-lg text-[11px] font-bold shrink-0', colors)}>
+                  <div className={cn('flex items-center justify-center h-9 w-9 rounded-lg text-[11px] font-bold shrink-0', colorStr)}>
                     {formatPrice(trade.price).replace('억', '').replace('만', '')}
                     <span className="text-[8px] ml-0.5">억</span>
                   </div>

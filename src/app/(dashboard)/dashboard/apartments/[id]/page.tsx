@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { pricePerPyeong, toPyeong } from '@/lib/calculations';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, priceColorClass } from '@/lib/format';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Calendar, ArrowLeft, Map, TrendingUp, TrendingDown } from 'lucide-react';
@@ -22,13 +22,6 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-function getPriceColor(price: number): { bg: string; text: string } {
-  if (price >= 200000) return { bg: 'bg-violet-500/10', text: 'text-violet-600' };
-  if (price >= 100000) return { bg: 'bg-blue-500/10', text: 'text-blue-600' };
-  if (price >= 50000) return { bg: 'bg-emerald-500/10', text: 'text-emerald-600' };
-  return { bg: 'bg-slate-500/10', text: 'text-slate-600' };
 }
 
 export default async function ApartmentDetailPage({ params }: PageProps) {
@@ -78,7 +71,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
   const maxPrice = tradeCount ? Math.max(...complex.trades.map((t) => t.price)) : 0;
   const minPrice = tradeCount ? Math.min(...complex.trades.map((t) => t.price)) : 0;
   const latestTrade = complex.trades[0];
-  const color = getPriceColor(avgPrice);
+  const color = priceColorClass(avgPrice);
 
   // 층별 분석
   const floorGroups = [

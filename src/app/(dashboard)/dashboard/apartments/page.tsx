@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, priceColorClass } from '@/lib/format';
 import { KakaoMapProvider } from '@/components/kakao-map-provider';
 import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
 import { ApartmentsMiniMap } from './_components/apartments-mini-map';
@@ -40,12 +40,6 @@ interface DongCount {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-function priceColor(price: number): { bg: string; text: string } {
-  if (price >= 200000) return { bg: 'bg-violet-500/10', text: 'text-violet-600' };
-  if (price >= 100000) return { bg: 'bg-blue-500/10', text: 'text-blue-600' };
-  if (price >= 50000) return { bg: 'bg-emerald-500/10', text: 'text-emerald-600' };
-  return { bg: 'bg-slate-500/10', text: 'text-slate-600' };
-}
 
 export default function ApartmentsPage() {
   const [query, setQuery] = useState('');
@@ -194,7 +188,7 @@ export default function ApartmentsPage() {
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {data.data.map((apt) => {
-              const color = apt.latestTrade ? priceColor(apt.latestTrade.price) : { bg: 'bg-muted/50', text: 'text-muted-foreground' };
+              const color = apt.latestTrade ? priceColorClass(apt.latestTrade.price) : { bg: 'bg-muted/50', text: 'text-muted-foreground' };
               const isHot = apt.recentTradeCount >= 3;
               return (
                 <Link key={apt.id} href={`/dashboard/apartments/${apt.id}`}>
