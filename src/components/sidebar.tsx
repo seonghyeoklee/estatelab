@@ -15,7 +15,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const NAV_GROUPS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof Map;
+  exact?: boolean;
+  badge?: string;
+}
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: 'Overview',
     items: [
@@ -27,14 +35,14 @@ const NAV_GROUPS = [
     label: '부동산',
     items: [
       { href: '/dashboard/apartments', label: '아파트', icon: Building2, exact: true },
-      { href: '/dashboard/subscriptions', label: '청약', icon: CalendarDays },
+      { href: '/dashboard/subscriptions', label: '청약', icon: CalendarDays, badge: '준비중' },
     ],
   },
   {
     label: '경제',
     items: [
       { href: '/dashboard/rates', label: '금리 동향', icon: Landmark },
-      { href: '/dashboard/indices', label: '가격지수', icon: TrendingUp },
+      { href: '/dashboard/indices', label: '가격지수', icon: TrendingUp, badge: '준비중' },
     ],
   },
   {
@@ -105,7 +113,12 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
                     )}
                   >
                     <item.icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-foreground' : '')} />
-                    {item.label}
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge && !isActive && (
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

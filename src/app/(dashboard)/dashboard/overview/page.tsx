@@ -30,25 +30,27 @@ export default function OverviewPage() {
         <StatsCards />
       </Suspense>
 
+      {/* 월별 거래량 + 금리 현황 (2열) */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <MonthlyVolumeChart />
+        </div>
+        <RateSummaryCard />
+      </div>
+
       {/* 인사이트 */}
       <div>
         <h2 className="mb-3 text-lg font-semibold">시장 인사이트</h2>
         <InsightsCards />
       </div>
 
-      {/* Region summaries */}
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">지역별 거래 현황</h2>
-        <RegionSummaryCards />
-      </div>
-
-      {/* 월별 거래량 */}
-      <MonthlyVolumeChart />
-
-      {/* Bottom grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* 지역별 + 최근 거래 */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <h2 className="mb-3 text-lg font-semibold">지역별 거래 현황</h2>
+          <RegionSummaryCards />
+        </div>
         <RecentTradesCard />
-        <RateSummaryCard />
       </div>
     </div>
   );
