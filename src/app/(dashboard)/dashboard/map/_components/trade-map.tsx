@@ -66,12 +66,14 @@ const SIDO_CENTERS: Record<string, { lat: number; lng: number; level: number }> 
   세종특별자치시: { lat: 36.48, lng: 127.0, level: 9 },
 };
 
-// 가격대별 마커 색상
+// 가격대별 마커 색상 (6단계)
 function getPriceColor(avgPrice: number): { bg: string; text: string; border: string; label: string } {
+  if (avgPrice >= 300000) return { bg: '#9333ea', text: '#fff', border: '#7e22ce', label: '30억+' };
   if (avgPrice >= 200000) return { bg: '#7c3aed', text: '#fff', border: '#6d28d9', label: '20억+' };
   if (avgPrice >= 100000) return { bg: '#0369a1', text: '#fff', border: '#075985', label: '10억+' };
   if (avgPrice >= 50000) return { bg: '#059669', text: '#fff', border: '#047857', label: '5억+' };
-  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~5억' };
+  if (avgPrice >= 30000) return { bg: '#0d9488', text: '#fff', border: '#0f766e', label: '3억+' };
+  return { bg: '#64748b', text: '#fff', border: '#475569', label: '~3억' };
 }
 
 // 지역 그룹 (동/구 단위 집계)
@@ -652,9 +654,14 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         }
       };
 
+      const pppLabel = complex.avgPricePerPyeong > 0
+        ? `${complex.avgPricePerPyeong.toLocaleString()}만/평`
+        : undefined;
+
       const content = createPriceLabel({
         title: complex.name,
         price: priceLabel,
+        subtitle: pppLabel,
         color,
         size: 'md',
         onClick: handleSelect,
@@ -898,7 +905,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           className="flex items-center gap-1.5 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 text-[11px] font-medium shadow-sm hover:bg-white transition-all"
         >
           <List className="h-3.5 w-3.5" />
-          {complexes.length}개 단지
+          목록 보기
         </button>
 
         {/* 지도 타입 + 지적편집도 */}
@@ -970,6 +977,34 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             <Locate className="h-3.5 w-3.5" />
             전체 보기
           </button>
+        </div>
+      </div>
+
+      {/* 좌측 하단: 줌 레벨 + 뷰포트 단지 수 + 범례 */}
+      <div className="absolute bottom-3 left-3 z-[20] flex flex-col gap-1.5 pointer-events-none">
+        <div className="flex items-center gap-2 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm px-3 py-1.5 pointer-events-auto">
+          <span className="text-[10px] text-muted-foreground">
+            {zoomLevel <= 5 ? '단지별' : zoomLevel <= 7 ? '동별' : '구별'}
+          </span>
+          <span className="text-[10px] font-semibold text-foreground">
+            {visibleIds.length > 0 ? `${visibleIds.length}개 단지` : ''}
+          </span>
+        </div>
+        {/* 가격 범례 */}
+        <div className="flex flex-wrap gap-1 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm px-2.5 py-1.5 pointer-events-auto">
+          {[
+            { color: '#9333ea', label: '30억+' },
+            { color: '#7c3aed', label: '20억+' },
+            { color: '#0369a1', label: '10억+' },
+            { color: '#059669', label: '5억+' },
+            { color: '#0d9488', label: '3억+' },
+            { color: '#64748b', label: '~3억' },
+          ].map((item) => (
+            <span key={item.label} className="flex items-center gap-0.5 text-[8px] text-muted-foreground">
+              <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: item.color }} />
+              {item.label}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -1081,9 +1116,10 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                   </button>
                   {/* 범례 */}
                   <div className="flex items-center gap-1.5 ml-auto text-[9px] text-muted-foreground">
-                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#7c3aed' }} />20억+</span>
+                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#9333ea' }} />30억+</span>
                     <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#0369a1' }} />10억+</span>
                     <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#059669' }} />5억+</span>
+                    <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-sm" style={{ background: '#64748b' }} />~3억</span>
                   </div>
                 </div>
               </div>

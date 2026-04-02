@@ -8,9 +8,11 @@ import { formatPrice } from '@/lib/format';
 import type { MapComplex } from '@/types/trade';
 
 function getPriceColor(avgPrice: number) {
+  if (avgPrice >= 300000) return '#9333ea';
   if (avgPrice >= 200000) return '#7c3aed';
   if (avgPrice >= 100000) return '#0369a1';
   if (avgPrice >= 50000) return '#059669';
+  if (avgPrice >= 30000) return '#0d9488';
   return '#64748b';
 }
 
