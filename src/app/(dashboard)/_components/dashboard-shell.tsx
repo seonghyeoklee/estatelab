@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/sidebar';
 import { Header } from '@/components/header';
 import { MobileSidebar } from '@/components/mobile-sidebar';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { CommandPalette } from '@/components/command-palette';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -34,10 +35,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6 pb-20 md:pb-6">
           {children}
         </main>
       </div>
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav />
 
       {/* Command Palette */}
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />

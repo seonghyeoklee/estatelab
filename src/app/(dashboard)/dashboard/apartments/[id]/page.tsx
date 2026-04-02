@@ -201,16 +201,12 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardContent className="p-5">
-            <PriceChart trades={complex.trades.map((t) => ({
-              dealDate: t.dealDate.toISOString(),
-              price: t.price,
-              area: t.area,
-              floor: t.floor,
-            }))} />
-          </CardContent>
-        </Card>
+        <PriceChart trades={complex.trades.map((t) => ({
+          dealDate: t.dealDate.toISOString(),
+          price: t.price,
+          area: t.area,
+          floor: t.floor,
+        }))} />
         <AreaComparison areaGroups={areaGroups} />
       </div>
 

@@ -48,7 +48,7 @@ export default function RegisterPage() {
       if (result?.error) {
         setError('회원가입은 완료되었지만 로그인에 실패했습니다.');
       } else {
-        router.push('/dashboard');
+        router.push('/dashboard/map');
         router.refresh();
       }
     } catch {
