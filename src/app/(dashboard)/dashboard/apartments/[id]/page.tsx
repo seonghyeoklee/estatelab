@@ -6,7 +6,7 @@ import { pricePerPyeong, toPyeong } from '@/lib/calculations';
 import { formatPrice, priceColorClass } from '@/lib/format';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Calendar, ArrowLeft, Map, TrendingUp, TrendingDown } from 'lucide-react';
+import { Building2, MapPin, Calendar, ArrowLeft, Map, TrendingUp, TrendingDown, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PriceChart } from './_components/price-chart';
 import { TradeTable } from './_components/trade-table';
@@ -147,6 +147,15 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
                 <Map className="h-4 w-4" />
                 지도에서 보기
               </Link>
+              {latestTrade && (
+                <Link
+                  href={`/dashboard/calculator?price=${latestTrade.price}`}
+                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                >
+                  <Calculator className="h-4 w-4" />
+                  대출 계산
+                </Link>
+              )}
             </div>
             {complex.roadAddress && (
               <p className="text-[13px] text-muted-foreground mt-1">{complex.roadAddress}</p>
