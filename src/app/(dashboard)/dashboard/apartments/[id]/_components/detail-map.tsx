@@ -21,7 +21,6 @@ interface NearbyData {
   radius: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const CAT_COLORS: Record<string, { color: string; label: string }> = {
   subway: { color: '#2563eb', label: '지하철' },
@@ -86,7 +85,6 @@ export function DetailMap({ complexId, lat, lng, name, address }: Props) {
   const hasCoords = lat !== null && lng !== null;
   const { data: nearbyData } = useSWR<{ data: NearbyData }>(
     hasCoords ? `/api/market/apartments/${complexId}/nearby?radius=1000` : null,
-    fetcher
   );
 
   // 지도 초기화 — 좌표 있으면 바로, 없으면 주소 검색

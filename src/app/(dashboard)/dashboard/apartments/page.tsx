@@ -39,7 +39,6 @@ interface DongCount {
   count: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 
 export default function ApartmentsPage() {
@@ -76,7 +75,7 @@ export default function ApartmentsPage() {
     data: ApartmentItem[];
     meta: { total: number; page: number; totalPages: number };
     dongCounts: DongCount[];
-  }>(`/api/market/apartments?${params.toString()}`, fetcher);
+  }>(`/api/market/apartments?${params.toString()}`);
 
   const handleFilterChange = (newFilters: FilterValues) => {
     setFilters(newFilters);

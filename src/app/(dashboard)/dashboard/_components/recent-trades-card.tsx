@@ -21,12 +21,10 @@ interface Trade {
   };
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function RecentTradesCard() {
   const { data, isLoading } = useSWR<{ data: Trade[] }>(
     '/api/market/trades?limit=10',
-    fetcher,
     { refreshInterval: 300_000 }
   );
 

@@ -22,7 +22,6 @@ interface RegionSummary {
   } | null;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // 가격대별 그라데이션
 function priceGradient(avgPrice: number): string {
@@ -42,7 +41,6 @@ function priceAccent(avgPrice: number): { text: string; bar: string } {
 export function RegionSummaryCards() {
   const { data, isLoading } = useSWR<{ data: RegionSummary[] }>(
     '/api/market/summary/regions',
-    fetcher,
     { refreshInterval: 300_000 }
   );
 

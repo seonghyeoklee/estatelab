@@ -10,7 +10,6 @@ import { Building2, Clock, Heart, User } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { WatchlistButton } from '@/components/watchlist-button';
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface WatchlistItem {
   id: string;
@@ -43,11 +42,9 @@ export default function MyPage() {
   const { data: session, status } = useSession();
   const { data: watchlistData } = useSWR<{ data: WatchlistItem[] }>(
     session ? '/api/user/watchlist' : null,
-    fetcher
   );
   const { data: historyData } = useSWR<{ data: HistoryItem[] }>(
     session ? '/api/user/history' : null,
-    fetcher
   );
 
   if (status === 'loading') {

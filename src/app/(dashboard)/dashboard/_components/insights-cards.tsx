@@ -51,12 +51,10 @@ interface InsightsData {
   priceChange: PriceChangeItem[];
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function InsightsCards() {
   const { data, isLoading } = useSWR<{ data: InsightsData }>(
     '/api/market/summary/insights',
-    fetcher,
     { refreshInterval: 600_000 }
   );
 

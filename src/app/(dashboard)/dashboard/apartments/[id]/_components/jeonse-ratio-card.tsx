@@ -17,12 +17,10 @@ interface RentSummary {
   jeonseRatio: number | null;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function JeonseRatioCard({ complexId }: { complexId: string }) {
   const { data } = useSWR<{ data: RentSummary[] }>(
     `/api/market/apartments/${complexId}/rents`,
-    fetcher
   );
 
   if (!data?.data || data.data.length === 0) {

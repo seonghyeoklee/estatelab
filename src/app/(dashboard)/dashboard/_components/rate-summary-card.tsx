@@ -13,7 +13,6 @@ interface Rate {
   date: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function rateColor(rate: number): string {
   if (rate >= 4) return 'text-red-500';
@@ -24,7 +23,6 @@ function rateColor(rate: number): string {
 export function RateSummaryCard() {
   const { data, isLoading } = useSWR<{ data: Rate[] }>(
     '/api/market/rates',
-    fetcher,
     { refreshInterval: 600_000 }
   );
 

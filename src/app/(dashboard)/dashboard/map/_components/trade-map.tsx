@@ -11,7 +11,6 @@ import type { MapComplex, Region } from '@/types/trade';
 import { ComplexDetailPanel } from './complex-detail-panel';
 import { MapSearchBar } from './map-search-bar';
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // 주변시설 카테고리 설정
 const NEARBY_CATEGORIES: Record<string, { label: string; color: string; border: string }> = {
@@ -294,15 +293,14 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     });
   }, [showRoadview, selectedComplex]);
 
-  const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
-  const { data: complexData } = useSWR<{ data: MapComplex[] }>('/api/market/map/complexes', fetcher);
+  const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions');
+  const { data: complexData } = useSWR<{ data: MapComplex[] }>('/api/market/map/complexes');
 
   // 선택된 단지 주변시설 데이터
   interface NearbyPlace { id: string; name: string; category: string; distance: number; lat: number; lng: number; }
   interface NearbySummary { key: string; label: string; count: number; nearest: NearbyPlace | null; }
   const { data: nearbyData } = useSWR<{ data: { summary: NearbySummary[]; places: Record<string, NearbyPlace[]> } }>(
     selectedComplex ? `/api/market/apartments/${selectedComplex.id}/nearby?radius=1000` : null,
-    fetcher
   );
 
   const complexes = useMemo(() => complexData?.data ?? [], [complexData?.data]);
@@ -403,7 +401,6 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   interface SchoolPlace { id: string; name: string; distance: number; lat: number; lng: number; schoolType: 'elementary' | 'middle' | 'high'; }
   const { data: schoolMapData } = useSWR<{ data: { schools: { elementary: SchoolPlace[]; middle: SchoolPlace[]; high: SchoolPlace[] }; grade: string } }>(
     selectedComplex ? `/api/market/apartments/${selectedComplex.id}/schools?radius=1500` : null,
-    fetcher
   );
 
   // 학군 시각화 — 동심원 + 연결선 + 학교 마커

@@ -57,7 +57,6 @@ const SORT_OPTIONS = [
   { label: '연식순', value: 'year' },
 ];
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface Props {
   filters: FilterValues;
@@ -66,7 +65,7 @@ interface Props {
 
 export function ApartmentFilters({ filters, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions', fetcher);
+  const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions');
 
   const regions = regionData?.data || [];
   const sidoList = [...new Set(regions.map((r) => r.sido))];

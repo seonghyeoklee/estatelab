@@ -64,7 +64,6 @@ interface NearbyData {
   radius: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // 카테고리별 설정
 const CATEGORY_CONFIG: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -194,19 +193,15 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
 
   const { data, isLoading } = useSWR<{ data: ComplexDetail }>(
     `/api/market/apartments/${complexId}`,
-    fetcher
   );
   const { data: nearbyData } = useSWR<{ data: NearbyData }>(
     activeTab === 'nearby' ? `/api/market/apartments/${complexId}/nearby?radius=1000` : null,
-    fetcher
   );
   const { data: buildingData } = useSWR<{ data: BuildingData }>(
     activeTab === 'buildings' ? `/api/market/apartments/${complexId}/buildings` : null,
-    fetcher
   );
   const { data: schoolData } = useSWR<{ data: SchoolData }>(
     activeTab === 'schools' ? `/api/market/apartments/${complexId}/schools?radius=1500` : null,
-    fetcher
   );
 
   interface CompareItem {
@@ -219,7 +214,6 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
   }
   const { data: compareData } = useSWR<{ data: CompareData }>(
     complexId ? `/api/market/apartments/${complexId}/compare` : null,
-    fetcher
   );
 
   interface RankData {
@@ -230,7 +224,6 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
   }
   const { data: rankData } = useSWR<{ data: RankData | null }>(
     complexId ? `/api/market/apartments/${complexId}/rank` : null,
-    fetcher
   );
 
   // ESC 키로 닫기
@@ -529,7 +522,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   }).filter((r) => r.count > 0);
                   if (results.length < 2) return null;
                   const maxAvg = Math.max(...results.map((r) => r.avg));
-                  const premium = results.length >= 2
+                  const premium = results.length >= 2 && results[0].avg > 0
                     ? Math.round(((results[results.length - 1].avg - results[0].avg) / results[0].avg) * 100)
                     : 0;
 
@@ -773,8 +766,8 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   </div>
                 ) : (() => {
                   const { units, totalDong, totalHhld, bldNm } = buildingData.data;
-                  const maxFloor = Math.max(...units.map((u) => u.grndFlrCnt));
-                  const maxHhld = Math.max(...units.map((u) => u.hhldCnt));
+                  const maxFloor = units.length > 0 ? Math.max(...units.map((u) => u.grndFlrCnt)) : 0;
+                  const maxHhld = units.length > 0 ? Math.max(...units.map((u) => u.hhldCnt)) : 0;
                   const totalElvt = units.reduce((s, u) => s + u.rideUseElvtCnt, 0);
                   const hasEarthquake = units.some((u) => u.rserthqkAblty);
 

@@ -41,7 +41,6 @@ interface Summary {
   nearest: NearbyPlace | null;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function formatDistance(m: number): string {
   if (m < 1000) return `${m}m`;
@@ -51,7 +50,7 @@ function formatDistance(m: number): string {
 export function NearbyFacilities({ complexId }: { complexId: string }) {
   const { data, isLoading } = useSWR<{
     data: { summary: Summary[]; places: Record<string, NearbyPlace[]>; radius: number };
-  }>(`/api/market/apartments/${complexId}/nearby`, fetcher);
+  }>(`/api/market/apartments/${complexId}/nearby`);
 
   if (isLoading) {
     return (

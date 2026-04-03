@@ -16,12 +16,10 @@ interface RankData {
   nearMe: { id: string; name: string; avgPpp: number }[];
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function RankCard({ complexId }: { complexId: string }) {
   const { data } = useSWR<{ data: RankData | null }>(
     `/api/market/apartments/${complexId}/rank`,
-    fetcher
   );
 
   if (!data?.data) return null;

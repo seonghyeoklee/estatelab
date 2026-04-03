@@ -24,7 +24,6 @@ interface Rate {
   change: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function RateIcon({ change }: { change: number }) {
   if (change > 0) return <TrendingUp className="h-4 w-4 text-price-up" />;
@@ -43,11 +42,9 @@ const CHART_COLORS: Record<string, string> = {
 export default function RatesPage() {
   const { data: latestData, isLoading: latestLoading } = useSWR<{ data: Rate[] }>(
     '/api/market/rates',
-    fetcher
   );
   const { data: historyData, isLoading: historyLoading } = useSWR<{ data: Rate[] }>(
     '/api/market/rates/history',
-    fetcher
   );
 
   const latest = latestData?.data ?? [];

@@ -18,12 +18,10 @@ interface MonthlyVolume {
   count: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function MonthlyVolumeChart() {
   const { data, isLoading } = useSWR<{ data: MonthlyVolume[] }>(
     '/api/market/summary/monthly-volume',
-    fetcher,
     { refreshInterval: 600_000 }
   );
 
