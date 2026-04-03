@@ -659,7 +659,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         content.classList.remove('marker-bounce');
         void content.offsetWidth;
         content.classList.add('marker-bounce');
-        content.style.zIndex = '100';
+        content.style.zIndex = '9999';
         setTimeout(() => {
           content.classList.remove('marker-bounce');
           content.classList.add('marker-selected');
