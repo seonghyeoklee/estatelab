@@ -4,13 +4,18 @@ import { prisma } from '@/lib/prisma';
 import { cn } from '@/lib/utils';
 
 export async function StatsCards() {
-  const now = new Date();
-  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  // 최근 거래 기준월 (이번 달 거래 없으면 직전 월)
+  const latestTrade = await prisma.apartmentTrade.findFirst({
+    orderBy: { dealDate: 'desc' },
+    select: { dealDate: true },
+  });
+  const refDate = latestTrade?.dealDate ?? new Date();
+  const thisMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+  const lastMonth = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
 
   const [regionCount, complexCount, tradeCount, tradesThisMonth, tradesLastMonth, baseRate] = await Promise.all([
     prisma.region.count(),
-    prisma.apartmentComplex.count(),
+    prisma.apartmentComplex.count({ where: { NOT: { name: { startsWith: '(' } } } }),
     prisma.apartmentTrade.count(),
     prisma.apartmentTrade.count({ where: { dealDate: { gte: thisMonth } } }),
     prisma.apartmentTrade.count({ where: { dealDate: { gte: lastMonth, lt: thisMonth } } }),

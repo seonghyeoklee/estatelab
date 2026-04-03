@@ -5,10 +5,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const now = new Date();
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    // 가장 최근 거래가 있는 월을 기준으로 비교 (이번 달 거래 없으면 직전 월 사용)
+    const latestTrade = await prisma.apartmentTrade.findFirst({
+      orderBy: { dealDate: 'desc' },
+      select: { dealDate: true },
+    });
+    const refDate = latestTrade?.dealDate ?? new Date();
+    const thisMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+    const lastMonth = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
+    const threeMonthsAgo = new Date(refDate.getFullYear(), refDate.getMonth() - 3, 1);
 
     // 1) 평당가 TOP 10 (최근 3개월 거래 기준)
     const topPricePerPyeong = await prisma.$queryRaw<
