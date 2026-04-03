@@ -73,12 +73,6 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* Landing page dot grid background */
-.bg-dot-grid {
-  background-image: radial-gradient(hsl(240 6% 88%) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
