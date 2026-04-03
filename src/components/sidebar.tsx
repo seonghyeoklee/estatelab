@@ -105,6 +105,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
                     key={item.href}
                     href={item.href}
                     onClick={onNavigate}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-2.5 rounded-xl px-2.5 py-[7px] text-[13px] font-medium transition-all duration-150',
                       isActive

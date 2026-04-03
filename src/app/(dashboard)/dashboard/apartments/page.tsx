@@ -6,12 +6,13 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon, Flame } from 'lucide-react';
+import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Map as MapIcon, Flame, SearchX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice, priceColorClass } from '@/lib/format';
 import { KakaoMapProvider } from '@/components/kakao-map-provider';
 import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
 import { ApartmentsMiniMap } from './_components/apartments-mini-map';
+import { EmptyState } from '@/components/empty-state';
 
 interface ApartmentItem {
   id: string;
@@ -97,6 +98,7 @@ export default function ApartmentsPage() {
           placeholder="단지명, 동, 지역 검색... (예: 강남 래미안)"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setPage(1); setDongFilter(''); }}
+          aria-label="아파트 검색"
           className="w-full rounded-xl border bg-background py-2.5 pl-10 pr-4 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
@@ -106,7 +108,7 @@ export default function ApartmentsPage() {
 
       {/* 동 필터 칩 */}
       {data?.dongCounts && data.dongCounts.length > 1 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="동 필터">
           <button
             onClick={() => { setDongFilter(''); setPage(1); }}
             className={cn(
@@ -174,16 +176,13 @@ export default function ApartmentsPage() {
           ))}
         </div>
       ) : !data?.data?.length ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <Building2 className="h-10 w-10 text-muted-foreground" />
-            <p className="text-[15px] text-muted-foreground">
-              {query || dongFilter || Object.values(filters).some(Boolean)
-                ? '조건에 맞는 단지가 없습니다.'
-                : '수집된 단지 데이터가 없습니다.'}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={query || dongFilter ? SearchX : Building2}
+          title={query || dongFilter || Object.values(filters).some(Boolean)
+            ? '조건에 맞는 단지가 없습니다'
+            : '수집된 단지 데이터가 없습니다'}
+          description={query ? `"${query}" 검색 결과가 없습니다. 다른 키워드로 시도해보세요.` : undefined}
+        />
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">

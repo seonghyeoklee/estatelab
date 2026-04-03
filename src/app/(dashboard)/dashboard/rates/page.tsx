@@ -90,7 +90,7 @@ export default function RatesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {latest.map((rate, idx) => (
-            <Card key={rate.name} className={`hover-lift animate-fade-up delay-${idx + 1}`}>
+            <Card key={rate.name} className="hover-lift" style={{ animationDelay: `${(idx + 1) * 80}ms` }}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {rate.nameKr}

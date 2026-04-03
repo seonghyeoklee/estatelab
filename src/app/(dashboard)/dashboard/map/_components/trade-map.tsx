@@ -1030,7 +1030,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             </div>
           </div>
           {/* 모바일 — 하단 시트 */}
-          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[25] max-h-[60vh] overflow-y-auto bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] animate-fade-up">
+          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[25] max-h-[60vh] overflow-y-auto overscroll-contain bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] animate-fade-up">
             <div className="sticky top-0 flex items-center justify-center py-2 bg-white rounded-t-2xl">
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
