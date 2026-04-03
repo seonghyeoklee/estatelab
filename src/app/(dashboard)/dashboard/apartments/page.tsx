@@ -187,7 +187,21 @@ function ApartmentsContent() {
             ? '조건에 맞는 단지가 없습니다'
             : '수집된 단지 데이터가 없습니다'}
           description={query ? `"${query}" 검색 결과가 없습니다. 다른 키워드로 시도해보세요.` : undefined}
-        />
+        >
+          {(query || dongFilter || Object.values(filters).some(Boolean)) && (
+            <button
+              onClick={() => {
+                setQuery('');
+                setDongFilter('');
+                setFilters({ regionCode: '', sido: '', minPrice: '', maxPrice: '', minArea: '', maxArea: '', minYear: '', sort: 'trades' });
+                setPage(1);
+              }}
+              className="rounded-lg bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              필터 초기화
+            </button>
+          )}
+        </EmptyState>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Map, LayoutDashboard, Building2, Percent, Heart } from 'lucide-react';
@@ -15,9 +16,21 @@ const NAV_ITEMS = [
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
-  // 지도 페이지에서는 숨김 (지도가 전체 화면)
-  if (pathname === '/dashboard/map') return null;
+  // 모바일 키보드 감지 — visualViewport 활용
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      setKeyboardOpen(vv.height < window.innerHeight * 0.75);
+    };
+    vv.addEventListener('resize', handler);
+    return () => vv.removeEventListener('resize', handler);
+  }, []);
+
+  // 지도 페이지 또는 키보드 열림 시 숨김
+  if (pathname === '/dashboard/map' || keyboardOpen) return null;
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-sm" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>

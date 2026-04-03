@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Heart } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/components/google-analytics';
 
@@ -15,6 +16,14 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
   const { data: session } = useSession();
   const [isWatched, setIsWatched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // cleanup
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -31,11 +40,32 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
   if (!session?.user) return null;
 
   const toggle = async () => {
+    if (loading) return;
     setLoading(true);
+
     try {
       if (isWatched) {
+        // 즉시 UI 업데이트 + 서버 요청
+        setIsWatched(false);
         const res = await fetch(`/api/user/watchlist?complexId=${complexId}`, { method: 'DELETE' });
-        if (res.ok) setIsWatched(false);
+        if (res.ok) {
+          toast('관심 단지에서 제거했습니다', {
+            action: {
+              label: '되돌리기',
+              onClick: async () => {
+                const reAdd = await fetch('/api/user/watchlist', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ complexId }),
+                });
+                if (reAdd.ok) setIsWatched(true);
+              },
+            },
+            duration: 4000,
+          });
+        } else {
+          setIsWatched(true); // 실패 시 복구
+        }
       } else {
         const res = await fetch('/api/user/watchlist', {
           method: 'POST',
@@ -45,6 +75,7 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
         if (res.ok) {
           setIsWatched(true);
           trackEvent('watchlist_add', { complex_id: complexId });
+          toast.success('관심 단지에 추가했습니다');
         }
       }
     } catch {
@@ -68,6 +99,7 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
           : 'bg-muted/50 text-muted-foreground hover:bg-muted'
       )}
       title={isWatched ? '관심 단지 해제' : '관심 단지 추가'}
+      aria-label={isWatched ? '관심 단지 해제' : '관심 단지 추가'}
     >
       <Heart
         className={cn(iconSize, isWatched && 'fill-current')}

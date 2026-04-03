@@ -25,7 +25,15 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ trades }: PriceChartProps) {
-  if (trades.length === 0) return null;
+  if (trades.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-2 py-8">
+          <p className="text-sm text-muted-foreground">거래 데이터가 없습니다</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // 월별 평균가 계산
   const monthlyMap = new Map<string, { total: number; count: number; min: number; max: number }>();
