@@ -65,7 +65,7 @@ export async function GET(
 
   const myRank = ranked.findIndex((r) => r.id === id) + 1;
   const totalInRegion = ranked.length;
-  const percentile = Math.round((1 - (myRank - 1) / totalInRegion) * 100);
+  const percentile = totalInRegion > 0 ? Math.round((1 - (myRank - 1) / totalInRegion) * 100) : 0;
 
   // 회전율: 최근 1년 거래 건수 / 세대수
   const oneYearAgo = new Date();

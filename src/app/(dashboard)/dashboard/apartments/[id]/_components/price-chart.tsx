@@ -61,8 +61,8 @@ export function PriceChart({ trades }: PriceChartProps) {
   const yMin = Math.floor(Math.min(...allPrices) / 1000) * 1000;
   const yMax = Math.ceil(Math.max(...allPrices) / 1000) * 1000;
 
-  // 변동률
-  const changePct = chartData.length >= 2
+  // 변동률 (0으로 나누기 방지)
+  const changePct = chartData.length >= 2 && first.avgPrice > 0
     ? Math.round(((latest.avgPrice - first.avgPrice) / first.avgPrice) * 1000) / 10
     : null;
 

@@ -135,6 +135,7 @@ async function handleRawSortQuery(
     ) lt ON true
   `;
 
+  // ORDER BY는 하드코딩된 문자열만 사용 — sort 값이 직접 SQL에 삽입되지 않음
   const orderClause =
     sort === 'ppp' ? 'ORDER BY avg_ppp DESC NULLS LAST' :
     sort === 'name' ? "ORDER BY CASE WHEN ranked.name ~ '^[가-힣]' THEN 0 ELSE 1 END, ranked.name" :

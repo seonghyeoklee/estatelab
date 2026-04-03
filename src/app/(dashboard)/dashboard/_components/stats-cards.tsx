@@ -30,24 +30,27 @@ export async function StatsCards() {
       value: regionCount.toLocaleString(),
       unit: '개 시군구',
       icon: MapPin,
-      color: 'bg-emerald-500/10 text-emerald-600',
+      iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-500/10',
+      decorBg: 'bg-emerald-500/10',
     },
     {
       label: '아파트 단지',
       value: complexCount.toLocaleString(),
       unit: '개 단지',
       icon: Building2,
-      color: 'bg-blue-500/10 text-blue-600',
+      iconColor: 'text-blue-600',
       iconBg: 'bg-blue-500/10',
+      decorBg: 'bg-blue-500/10',
     },
     {
       label: '실거래 건수',
       value: tradeCount.toLocaleString(),
       unit: '건',
       icon: TrendingUp,
-      color: 'bg-violet-500/10 text-violet-600',
+      iconColor: 'text-violet-600',
       iconBg: 'bg-violet-500/10',
+      decorBg: 'bg-violet-500/10',
       change: tradeGrowth,
       changeLabel: '전월 대비',
     },
@@ -58,8 +61,9 @@ export async function StatsCards() {
         ? `${baseRate.date.toISOString().slice(0, 7)} 기준`
         : '',
       icon: Landmark,
-      color: 'bg-amber-500/10 text-amber-600',
+      iconColor: 'text-amber-600',
       iconBg: 'bg-amber-500/10',
+      decorBg: 'bg-amber-500/10',
       change: baseRate ? baseRate.change : null,
       changeLabel: 'bp',
       changeReverse: true,
@@ -74,7 +78,7 @@ export async function StatsCards() {
             <div className="flex items-center justify-between mb-3">
               <span className="text-[12px] font-medium text-muted-foreground">{stat.label}</span>
               <div className={cn('rounded-lg p-2', stat.iconBg)}>
-                <stat.icon className={cn('h-4 w-4', stat.color.split(' ')[1])} />
+                <stat.icon className={cn('h-4 w-4', stat.iconColor)} />
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
@@ -92,7 +96,7 @@ export async function StatsCards() {
             </div>
           </CardContent>
           {/* 배경 장식 */}
-          <div className={cn('absolute -bottom-4 -right-4 h-20 w-20 rounded-full opacity-[0.04]', stat.color.split(' ')[0])} />
+          <div className={cn('absolute -bottom-4 -right-4 h-20 w-20 rounded-full opacity-[0.04]', stat.decorBg)} />
         </Card>
       ))}
     </div>

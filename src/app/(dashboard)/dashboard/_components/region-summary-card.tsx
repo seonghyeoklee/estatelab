@@ -32,11 +32,11 @@ function priceGradient(avgPrice: number): string {
   return 'from-slate-500/10 to-slate-500/5';
 }
 
-function priceAccent(avgPrice: number): string {
-  if (avgPrice >= 200000) return 'text-violet-600';
-  if (avgPrice >= 100000) return 'text-blue-600';
-  if (avgPrice >= 50000) return 'text-emerald-600';
-  return 'text-slate-600';
+function priceAccent(avgPrice: number): { text: string; bar: string } {
+  if (avgPrice >= 200000) return { text: 'text-violet-600', bar: 'bg-violet-500/60' };
+  if (avgPrice >= 100000) return { text: 'text-blue-600', bar: 'bg-blue-500/60' };
+  if (avgPrice >= 50000) return { text: 'text-emerald-600', bar: 'bg-emerald-500/60' };
+  return { text: 'text-slate-600', bar: 'bg-slate-500/60' };
 }
 
 export function RegionSummaryCards() {
@@ -109,7 +109,7 @@ export function RegionSummaryCards() {
               {/* 가격 정보 */}
               <div className="space-y-1.5">
                 <div className="flex items-baseline gap-2">
-                  <span className={cn('text-xl font-bold', accent)}>
+                  <span className={cn('text-xl font-bold', accent.text)}>
                     {formatPrice(region.avgPrice)}
                   </span>
                   <span className="text-[11px] text-muted-foreground">평균</span>
@@ -122,7 +122,7 @@ export function RegionSummaryCards() {
                   </div>
                   <div className="h-1.5 rounded-full bg-muted/60">
                     <div
-                      className={cn('h-1.5 rounded-full transition-all', accent.replace('text-', 'bg-').replace('600', '500/60'))}
+                      className={cn('h-1.5 rounded-full transition-all', accent.bar)}
                       style={{ width: `${barPct}%` }}
                     />
                   </div>
@@ -138,7 +138,7 @@ export function RegionSummaryCards() {
                       {region.latestTrade.name} {region.latestTrade.area}㎡
                     </p>
                   </div>
-                  <span className={cn('text-[12px] font-bold shrink-0', accent)}>
+                  <span className={cn('text-[12px] font-bold shrink-0', accent.text)}>
                     {formatPrice(region.latestTrade.price)}
                   </span>
                 </div>

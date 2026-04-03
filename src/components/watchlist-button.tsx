@@ -33,18 +33,18 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
     setLoading(true);
     try {
       if (isWatched) {
-        await fetch(`/api/user/watchlist?complexId=${complexId}`, { method: 'DELETE' });
-        setIsWatched(false);
+        const res = await fetch(`/api/user/watchlist?complexId=${complexId}`, { method: 'DELETE' });
+        if (res.ok) setIsWatched(false);
       } else {
-        await fetch('/api/user/watchlist', {
+        const res = await fetch('/api/user/watchlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ complexId }),
         });
-        setIsWatched(true);
+        if (res.ok) setIsWatched(true);
       }
     } catch {
-      // 무시
+      console.error('관심 단지 업데이트 실패');
     }
     setLoading(false);
   };
