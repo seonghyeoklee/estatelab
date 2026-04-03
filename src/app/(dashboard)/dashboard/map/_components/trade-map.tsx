@@ -269,37 +269,50 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
 
-  // 선택 단지 건물 폴리곤 표시
+  // 선택 단지 건물 폴리곤 표시 — VWORLD WFS 클라이언트 직접 호출
   useEffect(() => {
-    // 이전 폴리곤 제거
     buildingPolygonsRef.current.forEach((p) => p.setMap(null));
     buildingPolygonsRef.current = [];
 
     const map = mapInstanceRef.current;
-    if (!map || !selectedComplex?.lat || !selectedComplex?.lng) return;
+    const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !vworldKey) return;
 
-    // 건물 폴리곤 가져오기
-    fetch(`/api/market/building-polygon?lat=${selectedComplex.lat}&lng=${selectedComplex.lng}&radius=80`)
+    const lat = selectedComplex.lat;
+    const lng = selectedComplex.lng;
+    const radius = 80;
+    const latD = radius / 111320;
+    const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
+    const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
+
+    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_bldglevel&bbox=${bbox}&srsName=EPSG:4326&output=application/json&maxFeatures=50&key=${vworldKey}`;
+
+    fetch(url)
       .then((r) => r.json())
-      .then((data) => {
-        if (!data.data?.length) return;
+      .then((geojson) => {
+        if (!geojson.features?.length) return;
 
-        for (const building of data.data) {
-          if (!building.coordinates?.length) continue;
-          const path = building.coordinates.map(
-            (c: { lat: number; lng: number }) => new kakao.maps.LatLng(c.lat, c.lng)
-          );
+        for (const f of geojson.features) {
+          try {
+            const coords = f.geometry.type === 'MultiPolygon'
+              ? f.geometry.coordinates[0][0]
+              : f.geometry.coordinates[0];
 
-          const polygon = new kakao.maps.Polygon({
-            path,
-            strokeWeight: 2,
-            strokeColor: '#059669',
-            strokeOpacity: 0.8,
-            fillColor: '#059669',
-            fillOpacity: 0.12,
-          });
-          polygon.setMap(map);
-          buildingPolygonsRef.current.push(polygon);
+            const path = coords.map(([lng, lat]: number[]) => new kakao.maps.LatLng(lat, lng));
+
+            const polygon = new kakao.maps.Polygon({
+              path,
+              strokeWeight: 2,
+              strokeColor: '#059669',
+              strokeOpacity: 0.8,
+              fillColor: '#059669',
+              fillOpacity: 0.12,
+            });
+            polygon.setMap(map);
+            buildingPolygonsRef.current.push(polygon);
+          } catch {
+            // 폴리곤 파싱 실패 무시
+          }
         }
       })
       .catch(() => {});
