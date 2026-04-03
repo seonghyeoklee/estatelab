@@ -285,7 +285,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_bldglevel&bbox=${bbox}&srsName=EPSG:4326&output=application/json&maxFeatures=50&key=${vworldKey}`;
+    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`;
 
     fetch(url)
       .then((r) => r.json())
