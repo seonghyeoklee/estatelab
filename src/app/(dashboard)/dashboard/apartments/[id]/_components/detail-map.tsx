@@ -174,7 +174,7 @@ export function DetailMap({ complexId, lat, lng, name, address }: Props) {
                 .filter((s) => s.count > 0)
                 .slice(0, 4)
                 .map((s) => (
-                  <span key={s.key} className="text-[10px] text-muted-foreground">
+                  <span key={s.key} className="text-xs text-muted-foreground">
                     {s.label} {s.count}
                   </span>
                 ))}

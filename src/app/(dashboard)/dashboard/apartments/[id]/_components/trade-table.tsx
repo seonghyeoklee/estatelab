@@ -38,7 +38,7 @@ export function TradeTable({ trades }: TradeTableProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">거래 내역</CardTitle>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {filtered.length}건{areaFilter ? ` (${areaFilter}㎡)` : ''}
           </span>
         </div>
@@ -48,7 +48,7 @@ export function TradeTable({ trades }: TradeTableProps) {
             <button
               onClick={() => setAreaFilter(null)}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors',
+                'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                 !areaFilter ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
               )}
             >
@@ -59,7 +59,7 @@ export function TradeTable({ trades }: TradeTableProps) {
                 key={area}
                 onClick={() => setAreaFilter(area)}
                 className={cn(
-                  'rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors',
+                  'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                   areaFilter === area ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                 )}
               >
@@ -91,7 +91,7 @@ export function TradeTable({ trades }: TradeTableProps) {
                   <td className="py-2">{trade.floor}층</td>
                   <td className="py-2 text-right font-semibold text-primary tabular-nums">{(trade.price / 10000).toFixed(1)}억</td>
                   <td className="py-2 text-right text-muted-foreground tabular-nums">{trade.pricePerPyeong ? `${trade.pricePerPyeong.toLocaleString()}만` : '—'}</td>
-                  <td className="py-2">{trade.dealType && <Badge variant="outline" className="text-[10px]">{trade.dealType}</Badge>}</td>
+                  <td className="py-2">{trade.dealType && <Badge variant="outline" className="text-xs">{trade.dealType}</Badge>}</td>
                 </tr>
               ))}
             </tbody>
@@ -106,14 +106,14 @@ export function TradeTable({ trades }: TradeTableProps) {
                 <p className="text-[13px] font-semibold text-primary tabular-nums">
                   {(trade.price / 10000).toFixed(1)}억
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {trade.area}㎡ · {trade.floor}층
                   {trade.pricePerPyeong ? ` · ${trade.pricePerPyeong.toLocaleString()}만/평` : ''}
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-[11px] text-muted-foreground tabular-nums">{trade.dealDate.slice(0, 10)}</p>
-                {trade.dealType && <Badge variant="outline" className="text-[9px] mt-0.5">{trade.dealType}</Badge>}
+                <p className="text-xs text-muted-foreground tabular-nums">{trade.dealDate.slice(0, 10)}</p>
+                {trade.dealType && <Badge variant="outline" className="text-xs mt-0.5">{trade.dealType}</Badge>}
               </div>
             </div>
           ))}

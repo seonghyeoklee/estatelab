@@ -91,7 +91,7 @@ export function NearbyFacilities({ complexId }: { complexId: string }) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">주변 시설</CardTitle>
-          <Badge variant="outline" className="text-[10px]">반경 1km</Badge>
+          <Badge variant="outline" className="text-xs">반경 1km</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -107,12 +107,12 @@ export function NearbyFacilities({ complexId }: { complexId: string }) {
                     <Icon className="h-3.5 w-3.5" />
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
                     <p className="text-sm font-bold">{s.count}개</p>
                   </div>
                 </div>
                 {s.nearest && (
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     가장 가까운: {s.nearest.name} ({formatDistance(s.nearest.distance)})
                   </p>
                 )}
@@ -138,13 +138,13 @@ export function NearbyFacilities({ complexId }: { complexId: string }) {
                 {items.slice(0, 5).map((place) => (
                   <div
                     key={place.id}
-                    className="flex items-center justify-between rounded-md px-2 py-1.5 text-[11px] hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between rounded-md px-2 py-1.5 text-xs hover:bg-accent/50 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{place.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{place.category}</p>
+                      <p className="text-xs text-muted-foreground truncate">{place.category}</p>
                     </div>
-                    <Badge variant="secondary" className="text-[9px] shrink-0 ml-2">
+                    <Badge variant="secondary" className="text-xs shrink-0 ml-2">
                       {formatDistance(place.distance)}
                     </Badge>
                   </div>

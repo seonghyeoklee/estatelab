@@ -61,7 +61,7 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
             </div>
             <div>
               <h2 className="text-[16px] font-bold">전월세 현황</h2>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 전세 {totalJeonse}건 · 월세 {totalWolse}건
               </p>
             </div>
@@ -85,7 +85,7 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
             <div key={r.area} className="rounded-xl border p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-semibold">{r.area}㎡</span>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>전세 {r.jeonseCount}건</span>
                   <span>월세 {r.wolseCount}건</span>
                 </div>
@@ -95,14 +95,14 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
                 {/* 매매가 */}
                 {r.avgTradePrice > 0 && (
                   <div className="rounded-lg bg-muted/50 p-2">
-                    <p className="text-[10px] text-muted-foreground">매매</p>
+                    <p className="text-xs text-muted-foreground">매매</p>
                     <p className="text-[13px] font-bold">{formatPrice(r.avgTradePrice)}</p>
                   </div>
                 )}
                 {/* 전세가 */}
                 {r.avgDeposit > 0 && (
                   <div className="rounded-lg bg-amber-500/5 p-2">
-                    <p className="text-[10px] text-muted-foreground">전세</p>
+                    <p className="text-xs text-muted-foreground">전세</p>
                     <p className="text-[13px] font-bold text-amber-700">{formatPrice(r.avgDeposit)}</p>
                   </div>
                 )}
@@ -112,7 +112,7 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
                     'rounded-lg p-2',
                     r.jeonseRatio >= 70 ? 'bg-red-500/5' : 'bg-emerald-500/5'
                   )}>
-                    <p className="text-[10px] text-muted-foreground">전세가율</p>
+                    <p className="text-xs text-muted-foreground">전세가율</p>
                     <p className={cn(
                       'text-[13px] font-bold',
                       r.jeonseRatio >= 70 ? 'text-red-600' : 'text-emerald-600'
@@ -125,7 +125,7 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
 
               {/* 월세 정보 */}
               {r.wolseCount > 0 && r.avgMonthlyRent > 0 && (
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   월세 평균 보증금 {formatPrice(r.avgDeposit)} / 월 {r.avgMonthlyRent}만
                 </p>
               )}

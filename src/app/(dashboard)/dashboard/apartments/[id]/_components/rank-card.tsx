@@ -38,12 +38,12 @@ export function RankCard({ complexId }: { complexId: string }) {
               <span className="text-primary">{myRank}</span>
               <span className="text-[14px] font-normal text-muted-foreground">/{totalInRegion}</span>
             </p>
-            <p className="text-[12px] text-muted-foreground">상위 {percentile}%</p>
+            <p className="text-xs text-muted-foreground">상위 {percentile}%</p>
           </div>
           <div className="text-center rounded-xl bg-muted/50 p-3">
             <p className="text-[13px] text-muted-foreground">평당가</p>
             <p className="text-2xl font-bold mt-1">{myAvgPpp.toLocaleString()}</p>
-            <p className="text-[12px] text-muted-foreground">만원/평</p>
+            <p className="text-xs text-muted-foreground">만원/평</p>
           </div>
           <div className="text-center rounded-xl bg-muted/50 p-3">
             <p className="text-[13px] text-muted-foreground">회전율</p>
@@ -55,7 +55,7 @@ export function RankCard({ complexId }: { complexId: string }) {
                 )}>
                   {turnoverRate}%
                 </p>
-                <p className="text-[12px] text-muted-foreground">{recentTrades}건/{totalUnits}세대</p>
+                <p className="text-xs text-muted-foreground">{recentTrades}건/{totalUnits}세대</p>
               </>
             ) : (
               <p className="text-xl font-bold text-muted-foreground mt-1">—</p>
@@ -72,7 +72,7 @@ export function RankCard({ complexId }: { complexId: string }) {
                 <div key={item.id} className="flex items-center justify-between rounded-lg px-3 py-2 bg-muted/30">
                   <div className="flex items-center gap-2">
                     <span className={cn(
-                      'flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold',
+                      'flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold',
                       idx === 0 ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'
                     )}>
                       {idx + 1}

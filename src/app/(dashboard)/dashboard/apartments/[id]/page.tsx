@@ -186,7 +186,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
           <CardContent className="p-5">
             <p className="text-[13px] text-muted-foreground">거래 건수</p>
             <p className="text-2xl font-bold mt-1">{tradeCount}건</p>
-            <p className="text-[12px] text-muted-foreground">{areaGroups.length}개 면적 타입</p>
+            <p className="text-xs text-muted-foreground">{areaGroups.length}개 면적 타입</p>
           </CardContent>
         </Card>
         <Card>
@@ -195,7 +195,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
             {latestTrade ? (
               <div>
                 <p className="text-2xl font-bold mt-1">{formatPrice(latestTrade.price)}</p>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {latestTrade.area}㎡ ({Math.round(toPyeong(latestTrade.area))}평) · {latestTrade.floor}층 · {latestTrade.dealDate.toISOString().slice(0, 10)}
                 </p>
               </div>
@@ -253,7 +253,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
                       <span className="text-[14px] font-medium">{g.label}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-[16px] font-bold">{formatPrice(g.avg)}</span>
-                        <Badge variant="outline" className="text-[11px]">{g.count}건</Badge>
+                        <Badge variant="outline" className="text-xs">{g.count}건</Badge>
                       </div>
                     </div>
                     <div className="h-3 rounded-full bg-muted">

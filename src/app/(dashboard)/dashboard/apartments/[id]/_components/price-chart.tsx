@@ -82,7 +82,7 @@ export function PriceChart({ trades }: PriceChartProps) {
           <div className="text-right">
             <p className="text-lg font-bold text-primary">{formatPrice(latest.avgPrice)}</p>
             {changePct !== null && (
-              <p className={`text-[11px] font-semibold ${changePct >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+              <p className={`text-xs font-semibold ${changePct >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
                 {changePct >= 0 ? '+' : ''}{changePct}% ({first.label}→{latest.label})
               </p>
             )}
@@ -143,7 +143,7 @@ export function PriceChart({ trades }: PriceChartProps) {
             />
           </AreaChart>
         </ResponsiveContainer>
-        <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
           <span>{chartData.length}개월 데이터</span>
           <span>총 {trades.length}건 거래</span>
         </div>
