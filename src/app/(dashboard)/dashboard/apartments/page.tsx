@@ -198,7 +198,7 @@ export default function ApartmentsPage() {
                           <div className="flex items-center gap-1.5 min-w-0">
                             <h3 className="text-[16px] font-bold leading-tight line-clamp-1">{apt.name}</h3>
                             {isHot && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-600 shrink-0">
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-bold text-orange-600 shrink-0">
                                 <Flame className="h-2.5 w-2.5" />
                                 활발
                               </span>

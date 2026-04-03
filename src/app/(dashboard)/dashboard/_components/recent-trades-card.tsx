@@ -72,7 +72,7 @@ export function RecentTradesCard() {
                   {/* 순번 + 가격 뱃지 */}
                   <div className={cn('flex items-center justify-center h-9 w-9 rounded-lg text-[11px] font-bold shrink-0', colorStr)}>
                     {formatPrice(trade.price).replace('억', '').replace('만', '')}
-                    <span className="text-[8px] ml-0.5">억</span>
+                    <span className="text-[9px] ml-0.5">억</span>
                   </div>
 
                   {/* 단지 정보 */}

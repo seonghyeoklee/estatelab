@@ -118,7 +118,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
                     <item.icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-foreground' : '')} />
                     <span className="flex-1">{item.label}</span>
                     {item.badge && !isActive && (
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                         {item.badge}
                       </span>
                     )}

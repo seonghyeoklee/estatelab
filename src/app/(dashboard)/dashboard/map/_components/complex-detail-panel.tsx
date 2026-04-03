@@ -968,12 +968,12 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                           {idx === 0 && (
-                                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[8px] font-bold text-primary">
+                                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">
                                               최근접
                                             </span>
                                           )}
                                           {isNear && idx !== 0 && (
-                                            <span className="shrink-0 rounded bg-emerald-500/10 px-1 py-0.5 text-[8px] font-bold text-emerald-600">
+                                            <span className="shrink-0 rounded bg-emerald-500/10 px-1 py-0.5 text-[10px] font-bold text-emerald-600">
                                               도보권
                                             </span>
                                           )}
