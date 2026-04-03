@@ -228,9 +228,9 @@ export default function ApartmentsPage() {
                               {formatPrice(apt.latestTrade.price)}
                             </p>
                             <p className="text-[12px] text-muted-foreground mt-0.5">
-                              {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층ㅤ
+                              {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층
                               {apt.latestTrade.pricePerPyeong
-                                ? `${apt.latestTrade.pricePerPyeong.toLocaleString()}만/평`
+                                ? ` · ${apt.latestTrade.pricePerPyeong.toLocaleString()}만/평`
                                 : ''}
                             </p>
                           </div>

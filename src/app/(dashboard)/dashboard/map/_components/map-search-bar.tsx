@@ -46,7 +46,7 @@ export function MapSearchBar({ complexes, onSelect }: Props) {
   };
 
   return (
-    <div ref={containerRef} className="absolute top-3 left-3 z-[21] w-72 md:w-80 pointer-events-auto">
+    <div ref={containerRef} className="absolute top-3 left-3 right-14 md:right-auto z-[21] md:w-80 pointer-events-auto">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <input

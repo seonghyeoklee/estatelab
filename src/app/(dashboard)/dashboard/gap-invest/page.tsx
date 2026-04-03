@@ -179,36 +179,38 @@ export default function GapInvestPage() {
       {/* 대출 조건 설정 */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-primary" />
+              <Calculator className="h-4 w-4 text-primary shrink-0" />
               <span className="text-[13px] font-semibold">투자 시뮬레이션</span>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[11px] text-muted-foreground">대출금리</label>
-              <input
-                type="number"
-                value={loanRate}
-                onChange={(e) => setLoanRate(parseFloat(e.target.value) || 0)}
-                step="0.1"
-                min="0"
-                max="10"
-                className="w-16 rounded-md border px-2 py-1 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-              />
-              <span className="text-[11px] text-muted-foreground">%</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[11px] text-muted-foreground">대출비율</label>
-              <input
-                type="number"
-                value={loanRatio}
-                onChange={(e) => setLoanRatio(parseInt(e.target.value) || 0)}
-                step="10"
-                min="0"
-                max="100"
-                className="w-16 rounded-md border px-2 py-1 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-              />
-              <span className="text-[11px] text-muted-foreground">%</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] text-muted-foreground shrink-0">대출금리</label>
+                <input
+                  type="number"
+                  value={loanRate}
+                  onChange={(e) => setLoanRate(parseFloat(e.target.value) || 0)}
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                <span className="text-[11px] text-muted-foreground">%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] text-muted-foreground shrink-0">대출비율</label>
+                <input
+                  type="number"
+                  value={loanRatio}
+                  onChange={(e) => setLoanRatio(parseInt(e.target.value) || 0)}
+                  step="10"
+                  min="0"
+                  max="100"
+                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                <span className="text-[11px] text-muted-foreground">%</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -276,7 +278,7 @@ export default function GapInvestPage() {
                   </div>
 
                   {/* 중간: 가격 비교 */}
-                  <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
                     <div className="rounded-lg bg-muted/50 p-2.5 text-center">
                       <p className="text-[10px] text-muted-foreground">매매</p>
                       <p className="text-[14px] font-bold">{formatPrice(item.avgTrade)}</p>

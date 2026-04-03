@@ -43,6 +43,10 @@ async function main() {
 
   const pool = new Pool({
     connectionString: (process.env.DATABASE_URL_UNPOOLED || '').replace(/^"|"$/g, ''),
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    max: 3,
+    statement_timeout: 30000,
   });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
@@ -140,10 +144,11 @@ async function main() {
         totalSkipped += skipped;
         console.warn(`${prefix} — ${created}건 수집 (${skipped}건 스킵)`);
 
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 1500));
       } catch (e) {
         console.error(`${prefix} — 오류:`, e instanceof Error ? e.message : e);
-        await new Promise((r) => setTimeout(r, 2000));
+        // 커넥션 에러 시 잠시 대기 후 계속
+        await new Promise((r) => setTimeout(r, 5000));
       }
     }
   }
