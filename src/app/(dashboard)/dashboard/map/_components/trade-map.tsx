@@ -269,37 +269,22 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const highlightCircleRef = useRef<kakao.maps.Circle | null>(null);
 
-  // 선택 단지 하이라이트 — 건물 영역 강조 + 지적편집도 자동 활성화
+  // 선택 단지 하이라이트 원
   useEffect(() => {
-    // 이전 하이라이트 제거
     if (highlightCircleRef.current) {
       highlightCircleRef.current.setMap(null);
       highlightCircleRef.current = null;
     }
 
     const map = mapInstanceRef.current;
-    if (!map || !selectedComplex?.lat || !selectedComplex?.lng) {
-      // 선택 해제 시 지적편집도도 끄기
-      if (map && showDistrict) {
-        map.removeOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
-        setShowDistrict(false);
-      }
-      return;
-    }
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng) return;
 
-    // 지적편집도 자동 활성화 (건물 윤곽 표시)
-    if (!showDistrict) {
-      map.addOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
-      setShowDistrict(true);
-    }
-
-    // 건물 영역 하이라이트 원 (반경 60m — 일반적인 아파트 단지 크기)
     const circle = new kakao.maps.Circle({
       center: new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng),
       radius: 60,
-      strokeWeight: 2.5,
+      strokeWeight: 2,
       strokeColor: '#059669',
-      strokeOpacity: 0.7,
+      strokeOpacity: 0.6,
       strokeStyle: 'solid',
       fillColor: '#059669',
       fillOpacity: 0.08,
