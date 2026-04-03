@@ -138,11 +138,11 @@ function createPriceLabel(opts: {
 }): HTMLDivElement {
   const { title, price, subtitle, color, size, onClick } = opts;
 
-  const pad = size === 'lg' ? '5px 12px' : size === 'md' ? '3px 9px' : '2px 7px';
-  const titleSize = size === 'lg' ? '10px' : size === 'md' ? '9px' : '8px';
+  const pad = size === 'lg' ? '5px 12px' : size === 'md' ? '4px 10px' : '3px 8px';
+  const titleSize = size === 'lg' ? '12px' : size === 'md' ? '11px' : '10px';
   const priceSize = size === 'lg' ? '14px' : size === 'md' ? '13px' : '11px';
   const radius = '10px';
-  const maxTitleWidth = size === 'lg' ? '110px' : '80px';
+  const maxTitleWidth = size === 'lg' ? '120px' : '90px';
 
   const el = document.createElement('div');
   el.style.cssText = `
@@ -162,7 +162,7 @@ function createPriceLabel(opts: {
   `;
 
   const titleSpan = document.createElement('span');
-  titleSpan.style.cssText = `font-size:${titleSize};opacity:0.8;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
+  titleSpan.style.cssText = `font-size:${titleSize};font-weight:600;opacity:0.95;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
   titleSpan.textContent = title;
   el.appendChild(titleSpan);
 
