@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage, buildDailyReport } from '@/lib/telegram';
 import { env } from '@/lib/env';
+import { formatPrice } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -125,7 +126,36 @@ export async function POST(req: NextRequest) {
       baseRate: baseRate ? { rate: baseRate.rate, change: baseRate.change } : null,
     });
 
-    const sent = await sendTelegramMessage(message);
+    // 관심 단지 신규 거래 (24시간 내)
+    const since24h = new Date();
+    since24h.setHours(since24h.getHours() - 24);
+
+    const watchlist = await prisma.userWatchlist.findMany({
+      select: { complexId: true, complex: { select: { name: true, dong: true, region: { select: { sigungu: true } } } } },
+    });
+
+    let watchlistSection = '';
+    if (watchlist.length > 0) {
+      const watchIds = [...new Set(watchlist.map((w) => w.complexId))];
+      const newTrades = await prisma.apartmentTrade.findMany({
+        where: { complexId: { in: watchIds }, createdAt: { gte: since24h } },
+        include: { complex: { select: { name: true, dong: true, region: { select: { sigungu: true } } } } },
+        orderBy: { dealDate: 'desc' },
+        take: 10,
+      });
+
+      if (newTrades.length > 0) {
+        const lines: string[] = ['\n⭐ <b>관심 단지 신규 거래</b>'];
+        for (const t of newTrades.slice(0, 5)) {
+          lines.push(`  · ${t.complex.name} ${formatPrice(t.price)} / ${t.area}㎡ / ${t.floor}층`);
+        }
+        if (newTrades.length > 5) lines.push(`  ... 외 ${newTrades.length - 5}건`);
+        watchlistSection = lines.join('\n');
+      }
+    }
+
+    const fullMessage = message + watchlistSection;
+    const sent = await sendTelegramMessage(fullMessage);
 
     // 알림 로그 저장
     await prisma.alert.create({

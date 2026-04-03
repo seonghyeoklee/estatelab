@@ -36,10 +36,6 @@
     {
       "path": "/api/cron/daily-report",
       "schedule": "0 9 * * 1-5"
-    },
-    {
-      "path": "/api/cron/watchlist-alert",
-      "schedule": "0 10 * * 1-5"
     }
   ]
 }
