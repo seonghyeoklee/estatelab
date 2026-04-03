@@ -817,6 +817,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       const bounds = map.getBounds();
       const visible = new Set<string>();
 
+      // 줌 아웃 시 (단지 마커 안 보이는 레벨) 선택 해제
+      if (level > 5) {
+        setSelectedComplex(null);
+      }
+
       // 줌 ≤ 5: 단지별 라벨
       complexOverlaysRef.current.forEach((overlay, idx) => {
         const complex = withCoords[idx];
