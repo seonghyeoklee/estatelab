@@ -646,7 +646,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         content.style.outline = '3px solid white';
         content.style.border = `2px solid ${color.border}`;
         selectedOverlayRef.current = content;
-        panToWithOffset(complex.lat!, complex.lng!);
+        setTimeout(() => panToWithOffset(complex.lat!, complex.lng!), 50);
       };
 
       const pppLabel = complex.avgPricePerPyeong > 0
@@ -697,8 +697,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.panTo(position);
           mapInstanceRef.current.setLevel(5, { animate: true });
+          setTimeout(() => mapInstanceRef.current?.panTo(position), 300);
         }
       };
 
@@ -729,8 +729,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.panTo(position);
           mapInstanceRef.current.setLevel(6, { animate: true });
+          setTimeout(() => mapInstanceRef.current?.panTo(position), 300);
         }
       };
 
