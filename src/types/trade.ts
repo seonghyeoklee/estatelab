@@ -37,6 +37,7 @@ export interface MapComplex {
   _count: { trades: number };
   avgPrice: number;
   avgPricePerPyeong: number;
+  latestDealDate: string | null;
 }
 
 /** 좌표가 있는 단지 (non-null) */

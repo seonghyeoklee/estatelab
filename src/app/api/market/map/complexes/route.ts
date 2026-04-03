@@ -25,7 +25,7 @@ export async function GET() {
       lng: true,
       _count: { select: { trades: true } },
       trades: {
-        select: { price: true, area: true },
+        select: { price: true, area: true, dealDate: true },
         orderBy: { dealDate: 'desc' },
         take: 20,
       },
@@ -43,6 +43,8 @@ export async function GET() {
         )
       : 0;
 
+    const latestDealDate = c.trades[0]?.dealDate ?? null;
+
     return {
       id: c.id,
       name: c.name,
@@ -53,6 +55,7 @@ export async function GET() {
       _count: c._count,
       avgPrice,
       avgPricePerPyeong,
+      latestDealDate,
     };
   });
 

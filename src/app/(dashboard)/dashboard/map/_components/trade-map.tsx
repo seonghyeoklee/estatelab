@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
 import { ComplexDetailPanel } from './complex-detail-panel';
+import { MapSearchBar } from './map-search-bar';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -176,6 +177,9 @@ function createPriceLabel(opts: {
     subSpan.textContent = subtitle;
     el.appendChild(subSpan);
   }
+
+  // NEW 뱃지 슬롯 (외부에서 추가)
+  el.dataset.badgeSlot = 'true';
 
   // 하단 꼬리
   const tail = document.createElement('div');
@@ -660,6 +664,22 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       });
       content.dataset.complexId = complex.id;
 
+      // NEW 뱃지 — 최근 30일 내 거래
+      if (complex.latestDealDate) {
+        const daysDiff = (Date.now() - new Date(complex.latestDealDate).getTime()) / 86400000;
+        if (daysDiff <= 30) {
+          const badge = document.createElement('span');
+          badge.style.cssText = `
+            position:absolute;top:-6px;right:-6px;
+            background:#ef4444;color:white;font-size:7px;font-weight:800;
+            padding:1px 4px;border-radius:6px;line-height:1.3;
+            box-shadow:0 1px 3px rgba(0,0,0,0.2);
+          `;
+          badge.textContent = 'NEW';
+          content.appendChild(badge);
+        }
+      }
+
       const overlay = new kakao.maps.CustomOverlay({
         position,
         content,
@@ -868,8 +888,21 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
   return (
     <div className="relative h-full">
+      {/* 지도 내 검색 */}
+      <MapSearchBar
+        complexes={complexes}
+        onSelect={(c) => {
+          if (c.lat && c.lng && mapInstanceRef.current) {
+            mapInstanceRef.current.setLevel(4, { animate: true });
+            mapInstanceRef.current.panTo(new kakao.maps.LatLng(c.lat, c.lng));
+          }
+          setSelectedComplex(c);
+          setShowList(false);
+        }}
+      />
+
       {/* 시도 선택 탭 */}
-      <div className="absolute top-3 left-3 z-[20] flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap pointer-events-none">
+      <div className="absolute top-14 left-3 z-[20] flex gap-1.5 max-w-[calc(100%-100px)] md:max-w-[calc(100%-140px)] overflow-x-auto scrollbar-none md:flex-wrap pointer-events-none">
         {sidoList.map((sido) => (
           <button
             key={sido}
