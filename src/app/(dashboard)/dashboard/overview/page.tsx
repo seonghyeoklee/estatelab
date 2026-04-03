@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
+
+export const metadata: Metadata = { title: '시장 개요' };
 import { StatsCards } from '../_components/stats-cards';
 import { RegionSummaryCards } from '../_components/region-summary-card';
 import { RecentTradesCard } from '../_components/recent-trades-card';

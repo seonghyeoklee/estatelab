@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { Card, CardContent } from '@/components/ui/card';
+
+export const metadata: Metadata = { title: '가격지수' };
 import { ExternalLink, BarChart3, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { Card, CardContent } from '@/components/ui/card';
+
+export const metadata: Metadata = { title: '청약 정보' };
 import { CalendarDays, ExternalLink, ArrowUpRight, Home, FileText } from 'lucide-react';
 import Link from 'next/link';
 

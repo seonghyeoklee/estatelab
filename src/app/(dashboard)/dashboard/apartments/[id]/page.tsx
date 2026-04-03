@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
@@ -22,6 +23,19 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const complex = await prisma.apartmentComplex.findUnique({
+    where: { id },
+    select: { name: true, dong: true, region: { select: { sigungu: true } } },
+  });
+  if (!complex) return { title: '단지 정보' };
+  return {
+    title: `${complex.name} - ${complex.region.sigungu} ${complex.dong}`,
+    description: `${complex.name} 아파트 실거래가, 시세 추이, 주변시설 정보`,
+  };
 }
 
 export default async function ApartmentDetailPage({ params }: PageProps) {

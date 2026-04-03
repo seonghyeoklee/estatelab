@@ -14,6 +14,18 @@ export function formatPricePerPyeong(price: number): string {
   return price.toLocaleString() + '만/평';
 }
 
+/** 날짜를 YYYY-MM-DD 문자열로 변환 (hydration-safe) */
+export function formatDate(date: Date | string): string {
+  if (typeof date === 'string') return date.slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+/** 날짜를 YYYY-MM 문자열로 변환 */
+export function formatMonth(date: Date | string): string {
+  if (typeof date === 'string') return date.slice(0, 7);
+  return date.toISOString().slice(0, 7);
+}
+
 /** 가격대별 CSS 클래스 (bg + text) */
 export function priceColorClass(price: number): { bg: string; text: string } {
   if (price >= 200000) return { bg: 'bg-violet-500/10', text: 'text-violet-600' };
