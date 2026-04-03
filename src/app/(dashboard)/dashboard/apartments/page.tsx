@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,20 +42,22 @@ interface DongCount {
 
 
 
-export default function ApartmentsPage() {
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
+function ApartmentsContent() {
+  const searchParams = useSearchParams();
+
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'));
   const [showMap, setShowMap] = useState(true);
-  const [dongFilter, setDongFilter] = useState('');
+  const [dongFilter, setDongFilter] = useState(searchParams.get('dong') || '');
   const [filters, setFilters] = useState<FilterValues>({
-    regionCode: '',
-    sido: '',
-    minPrice: '',
-    maxPrice: '',
-    minArea: '',
-    maxArea: '',
-    minYear: '',
-    sort: 'trades',
+    regionCode: searchParams.get('regionCode') || '',
+    sido: searchParams.get('sido') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    minArea: searchParams.get('minArea') || '',
+    maxArea: searchParams.get('maxArea') || '',
+    minYear: searchParams.get('minYear') || '',
+    sort: searchParams.get('sort') || 'trades',
   });
 
   const params = new URLSearchParams();
@@ -71,11 +74,14 @@ export default function ApartmentsPage() {
   if (filters.minYear) params.set('minYear', filters.minYear);
   if (filters.sort) params.set('sort', filters.sort);
 
+  // URL 동기화
+  const paramStr = params.toString();
+
   const { data, isLoading } = useSWR<{
     data: ApartmentItem[];
     meta: { total: number; page: number; totalPages: number };
     dongCounts: DongCount[];
-  }>(`/api/market/apartments?${params.toString()}`);
+  }>(`/api/market/apartments?${paramStr}`);
 
   const handleFilterChange = (newFilters: FilterValues) => {
     setFilters(newFilters);
@@ -302,5 +308,13 @@ export default function ApartmentsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ApartmentsPage() {
+  return (
+    <Suspense>
+      <ApartmentsContent />
+    </Suspense>
   );
 }

@@ -2,8 +2,10 @@
 
 import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wallet, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Wallet, Info, Search, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import { calculateMortgage, maxLoanByIncome } from '@/lib/mortgage';
@@ -349,6 +351,23 @@ function CalculatorContent() {
                 {maxBuyable >= price ? '매수 가능' : `${formatPrice(price - maxBuyable)} 부족`}
               </p>
             </div>
+          </div>
+
+          {/* CTA: 이 금액대 아파트 보기 */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button asChild className="flex-1">
+              <Link href={`/dashboard/apartments?maxPrice=${maxBuyable}&sort=price`}>
+                <Search className="h-4 w-4" />
+                {formatPrice(maxBuyable)} 이하 아파트 보기
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="flex-1">
+              <Link href={`/dashboard/gap-invest?maxRatio=100&sort=gap`}>
+                갭투자 기회 보기
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
