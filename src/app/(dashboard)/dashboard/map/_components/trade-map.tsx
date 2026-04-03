@@ -222,6 +222,23 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const guOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const initialFitDoneRef = useRef(false);
   const listenersAttachedRef = useRef(false);
+
+  // 패널 오프셋 보정 panTo — 좌측 패널(420px) / 모바일 하단 시트 감안
+  const panToWithOffset = useCallback((lat: number, lng: number) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const position = new kakao.maps.LatLng(lat, lng);
+    const proj = map.getProjection();
+    const point = proj.pointFromCoords(position);
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      point.y += window.innerHeight * 0.2;
+    } else {
+      point.x -= 210;
+    }
+    const adjusted = proj.coordsFromPoint(point);
+    map.panTo(adjusted);
+  }, []);
   // 주변시설 오버레이 + 반경 원
   const nearbyOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const radiusCircleRef = useRef<kakao.maps.Circle | null>(null);
@@ -322,9 +339,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const map = mapInstanceRef.current;
     if (map && target.lat && target.lng) {
       map.setLevel(4, { animate: false });
-      map.panTo(new kakao.maps.LatLng(target.lat, target.lng));
+      setTimeout(() => panToWithOffset(target.lat!, target.lng!), 200);
     }
-  }, []);
+  }, [panToWithOffset]);
 
   // focusComplexId effect — 데이터 로드 후 1회 실행
   useEffect(() => {
@@ -629,22 +646,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         content.style.outline = '3px solid white';
         content.style.border = `2px solid ${color.border}`;
         selectedOverlayRef.current = content;
-        // 선택한 단지를 보이는 영역 중앙으로 이동
-        if (mapInstanceRef.current) {
-          const map = mapInstanceRef.current;
-          const isMobile = window.innerWidth < 768;
-          const proj = map.getProjection();
-          const point = proj.pointFromCoords(position);
-          if (isMobile) {
-            // 모바일: 하단 시트(60vh)가 가리니까 위쪽으로 오프셋
-            point.y += window.innerHeight * 0.2;
-          } else {
-            // 데스크톱: 좌측 패널(420px) 감안해 오른쪽으로 오프셋
-            point.x -= 210;
-          }
-          const adjusted = proj.coordsFromPoint(point);
-          map.panTo(adjusted);
-        }
+        panToWithOffset(complex.lat!, complex.lng!);
       };
 
       const pppLabel = complex.avgPricePerPyeong > 0
@@ -1159,8 +1161,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                           setSelectedComplex(c);
                           setShowList(false);
                           if (mapInstanceRef.current && c.lat && c.lng) {
-                            mapInstanceRef.current.panTo(new kakao.maps.LatLng(c.lat, c.lng));
                             mapInstanceRef.current.setLevel(4, { animate: true });
+                            setTimeout(() => panToWithOffset(c.lat!, c.lng!), 200);
                           }
                         }}
                         className={cn(
