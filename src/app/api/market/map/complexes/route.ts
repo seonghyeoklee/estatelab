@@ -45,6 +45,22 @@ export async function GET() {
 
     const latestDealDate = c.trades[0]?.dealDate ?? null;
 
+    // 면적별 평균가
+    const byArea: Record<number, { total: number; count: number; totalPpp: number }> = {};
+    for (const t of c.trades) {
+      const area = Math.round(t.area);
+      if (!byArea[area]) byArea[area] = { total: 0, count: 0, totalPpp: 0 };
+      byArea[area].total += t.price;
+      byArea[area].count++;
+      byArea[area].totalPpp += pricePerPyeong(t.price, t.area);
+    }
+    const areas = Object.entries(byArea).map(([area, v]) => ({
+      area: Number(area),
+      avgPrice: Math.round(v.total / v.count),
+      avgPpp: Math.round(v.totalPpp / v.count),
+      count: v.count,
+    }));
+
     return {
       id: c.id,
       name: c.name,
@@ -56,6 +72,7 @@ export async function GET() {
       avgPrice,
       avgPricePerPyeong,
       latestDealDate,
+      areas,
     };
   });
 

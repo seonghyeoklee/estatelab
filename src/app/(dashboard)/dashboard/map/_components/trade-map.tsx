@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
@@ -262,6 +263,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [listSearch, setListSearch] = useState('');
   const [listSort, setListSort] = useState<'price' | 'trades'>('price');
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
+  const [areaFilter, setAreaFilter] = useState<number | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // 패널 열림/닫힘 시 지도 리사이즈
@@ -621,9 +625,26 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     for (const complex of withCoords) {
       const position = new kakao.maps.LatLng(complex.lat!, complex.lng!);
       const color = MARKER_COLOR;
-      const priceLabel = formatPrice(complex.avgPrice);
+
+      // 면적 필터 적용 시 해당 면적 가격, 없으면 전체 평균
+      const areaData = areaFilter && complex.areas
+        ? complex.areas.find((a) => a.area === areaFilter)
+        : null;
+      if (areaFilter && !areaData) continue; // 해당 면적 거래 없으면 마커 숨김
+      const displayPrice = areaData ? areaData.avgPrice : complex.avgPrice;
+      const displayPpp = areaData ? areaData.avgPpp : complex.avgPricePerPyeong;
+      const priceLabel = formatPrice(displayPrice);
 
       const handleSelect = () => {
+        // 비교 모드
+        if (compareMode) {
+          setCompareIds((prev) => {
+            if (prev.includes(complex.id)) return prev.filter((id) => id !== complex.id);
+            if (prev.length >= 2) return [prev[1], complex.id];
+            return [...prev, complex.id];
+          });
+          return;
+        }
         // 이전 선택 해제
         if (selectedOverlayRef.current) {
           selectedOverlayRef.current.classList.remove('marker-selected');
@@ -649,8 +670,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setTimeout(() => panToWithOffset(complex.lat!, complex.lng!), 50);
       };
 
-      const pppLabel = complex.avgPricePerPyeong > 0
-        ? `${complex.avgPricePerPyeong.toLocaleString()}만/평`
+      const pppLabel = displayPpp > 0
+        ? `${displayPpp.toLocaleString()}만/평`
         : undefined;
 
       const content = createPriceLabel({
@@ -821,7 +842,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       map.setBounds(bounds, 50, 50, 50, 50);
       initialFitDoneRef.current = true;
     }
-  }, [withCoords, dongGroups, guGroups]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [withCoords, dongGroups, guGroups, areaFilter, compareMode]);
 
   // 줌 컨트롤
   const handleZoomIn = () => {
@@ -916,6 +938,59 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             {sido.replace(/특별시|광역시|특별자치시|특별자치도|도$/, '')}
           </button>
         ))}
+      </div>
+
+      {/* 면적 필터 + 비교 모드 */}
+      <div className="absolute top-[88px] left-3 z-[20] flex items-center gap-1.5 pointer-events-none">
+        {/* 면적 필터 */}
+        <div className="flex gap-1 pointer-events-auto">
+          {[
+            { label: '전체', value: null },
+            { label: '~59㎡', value: 59 },
+            { label: '84㎡', value: 84 },
+            { label: '114㎡', value: 114 },
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => setAreaFilter(opt.value)}
+              className={cn(
+                'rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm transition-all',
+                areaFilter === opt.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 비교 모드 */}
+        <button
+          onClick={() => {
+            setCompareMode(!compareMode);
+            if (compareMode) setCompareIds([]);
+          }}
+          className={cn(
+            'rounded-lg px-2.5 py-1 text-[10px] font-medium shadow-sm transition-all pointer-events-auto',
+            compareMode
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
+          )}
+        >
+          <GitCompareArrows className="h-3 w-3 inline mr-1" />
+          비교{compareIds.length > 0 ? ` (${compareIds.length})` : ''}
+        </button>
+
+        {/* 비교 이동 */}
+        {compareIds.length === 2 && (
+          <Link
+            href={`/dashboard/compare?a=${compareIds[0]}&b=${compareIds[1]}`}
+            className="rounded-lg bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium shadow-sm pointer-events-auto"
+          >
+            비교하기 →
+          </Link>
+        )}
       </div>
 
       {/* 우측 컨트롤 */}

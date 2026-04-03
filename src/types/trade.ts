@@ -38,6 +38,7 @@ export interface MapComplex {
   avgPrice: number;
   avgPricePerPyeong: number;
   latestDealDate: string | null;
+  areas?: { area: number; avgPrice: number; avgPpp: number; count: number }[];
 }
 
 /** 좌표가 있는 단지 (non-null) */
