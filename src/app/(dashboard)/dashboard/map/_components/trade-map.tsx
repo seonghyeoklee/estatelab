@@ -267,30 +267,42 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
-  const highlightCircleRef = useRef<kakao.maps.Circle | null>(null);
+  const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
 
-  // 선택 단지 하이라이트 원
+  // 선택 단지 건물 폴리곤 표시
   useEffect(() => {
-    if (highlightCircleRef.current) {
-      highlightCircleRef.current.setMap(null);
-      highlightCircleRef.current = null;
-    }
+    // 이전 폴리곤 제거
+    buildingPolygonsRef.current.forEach((p) => p.setMap(null));
+    buildingPolygonsRef.current = [];
 
     const map = mapInstanceRef.current;
     if (!map || !selectedComplex?.lat || !selectedComplex?.lng) return;
 
-    const circle = new kakao.maps.Circle({
-      center: new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng),
-      radius: 60,
-      strokeWeight: 2,
-      strokeColor: '#059669',
-      strokeOpacity: 0.6,
-      strokeStyle: 'solid',
-      fillColor: '#059669',
-      fillOpacity: 0.08,
-    });
-    circle.setMap(map);
-    highlightCircleRef.current = circle;
+    // 건물 폴리곤 가져오기
+    fetch(`/api/market/building-polygon?lat=${selectedComplex.lat}&lng=${selectedComplex.lng}&radius=80`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.data?.length) return;
+
+        for (const building of data.data) {
+          if (!building.coordinates?.length) continue;
+          const path = building.coordinates.map(
+            (c: { lat: number; lng: number }) => new kakao.maps.LatLng(c.lat, c.lng)
+          );
+
+          const polygon = new kakao.maps.Polygon({
+            path,
+            strokeWeight: 2,
+            strokeColor: '#059669',
+            strokeOpacity: 0.8,
+            fillColor: '#059669',
+            fillOpacity: 0.12,
+          });
+          polygon.setMap(map);
+          buildingPolygonsRef.current.push(polygon);
+        }
+      })
+      .catch(() => {});
   }, [selectedComplex]);
 
   // 패널 열림/닫힘 시 지도 리사이즈
