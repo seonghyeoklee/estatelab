@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SessionProvider } from '@/components/session-provider';
+import { GoogleAnalytics } from '@/components/google-analytics';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
+        <GoogleAnalytics />
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

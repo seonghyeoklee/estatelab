@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Share2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/components/google-analytics';
 
 interface Props {
   title: string;
@@ -19,6 +20,7 @@ export function ShareButton({ title, className }: Props) {
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
+        trackEvent('share', { method: 'native', title });
         return;
       } catch {
         // 사용자 취소 — 무시
@@ -29,6 +31,7 @@ export function ShareButton({ title, className }: Props) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      trackEvent('share', { method: 'clipboard', title });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // 폴백의 폴백

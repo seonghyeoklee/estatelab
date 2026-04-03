@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/components/google-analytics';
 
 interface WatchlistButtonProps {
   complexId: string;
@@ -41,7 +42,10 @@ export function WatchlistButton({ complexId, size = 'md' }: WatchlistButtonProps
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ complexId }),
         });
-        if (res.ok) setIsWatched(true);
+        if (res.ok) {
+          setIsWatched(true);
+          trackEvent('watchlist_add', { complex_id: complexId });
+        }
       }
     } catch {
       console.error('관심 단지 업데이트 실패');
