@@ -18,6 +18,7 @@ import { NearbyFacilities } from './_components/nearby-facilities';
 import { RankCard } from './_components/rank-card';
 import { DetailMap } from './_components/detail-map';
 import { JeonseRatioCard } from './_components/jeonse-ratio-card';
+import { PriceDiagnosis } from './_components/price-diagnosis';
 import { KakaoMapProvider } from '@/components/kakao-map-provider';
 
 export const dynamic = 'force-dynamic';
@@ -269,6 +270,9 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* 적정가 진단 + 주변 비교 */}
+      <PriceDiagnosis complexId={id} />
 
       {/* 전월세 현황 + 전세가율 */}
       <JeonseRatioCard complexId={id} />
