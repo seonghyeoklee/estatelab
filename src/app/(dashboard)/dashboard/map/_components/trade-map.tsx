@@ -367,8 +367,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     setShowList(false);
     const map = mapInstanceRef.current;
     if (map && target.lat && target.lng) {
-      map.setLevel(4, { animate: false });
-      setTimeout(() => panToWithOffset(target.lat!, target.lng!), 200);
+      map.setLevel(4);
+      panToWithOffset(target.lat, target.lng);
     }
   }, [panToWithOffset]);
 
@@ -743,8 +743,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.setLevel(5, { animate: true });
-          setTimeout(() => mapInstanceRef.current?.panTo(position), 300);
+          mapInstanceRef.current.setCenter(position);
+          mapInstanceRef.current.setLevel(5);
         }
       };
 
@@ -775,8 +775,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.setLevel(6, { animate: true });
-          setTimeout(() => mapInstanceRef.current?.panTo(position), 300);
+          mapInstanceRef.current.setCenter(position);
+          mapInstanceRef.current.setLevel(6);
         }
       };
 
@@ -1261,8 +1261,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                           setSelectedComplex(c);
                           setShowList(false);
                           if (mapInstanceRef.current && c.lat && c.lng) {
-                            mapInstanceRef.current.setLevel(4, { animate: true });
-                            setTimeout(() => panToWithOffset(c.lat!, c.lng!), 200);
+                            mapInstanceRef.current.setLevel(4);
+                            panToWithOffset(c.lat, c.lng);
                           }
                         }}
                         className={cn(
