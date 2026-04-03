@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import { EmptyState } from '@/components/empty-state';
+import { calculateInvestment } from '@/lib/investment';
 
 interface GapItem {
   complexId: string;
@@ -72,6 +73,8 @@ export default function GapInvestPage() {
   const [showCalc, setShowCalc] = useState<string | null>(null);
   const [loanRate, setLoanRate] = useState(3.5);
   const [loanRatio, setLoanRatio] = useState(70);
+  const [holdYears, setHoldYears] = useState(3);
+  const [growthRate, setGrowthRate] = useState(3);
 
   const params = new URLSearchParams();
   params.set('minRatio', String(ratioFilter.min));
@@ -89,14 +92,14 @@ export default function GapInvestPage() {
 
   const items = data?.data ?? [];
 
-  // 투자 시뮬레이션 계산
-  const calcInvestment = (item: GapItem) => {
-    const gap = item.gapAmount; // 갭 (만원)
-    const loanAmount = Math.round(gap * (loanRatio / 100)); // 대출금
-    const selfFund = gap - loanAmount; // 자기자본
-    const monthlyPayment = Math.round((loanAmount * 10000 * (loanRate / 100 / 12)) / 10000); // 월 이자 (만원)
-    return { gap, loanAmount, selfFund, monthlyPayment };
-  };
+  const calcInvest = (item: GapItem) => calculateInvestment({
+    tradePrice: item.avgTrade,
+    jeonsePrice: item.avgJeonse,
+    loanRate,
+    loanRatio,
+    holdYears,
+    priceGrowthRate: growthRate,
+  });
 
   return (
     <div className="space-y-5">
@@ -212,6 +215,33 @@ export default function GapInvestPage() {
                 <span className="text-[11px] text-muted-foreground">%</span>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] text-muted-foreground shrink-0">보유기간</label>
+                <input
+                  type="number"
+                  value={holdYears}
+                  onChange={(e) => setHoldYears(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="30"
+                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                <span className="text-[11px] text-muted-foreground">년</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] text-muted-foreground shrink-0">연 상승률</label>
+                <input
+                  type="number"
+                  value={growthRate}
+                  onChange={(e) => setGrowthRate(parseFloat(e.target.value) || 0)}
+                  step="0.5"
+                  min="-10"
+                  max="20"
+                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                <span className="text-[11px] text-muted-foreground">%</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -239,7 +269,7 @@ export default function GapInvestPage() {
         <div className="space-y-3">
           {items.map((item) => {
             const risk = riskLevel(item.jeonseRatio);
-            const inv = calcInvestment(item);
+            const inv = calcInvest(item);
             const isExpanded = showCalc === `${item.complexId}-${item.area}`;
 
             return (
@@ -304,25 +334,50 @@ export default function GapInvestPage() {
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-2 rounded-lg border p-3 space-y-2 bg-muted/30">
-                      <div className="grid grid-cols-2 gap-2 text-[12px]">
-                        <div>
-                          <span className="text-muted-foreground">대출금 ({loanRatio}%)</span>
-                          <p className="font-semibold">{formatPrice(inv.loanAmount)}</p>
-                        </div>
+                    <div className="mt-2 rounded-lg border p-3 space-y-3 bg-muted/30">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[12px]">
                         <div>
                           <span className="text-muted-foreground">자기자본</span>
                           <p className="font-bold text-primary">{formatPrice(inv.selfFund)}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">월 이자 ({loanRate}%)</span>
-                          <p className="font-semibold">{inv.monthlyPayment.toLocaleString()}만원</p>
+                          <span className="text-muted-foreground">대출금</span>
+                          <p className="font-semibold">{formatPrice(inv.loanAmount)}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">거래 건수</span>
-                          <p className="font-semibold">매매 {item.tradeCount} · 전세 {item.jeonseCount}</p>
+                          <span className="text-muted-foreground">월 이자</span>
+                          <p className="font-semibold">{inv.monthlyInterest.toLocaleString()}만</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">월 원리금</span>
+                          <p className="font-semibold">{inv.monthlyPrincipalInterest.toLocaleString()}만</p>
                         </div>
                       </div>
+                      <div className="border-t pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[12px]">
+                        <div>
+                          <span className="text-muted-foreground">{holdYears}년 후 예상가</span>
+                          <p className="font-semibold">{formatPrice(inv.futurePrice)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">총 이자비용</span>
+                          <p className="font-semibold">{formatPrice(inv.totalInterest)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">예상 수익</span>
+                          <p className={cn('font-bold', inv.profit >= 0 ? 'text-red-600' : 'text-blue-600')}>
+                            {inv.profit >= 0 ? '+' : ''}{formatPrice(inv.profit)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">투자 수익률</span>
+                          <p className={cn('font-bold', inv.roi >= 0 ? 'text-red-600' : 'text-blue-600')}>
+                            {inv.roi >= 0 ? '+' : ''}{inv.roi}% ({inv.annualRoi}%/년)
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        매매 {item.tradeCount}건 · 전세 {item.jeonseCount}건 · 연 {growthRate}% 상승 가정
+                      </p>
                     </div>
                   )}
                 </CardContent>

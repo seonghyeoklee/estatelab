@@ -8,6 +8,7 @@ import { RecentTradesCard } from '../_components/recent-trades-card';
 import { RateSummaryCard } from '../_components/rate-summary-card';
 import { InsightsCards } from '../_components/insights-cards';
 import { MonthlyVolumeChart } from '../_components/monthly-volume-chart';
+import { GapInvestSummary } from '../_components/gap-invest-summary';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,13 +48,16 @@ export default function OverviewPage() {
         <InsightsCards />
       </div>
 
-      {/* 지역별 + 최근 거래 */}
+      {/* 지역별 + 갭투자 + 최근 거래 */}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-3 text-lg font-semibold">지역별 거래 현황</h2>
           <RegionSummaryCards />
         </div>
-        <RecentTradesCard />
+        <div className="space-y-4">
+          <GapInvestSummary />
+          <RecentTradesCard />
+        </div>
       </div>
     </div>
   );
