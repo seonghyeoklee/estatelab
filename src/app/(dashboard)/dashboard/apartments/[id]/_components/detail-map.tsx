@@ -58,10 +58,10 @@ function addCenterMarker(map: kakao.maps.Map, lat: number, lng: number, name: st
     center: new kakao.maps.LatLng(lat, lng),
     radius: 1000,
     strokeWeight: 1.5,
-    strokeColor: '#059669',
-    strokeOpacity: 0.3,
+    strokeColor: '#94a3b8',
+    strokeOpacity: 0.4,
     strokeStyle: 'dashed',
-    fillColor: '#059669',
+    fillColor: '#94a3b8',
     fillOpacity: 0.03,
   }).setMap(map);
 }

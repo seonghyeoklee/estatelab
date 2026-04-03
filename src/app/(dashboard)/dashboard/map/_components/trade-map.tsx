@@ -376,15 +376,15 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const places = nearbyData.data.places;
     const complexPos = new kakao.maps.LatLng(selectedComplex.lat, selectedComplex.lng);
 
-    // 반경 원 (1km)
+    // 반경 원 (1km) — 튀지 않는 slate 계열
     const circle = new kakao.maps.Circle({
       center: complexPos,
       radius: 1000,
       strokeWeight: 1.5,
-      strokeColor: '#059669',
-      strokeOpacity: 0.4,
+      strokeColor: '#94a3b8',
+      strokeOpacity: 0.5,
       strokeStyle: 'dashed',
-      fillColor: '#059669',
+      fillColor: '#94a3b8',
       fillOpacity: 0.04,
     });
     circle.setMap(map);
