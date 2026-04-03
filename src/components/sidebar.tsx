@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Search,
   Heart,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: '부동산',
     items: [
       { href: '/dashboard/apartments', label: '아파트', icon: Building2, exact: true },
+      { href: '/dashboard/gap-invest', label: '갭투자 분석', icon: Percent },
       { href: '/dashboard/subscriptions', label: '청약', icon: CalendarDays, badge: '준비중' },
     ],
   },

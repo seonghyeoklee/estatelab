@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, LayoutDashboard, Building2, Landmark, Heart } from 'lucide-react';
+import { Map, LayoutDashboard, Building2, Percent, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/dashboard/map', label: '지도', icon: Map },
   { href: '/dashboard/overview', label: '개요', icon: LayoutDashboard },
   { href: '/dashboard/apartments', label: '아파트', icon: Building2 },
-  { href: '/dashboard/rates', label: '금리', icon: Landmark },
+  { href: '/dashboard/gap-invest', label: '갭투자', icon: Percent },
   { href: '/dashboard/my', label: 'MY', icon: Heart },
 ];
 
