@@ -124,8 +124,8 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
             <Building2 className={cn('h-7 w-7', color.text)} />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{complex.name}</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-3xl font-bold tracking-tight truncate">{complex.name}</h1>
               <WatchlistButton complexId={id} />
               <ShareButton title={`${complex.name} - EstateLab`} />
             </div>

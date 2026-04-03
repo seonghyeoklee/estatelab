@@ -118,7 +118,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
         </button>
 
         {/* 정렬 */}
-        <div className="flex items-center gap-1 ml-auto">
+        <div className="flex items-center gap-1 ml-auto flex-wrap">
           {SORT_OPTIONS.map((opt) => (
             <button
               key={opt.value}

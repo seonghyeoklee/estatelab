@@ -119,7 +119,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => handleOpenChange(false)} />
 
       {/* 패널 */}
-      <div className="fixed left-1/2 top-[12%] md:top-[20%] z-50 w-full max-w-lg -translate-x-1/2 px-4">
+      <div className="fixed left-1/2 top-[12%] md:top-[20%] z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2">
         <div className="rounded-2xl border border-border/50 bg-white shadow-2xl overflow-hidden">
           {/* 검색 입력 */}
           <div className="flex items-center gap-3 border-b px-4 py-3">

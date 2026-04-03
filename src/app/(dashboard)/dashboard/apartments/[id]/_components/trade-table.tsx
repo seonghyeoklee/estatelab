@@ -70,7 +70,8 @@ export function TradeTable({ trades }: TradeTableProps) {
         )}
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        {/* 데스크톱: 테이블 */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
@@ -85,28 +86,37 @@ export function TradeTable({ trades }: TradeTableProps) {
             <tbody>
               {filtered.map((trade) => (
                 <tr key={trade.id} className="border-b last:border-0 hover:bg-accent/50 transition-colors">
-                  <td className="py-2 text-muted-foreground tabular-nums">
-                    {trade.dealDate.slice(0, 10)}
-                  </td>
+                  <td className="py-2 text-muted-foreground tabular-nums">{trade.dealDate.slice(0, 10)}</td>
                   <td className="py-2">{trade.area}㎡</td>
                   <td className="py-2">{trade.floor}층</td>
-                  <td className="py-2 text-right font-semibold text-primary tabular-nums">
-                    {(trade.price / 10000).toFixed(1)}억
-                  </td>
-                  <td className="py-2 text-right text-muted-foreground tabular-nums">
-                    {trade.pricePerPyeong ? `${trade.pricePerPyeong.toLocaleString()}만` : '—'}
-                  </td>
-                  <td className="py-2">
-                    {trade.dealType && (
-                      <Badge variant="outline" className="text-[10px]">
-                        {trade.dealType}
-                      </Badge>
-                    )}
-                  </td>
+                  <td className="py-2 text-right font-semibold text-primary tabular-nums">{(trade.price / 10000).toFixed(1)}억</td>
+                  <td className="py-2 text-right text-muted-foreground tabular-nums">{trade.pricePerPyeong ? `${trade.pricePerPyeong.toLocaleString()}만` : '—'}</td>
+                  <td className="py-2">{trade.dealType && <Badge variant="outline" className="text-[10px]">{trade.dealType}</Badge>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* 모바일: 카드 리스트 */}
+        <div className="md:hidden space-y-2">
+          {filtered.map((trade) => (
+            <div key={trade.id} className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-[13px] font-semibold text-primary tabular-nums">
+                  {(trade.price / 10000).toFixed(1)}억
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {trade.area}㎡ · {trade.floor}층
+                  {trade.pricePerPyeong ? ` · ${trade.pricePerPyeong.toLocaleString()}만/평` : ''}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[11px] text-muted-foreground tabular-nums">{trade.dealDate.slice(0, 10)}</p>
+                {trade.dealType && <Badge variant="outline" className="text-[9px] mt-0.5">{trade.dealType}</Badge>}
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
