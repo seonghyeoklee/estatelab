@@ -23,9 +23,11 @@ export async function GET(request: NextRequest) {
   };
 
   // 영역 필터 (파라미터 있을 때만)
+  let limit = 2000;
   if (swLat && swLng && neLat && neLng) {
     where.lat = { gte: swLat, lte: neLat };
     where.lng = { gte: swLng, lte: neLng };
+    limit = 3000; // 영역 좁으면 더 많이
   }
 
   const complexes = await prisma.apartmentComplex.findMany({
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
         take: 20,
       },
     },
-    take: 1000,
+    take: limit,
   });
 
   const data = complexes.map((c) => {

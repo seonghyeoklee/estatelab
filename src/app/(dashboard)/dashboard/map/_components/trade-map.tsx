@@ -864,11 +864,13 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setSelectedComplex(null);
       }
 
-      // 지도 영역 변경 시 API 재조회 (500ms 디바운스)
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}`;
-      debouncedSetBounds(newBounds);
+      // 줌 ≤ 5 (단지별 모드)일 때만 영역 기반 재조회
+      if (level <= 5) {
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+        const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}`;
+        debouncedSetBounds(newBounds);
+      }
 
       // 줌 ≤ 5: 단지별 라벨
       complexOverlaysRef.current.forEach((overlay, idx) => {
