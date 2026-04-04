@@ -3,10 +3,8 @@
 import useSWR from 'swr';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
-  TrendingUp, TrendingDown, BarChart3, ArrowUpRight, ArrowDownRight,
-  Crown, Percent, Activity,
+  TrendingUp, TrendingDown, BarChart3, Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
@@ -123,90 +121,6 @@ export function InsightsCards() {
         </Card>
       )}
 
-      {/* 전세가율 TOP */}
-      {insights.jeonseRatio.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-amber-500/10 p-2">
-                <Percent className="h-4 w-4 text-amber-600" />
-              </div>
-              <div>
-                <CardTitle className="text-sm">전세가율 TOP</CardTitle>
-                <p className="text-xs text-muted-foreground">전세 보증금 / 매매가 (높을수록 갭 작음)</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {insights.jeonseRatio.slice(0, 7).map((item, idx) => (
-              <Link key={item.complexId} href={`/dashboard/apartments/${item.complexId}`}>
-                <div className="group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent/50 transition-colors">
-                  <span className={cn(
-                    'text-xs font-bold w-5 text-center',
-                    idx < 3 ? 'text-amber-600' : 'text-muted-foreground'
-                  )}>
-                    {idx + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-medium truncate">{item.name}</span>
-                      <span className="text-xs text-muted-foreground shrink-0">{item.sigungu}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      매매 {formatPrice(item.avgTrade)} · 전세 {formatPrice(item.avgDeposit)}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      'text-xs font-bold shrink-0',
-                      item.ratio >= 70 ? 'text-red-600 bg-red-500/10' : 'text-amber-600 bg-amber-500/10'
-                    )}
-                  >
-                    {item.ratio}%
-                  </Badge>
-                </div>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 거래량 변화 (구별) */}
-      {insights.volumeChange.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-blue-500/10 p-2">
-                <Activity className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-sm">거래량 변화</CardTitle>
-                <p className="text-xs text-muted-foreground">이번 달 vs 지난 달 (구별)</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {insights.volumeChange.slice(0, 7).map((item) => (
-              <div key={item.sigungu} className="flex items-center gap-3 rounded-lg px-2 py-1.5">
-                <span className="text-[13px] font-medium w-20 truncate">{item.sigungu}</span>
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground tabular-nums">{item.lastMonth}건</span>
-                  <span className="text-xs text-muted-foreground">→</span>
-                  <span className="text-xs font-semibold tabular-nums">{item.thisMonth}건</span>
-                </div>
-                <span className={cn(
-                  'inline-flex items-center gap-0.5 text-xs font-bold tabular-nums',
-                  item.changePct > 0 ? 'text-red-500' : item.changePct < 0 ? 'text-blue-500' : 'text-muted-foreground'
-                )}>
-                  {item.changePct > 0 ? <ArrowUpRight className="h-3 w-3" /> : item.changePct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
-                  {item.changePct > 0 ? '+' : ''}{item.changePct}%
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
 
       {/* 가격 급등/급락 */}
       {insights.priceChange.length > 0 && (

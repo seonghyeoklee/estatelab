@@ -7,9 +7,7 @@ import {
   LayoutDashboard,
   Map,
   Landmark,
-  TrendingUp,
   Home,
-  CalendarDays,
   Search,
   Heart,
   Percent,
@@ -39,7 +37,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/dashboard/apartments', label: '아파트', icon: Building2, exact: true },
       { href: '/dashboard/gap-invest', label: '갭투자 분석', icon: Percent },
-      { href: '/dashboard/subscriptions', label: '청약', icon: CalendarDays, badge: '준비중' },
     ],
   },
   {
@@ -48,7 +45,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: '/dashboard/compare', label: '단지 비교', icon: GitCompareArrows },
       { href: '/dashboard/calculator', label: '대출 계산기', icon: Calculator },
       { href: '/dashboard/rates', label: '금리 동향', icon: Landmark },
-      { href: '/dashboard/indices', label: '가격지수', icon: TrendingUp, badge: '준비중' },
     ],
   },
   {
