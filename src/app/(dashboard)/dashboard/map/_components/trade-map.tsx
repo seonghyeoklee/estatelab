@@ -268,8 +268,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
+  const polygonCacheRef = useRef<Map<string, { lat: number; lng: number }[][]>>(new Map());
 
-  // 선택 단지 건물 폴리곤 표시 — VWORLD WFS 클라이언트 직접 호출
+  // 선택 단지 건물 폴리곤 표시 — 캐시 + VWORLD WFS
   useEffect(() => {
     buildingPolygonsRef.current.forEach((p) => p.setMap(null));
     buildingPolygonsRef.current = [];
@@ -278,6 +279,32 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
     if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !vworldKey) return;
 
+    const cacheKey = selectedComplex.id;
+
+    const renderPolygons = (buildings: { lat: number; lng: number }[][]) => {
+      for (const coords of buildings) {
+        const path = coords.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
+        const polygon = new kakao.maps.Polygon({
+          path,
+          strokeWeight: 2,
+          strokeColor: '#059669',
+          strokeOpacity: 0.8,
+          fillColor: '#059669',
+          fillOpacity: 0.12,
+        });
+        polygon.setMap(map);
+        buildingPolygonsRef.current.push(polygon);
+      }
+    };
+
+    // 캐시 히트
+    const cached = polygonCacheRef.current.get(cacheKey);
+    if (cached) {
+      renderPolygons(cached);
+      return;
+    }
+
+    // API 호출
     const lat = selectedComplex.lat;
     const lng = selectedComplex.lng;
     const radius = 80;
@@ -285,35 +312,24 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`;
-
-    fetch(url)
+    fetch(`https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`)
       .then((r) => r.json())
       .then((geojson) => {
         if (!geojson.features?.length) return;
 
+        const buildings: { lat: number; lng: number }[][] = [];
         for (const f of geojson.features) {
           try {
             const coords = f.geometry.type === 'MultiPolygon'
               ? f.geometry.coordinates[0][0]
               : f.geometry.coordinates[0];
-
-            const path = coords.map(([lng, lat]: number[]) => new kakao.maps.LatLng(lat, lng));
-
-            const polygon = new kakao.maps.Polygon({
-              path,
-              strokeWeight: 2,
-              strokeColor: '#059669',
-              strokeOpacity: 0.8,
-              fillColor: '#059669',
-              fillOpacity: 0.12,
-            });
-            polygon.setMap(map);
-            buildingPolygonsRef.current.push(polygon);
-          } catch {
-            // 폴리곤 파싱 실패 무시
-          }
+            buildings.push(coords.map(([lng, lat]: number[]) => ({ lat, lng })));
+          } catch { /* skip */ }
         }
+
+        // 캐시 저장
+        polygonCacheRef.current.set(cacheKey, buildings);
+        renderPolygons(buildings);
       })
       .catch(() => {});
   }, [selectedComplex]);
