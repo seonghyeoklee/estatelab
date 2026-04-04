@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  MapPin, Calculator, Percent, ChevronDown, Info,
+  MapPin, Calculator, Percent, ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
@@ -109,22 +109,11 @@ export default function GapInvestPage() {
         <p className="text-muted-foreground">전세가율이 높은 단지를 찾아 투자 기회를 분석합니다.</p>
       </div>
 
-      {/* 안내 카드 */}
-      <Card className="border-primary/20 bg-primary/[0.02]">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-          <div className="text-[12px] text-muted-foreground space-y-1">
-            <p><strong className="text-foreground">전세가율</strong> = 전세보증금 / 매매가 × 100. 높을수록 갭(투자금)이 적습니다.</p>
-            <p><strong className="text-foreground">70% 이상</strong>은 역전세 위험이 있으므로 주의가 필요합니다.</p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* 필터 */}
       <div className="space-y-3">
         {/* 전세가율 */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[12px] font-medium text-muted-foreground mr-1">전세가율</span>
+          <span className="text-xs font-medium text-muted-foreground mr-1">전세가율</span>
           {RATIO_OPTIONS.map((opt) => (
             <button
               key={opt.label}
@@ -144,7 +133,7 @@ export default function GapInvestPage() {
         {/* 면적 + 정렬 */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] font-medium text-muted-foreground mr-1">면적</span>
+            <span className="text-xs font-medium text-muted-foreground mr-1">면적</span>
             {AREA_OPTIONS.map((opt) => (
               <button
                 key={opt.label}
@@ -179,76 +168,42 @@ export default function GapInvestPage() {
         </div>
       </div>
 
-      {/* 대출 조건 설정 */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-primary shrink-0" />
-              <span className="text-[13px] font-semibold">투자 시뮬레이션</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-muted-foreground shrink-0">대출금리</label>
-                <input
-                  type="number"
-                  value={loanRate}
-                  onChange={(e) => setLoanRate(parseFloat(e.target.value) || 0)}
-                  step="0.1"
-                  min="0"
-                  max="10"
-                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-                />
-                <span className="text-xs text-muted-foreground">%</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-muted-foreground shrink-0">대출비율</label>
-                <input
-                  type="number"
-                  value={loanRatio}
-                  onChange={(e) => setLoanRatio(parseInt(e.target.value) || 0)}
-                  step="10"
-                  min="0"
-                  max="100"
-                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-                />
-                <span className="text-xs text-muted-foreground">%</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-muted-foreground shrink-0">보유기간</label>
-                <input
-                  type="number"
-                  value={holdYears}
-                  onChange={(e) => setHoldYears(parseInt(e.target.value) || 1)}
-                  min="1"
-                  max="30"
-                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-                />
-                <span className="text-xs text-muted-foreground">년</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-muted-foreground shrink-0">연 상승률</label>
-                <input
-                  type="number"
-                  value={growthRate}
-                  onChange={(e) => setGrowthRate(parseFloat(e.target.value) || 0)}
-                  step="0.5"
-                  min="-10"
-                  max="20"
-                  className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
-                />
-                <span className="text-xs text-muted-foreground">%</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 시뮬레이션 조건 — 간소화 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs font-medium text-muted-foreground">시뮬레이션</span>
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs text-muted-foreground">금리</label>
+          <input type="number" value={loanRate} onChange={(e) => setLoanRate(parseFloat(e.target.value) || 0)}
+            step="0.1" min="0" max="10"
+            className="w-14 rounded-md border px-2 py-1 text-xs text-center outline-none focus:ring-1 focus:ring-primary/30" />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs text-muted-foreground">대출</label>
+          <input type="number" value={loanRatio} onChange={(e) => setLoanRatio(parseInt(e.target.value) || 0)}
+            step="10" min="0" max="100"
+            className="w-14 rounded-md border px-2 py-1 text-xs text-center outline-none focus:ring-1 focus:ring-primary/30" />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs text-muted-foreground">보유</label>
+          <input type="number" value={holdYears} onChange={(e) => setHoldYears(parseInt(e.target.value) || 1)}
+            min="1" max="30"
+            className="w-14 rounded-md border px-2 py-1 text-xs text-center outline-none focus:ring-1 focus:ring-primary/30" />
+          <span className="text-xs text-muted-foreground">년</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs text-muted-foreground">상승</label>
+          <input type="number" value={growthRate} onChange={(e) => setGrowthRate(parseFloat(e.target.value) || 0)}
+            step="0.5" min="-10" max="20"
+            className="w-14 rounded-md border px-2 py-1 text-xs text-center outline-none focus:ring-1 focus:ring-primary/30" />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
+      </div>
 
       {/* 결과 */}
       {data?.meta && (
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           총 <span className="font-bold text-foreground">{data.meta.total.toLocaleString()}</span>건
         </p>
       )}
@@ -289,7 +244,7 @@ export default function GapInvestPage() {
                           {item.area}㎡
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-[12px] text-muted-foreground">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {item.sigungu} {item.dong}
@@ -334,50 +289,29 @@ export default function GapInvestPage() {
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-2 rounded-lg border p-3 space-y-3 bg-muted/30">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[12px]">
+                    <div className="mt-2 rounded-lg border p-3 bg-muted/30">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div>
                           <span className="text-muted-foreground">자기자본</span>
-                          <p className="font-bold text-primary">{formatPrice(inv.selfFund)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">대출금</span>
-                          <p className="font-semibold">{formatPrice(inv.loanAmount)}</p>
+                          <p className="text-sm font-bold text-primary">{formatPrice(inv.selfFund)}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">월 이자</span>
-                          <p className="font-semibold">{inv.monthlyInterest.toLocaleString()}만</p>
+                          <p className="text-sm font-bold">{inv.monthlyInterest.toLocaleString()}만</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">월 원리금</span>
-                          <p className="font-semibold">{inv.monthlyPrincipalInterest.toLocaleString()}만</p>
-                        </div>
-                      </div>
-                      <div className="border-t pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[12px]">
-                        <div>
-                          <span className="text-muted-foreground">{holdYears}년 후 예상가</span>
-                          <p className="font-semibold">{formatPrice(inv.futurePrice)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">총 이자비용</span>
-                          <p className="font-semibold">{formatPrice(inv.totalInterest)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">예상 수익</span>
-                          <p className={cn('font-bold', inv.profit >= 0 ? 'text-red-600' : 'text-blue-600')}>
+                          <span className="text-muted-foreground">예상 수익 ({holdYears}년)</span>
+                          <p className={cn('text-sm font-bold', inv.profit >= 0 ? 'text-red-600' : 'text-blue-600')}>
                             {inv.profit >= 0 ? '+' : ''}{formatPrice(inv.profit)}
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">투자 수익률</span>
-                          <p className={cn('font-bold', inv.roi >= 0 ? 'text-red-600' : 'text-blue-600')}>
-                            {inv.roi >= 0 ? '+' : ''}{inv.roi}% ({inv.annualRoi}%/년)
+                          <span className="text-muted-foreground">수익률</span>
+                          <p className={cn('text-sm font-bold', inv.roi >= 0 ? 'text-red-600' : 'text-blue-600')}>
+                            {inv.roi >= 0 ? '+' : ''}{inv.roi}%
                           </p>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        매매 {item.tradeCount}건 · 전세 {item.jeonseCount}건 · 연 {growthRate}% 상승 가정
-                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -396,7 +330,7 @@ export default function GapInvestPage() {
               >
                 이전
               </Button>
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {page} / {data.meta.totalPages}
               </span>
               <Button
