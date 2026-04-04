@@ -111,7 +111,10 @@ function groupByGu(complexes: MapComplex[], regions: Region[]): AreaCluster[] {
     (c) => c.regionCode,
     (c) => {
       const r = regionMap.get(c.regionCode);
-      return r ? r.sigungu.replace(/시$|군$/, '') : c.regionCode;
+      if (!r) return c.regionCode;
+      // "부천시 원미구" → "원미구", "강남구" → "강남구", "수원시 영통구" → "영통구"
+      const parts = r.sigungu.split(' ');
+      return parts.length > 1 ? parts[parts.length - 1] : r.sigungu;
     }
   );
 }
