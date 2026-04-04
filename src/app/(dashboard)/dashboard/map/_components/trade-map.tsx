@@ -645,7 +645,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
   // 오버레이 생성 (데이터 변경 시)
   useEffect(() => {
-    if (!mapInstanceRef.current || withCoords.length === 0) return;
+    if (!mapInstanceRef.current) return;
+    // 구별/동별은 서버 집계, 단지별은 complexData — 어느 하나라도 있으면 진행
+    if (withCoords.length === 0 && dongGroups.length === 0 && guGroups.length === 0) return;
     const map = mapInstanceRef.current;
 
     // 기존 오버레이 정리
@@ -884,11 +886,18 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     }
 
     // 데이터 있는 영역으로 자동 fit (최초 1회만)
-    if (!initialFitDoneRef.current && withCoords.length > 1) {
+    if (!initialFitDoneRef.current) {
       const bounds = new kakao.maps.LatLngBounds();
-      withCoords.forEach((c) => bounds.extend(new kakao.maps.LatLng(c.lat!, c.lng!)));
-      map.setBounds(bounds, 50, 50, 50, 50);
-      initialFitDoneRef.current = true;
+      // 서버 집계 데이터 또는 단지 데이터로 fit
+      const fitPoints = guGroups.length > 0
+        ? guGroups.map((g) => ({ lat: g.lat, lng: g.lng }))
+        : withCoords.map((c) => ({ lat: c.lat!, lng: c.lng! }));
+
+      if (fitPoints.length > 1) {
+        fitPoints.forEach((p) => bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)));
+        map.setBounds(bounds, 50, 50, 50, 50);
+        initialFitDoneRef.current = true;
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [withCoords, dongGroups, guGroups, areaFilter, compareMode, serverGuGroups, serverDongGroups]);
