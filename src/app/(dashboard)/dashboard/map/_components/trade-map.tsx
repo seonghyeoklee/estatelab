@@ -269,6 +269,66 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       .catch(() => {});
   }, [selectedComplex]);
 
+  // 구/동 클릭 시 행정구역 경계선 표시
+  const boundaryPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
+  const boundaryCacheRef = useRef<Map<string, { lat: number; lng: number }[][]>>(new Map());
+
+  const showBoundary = useCallback((lat: number, lng: number, type: 'sigg' | 'emd') => {
+    const map = mapInstanceRef.current;
+    const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
+    if (!map || !vworldKey) return;
+
+    // 이전 경계 제거
+    boundaryPolygonsRef.current.forEach((p) => p.setMap(null));
+    boundaryPolygonsRef.current = [];
+
+    const cacheKey = `${type}:${lat.toFixed(3)}:${lng.toFixed(3)}`;
+    const cached = boundaryCacheRef.current.get(cacheKey);
+
+    const renderBoundary = (rings: { lat: number; lng: number }[][]) => {
+      for (const ring of rings) {
+        const path = ring.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
+        const polygon = new kakao.maps.Polygon({
+          path,
+          strokeWeight: 3,
+          strokeColor: '#059669',
+          strokeOpacity: 0.7,
+          strokeStyle: 'solid',
+          fillColor: '#059669',
+          fillOpacity: 0.05,
+        });
+        polygon.setMap(map);
+        boundaryPolygonsRef.current.push(polygon);
+      }
+    };
+
+    if (cached) { renderBoundary(cached); return; }
+
+    const layerName = type === 'sigg' ? 'lt_c_adsigg' : 'lt_c_ademd';
+    const r = 0.005;
+    const bbox = `${lng - r},${lat - r},${lng + r},${lat + r}`;
+
+    fetch(`https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=${layerName}&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=1&key=${vworldKey}`)
+      .then((res) => res.json())
+      .then((geojson) => {
+        if (!geojson.features?.length) return;
+        const rings: { lat: number; lng: number }[][] = [];
+        for (const f of geojson.features) {
+          try {
+            const polys = f.geometry.type === 'MultiPolygon'
+              ? f.geometry.coordinates.map((p: number[][][]) => p[0])
+              : [f.geometry.coordinates[0]];
+            for (const ring of polys) {
+              rings.push(ring.map(([lng, lat]: number[]) => ({ lat, lng })));
+            }
+          } catch { /* skip */ }
+        }
+        boundaryCacheRef.current.set(cacheKey, rings);
+        renderBoundary(rings);
+      })
+      .catch(() => {});
+  }, []);
+
   // 패널 열림/닫힘 시 지도 리사이즈
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -755,6 +815,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
+          showBoundary(group.lat, group.lng, 'emd');
           mapInstanceRef.current.setCenter(position);
           mapInstanceRef.current.setLevel(5);
         }
@@ -787,6 +848,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
+          showBoundary(group.lat, group.lng, 'sigg');
           mapInstanceRef.current.setCenter(position);
           mapInstanceRef.current.setLevel(6);
         }
@@ -817,9 +879,13 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       const bounds = map.getBounds();
       const visible = new Set<string>();
 
-      // 줌 아웃 시 (단지 마커 안 보이는 레벨) 선택 해제
+      // 줌 아웃 시 (단지 마커 안 보이는 레벨) 선택 해제 + 경계선 제거
       if (level > 5) {
         setSelectedComplex(null);
+      }
+      if (level > 7) {
+        boundaryPolygonsRef.current.forEach((p) => p.setMap(null));
+        boundaryPolygonsRef.current = [];
       }
 
       // 줌 ≤ 5 (단지별 모드)일 때만 영역 기반 재조회
