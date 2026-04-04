@@ -61,63 +61,6 @@ const MARKER_COLOR = { bg: '#059669', text: '#fff', border: '#047857' };
 const MARKER_COLOR_CLUSTER = { bg: '#065f46', text: '#fff', border: '#064e3b' };
 
 
-// 지역 그룹 (동/구 단위 집계)
-interface AreaCluster {
-  label: string;
-  complexes: MapComplex[];
-  avgPrice: number;
-  lat: number;
-  lng: number;
-  count: number;
-}
-
-function groupByKey(complexes: MapComplex[], keyFn: (c: MapComplex) => string, labelFn: (c: MapComplex) => string): AreaCluster[] {
-  const map = new Map<string, MapComplex[]>();
-  for (const c of complexes) {
-    if (!c.lat || !c.lng) continue;
-    const key = keyFn(c);
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(c);
-  }
-  return Array.from(map.values()).map((items) => {
-    const totalPrice = items.reduce((s, c) => s + c.avgPrice, 0);
-    const avgLat = items.reduce((s, c) => s + c.lat!, 0) / items.length;
-    const avgLng = items.reduce((s, c) => s + c.lng!, 0) / items.length;
-    return {
-      label: labelFn(items[0]),
-      complexes: items,
-      avgPrice: Math.round(totalPrice / items.length),
-      lat: avgLat,
-      lng: avgLng,
-      count: items.length,
-    };
-  });
-}
-
-// 동별 그룹
-function groupByDong(complexes: MapComplex[]): AreaCluster[] {
-  return groupByKey(
-    complexes,
-    (c) => `${c.regionCode}:${c.dong}`,
-    (c) => c.dong
-  );
-}
-
-// 구(시군구)별 그룹 — 줌 아웃 시 사용
-function groupByGu(complexes: MapComplex[], regions: Region[]): AreaCluster[] {
-  const regionMap = new Map(regions.map((r) => [r.code, r]));
-  return groupByKey(
-    complexes,
-    (c) => c.regionCode,
-    (c) => {
-      const r = regionMap.get(c.regionCode);
-      if (!r) return c.regionCode;
-      // "부천시 원미구" → "원미구", "강남구" → "강남구", "수원시 영통구" → "영통구"
-      const parts = r.sigungu.split(' ');
-      return parts.length > 1 ? parts[parts.length - 1] : r.sigungu;
-    }
-  );
-}
 
 // 가격 라벨 엘리먼트 생성 — 단일 컬러, 가격 텍스트 강조
 function createPriceLabel(opts: {
@@ -381,12 +324,33 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     boundsTimerRef.current = setTimeout(() => setMapBounds(newBounds), 500);
   }, []);
 
-  const complexUrl = mapBounds
-    ? `/api/market/map/complexes?${mapBounds}`
-    : '/api/market/map/complexes';
-  const { data: complexData } = useSWR<{ data: MapComplex[] }>(complexUrl, {
-    keepPreviousData: true,  // 새 데이터 올 때까지 이전 데이터 유지 → 깜빡임 방지
-  });
+  // 줌 레벨별 API 분기
+  interface RegionStat { regionCode: string; sigungu: string; sido: string; avgPrice: number; avgPpp: number; complexCount: number; tradeCount: number; lat: number; lng: number; }
+  interface DongStat { regionCode: string; dong: string; sigungu: string; avgPrice: number; avgPpp: number; complexCount: number; tradeCount: number; lat: number; lng: number; }
+
+  const { data: regionStatsData } = useSWR<{ data: RegionStat[] }>('/api/market/map/region-stats');
+  const { data: dongStatsData } = useSWR<{ data: DongStat[] }>('/api/market/map/dong-stats');
+
+  // 단지 데이터는 줌 인(≤5)할 때만 조회
+  const complexUrl = mapBounds ? `/api/market/map/complexes?${mapBounds}` : null;
+  const { data: complexData } = useSWR<{ data: MapComplex[] }>(complexUrl, { keepPreviousData: true });
+
+  // 서버 집계 데이터를 구별/동별 그룹으로 변환
+  const serverGuGroups = useMemo(() => {
+    if (!regionStatsData?.data) return [];
+    return regionStatsData.data.map((s) => {
+      const parts = s.sigungu.split(' ');
+      const label = parts.length > 1 ? parts[parts.length - 1] : s.sigungu;
+      return { label, avgPrice: s.avgPrice, lat: s.lat, lng: s.lng, count: s.complexCount, complexes: [] as MapComplex[] };
+    });
+  }, [regionStatsData]);
+
+  const serverDongGroups = useMemo(() => {
+    if (!dongStatsData?.data) return [];
+    return dongStatsData.data.map((s) => ({
+      label: s.dong, avgPrice: s.avgPrice, lat: s.lat, lng: s.lng, count: s.complexCount, complexes: [] as MapComplex[],
+    }));
+  }, [dongStatsData]);
 
   // 선택된 단지 주변시설 데이터
   interface NearbyPlace { id: string; name: string; category: string; distance: number; lat: number; lng: number; }
@@ -400,11 +364,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
   const sidoList = regionData?.data ? [...new Set(regionData.data.map((r) => r.sido))] : [];
 
-  const regions = useMemo(() => regionData?.data ?? [], [regionData?.data]);
 
   // 동별/구별 그룹 메모이제이션
-  const dongGroups = useMemo(() => groupByDong(withCoords), [withCoords]);
-  const guGroups = useMemo(() => groupByGu(withCoords, regions), [withCoords, regions]);
+  // 서버 집계 데이터 사용 (클라이언트 그룹핑 대체)
+  const dongGroups = serverDongGroups;
+  const guGroups = serverGuGroups;
 
   // focusComplexId로 진입 시 해당 단지 선택 + 포커싱
   const [focusApplied, setFocusApplied] = useState(false);
@@ -927,7 +891,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       initialFitDoneRef.current = true;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [withCoords, dongGroups, guGroups, areaFilter, compareMode]);
+  }, [withCoords, dongGroups, guGroups, areaFilter, compareMode, serverGuGroups, serverDongGroups]);
 
   // 줌 컨트롤
   const handleZoomIn = () => {
