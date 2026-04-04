@@ -5,9 +5,8 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, ChevronRight, Search, TrendingUp, MapPin, Calendar, Flame, SearchX } from 'lucide-react';
+import { Building2, ChevronRight, Search, MapPin, Calendar, Flame, SearchX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice, priceColorClass } from '@/lib/format';
 import { ApartmentFilters, type FilterValues } from './_components/apartment-filters';
@@ -139,10 +138,10 @@ function ApartmentsContent() {
       {/* 결과 카운트 + 지도 토글 */}
       {data?.meta && (
         <div className="flex items-center justify-between">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             총 <span className="font-bold text-foreground">{data.meta.total.toLocaleString()}</span>개 단지
           </p>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {page} / {data.meta.totalPages} 페이지
           </p>
         </div>
@@ -171,7 +170,7 @@ function ApartmentsContent() {
                 setFilters({ regionCode: '', sido: '', minPrice: '', maxPrice: '', minArea: '', maxArea: '', minYear: '', sort: 'trades' });
                 setPage(1);
               }}
-              className="rounded-lg bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               필터 초기화
             </button>
@@ -201,7 +200,7 @@ function ApartmentsContent() {
                           </div>
                           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                         </div>
-                        <div className="flex items-center gap-2 mt-1.5 text-[13px] text-muted-foreground">
+                        <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {apt.region.sigungu} {apt.dong}
@@ -215,14 +214,14 @@ function ApartmentsContent() {
                         </div>
                       </div>
 
-                      {/* 하단: 가격 + 거래 정보 */}
+                      {/* 하단: 가격 + 거래 */}
                       <div className="flex items-end justify-between">
                         {apt.latestTrade ? (
                           <div>
                             <p className={cn('text-xl font-bold', color.text)}>
                               {formatPrice(apt.latestTrade.price)}
                             </p>
-                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {apt.latestTrade.area}㎡ · {apt.latestTrade.floor}층
                               {apt.latestTrade.pricePerPyeong
                                 ? ` · ${apt.latestTrade.pricePerPyeong.toLocaleString()}만/평`
@@ -230,19 +229,11 @@ function ApartmentsContent() {
                             </p>
                           </div>
                         ) : (
-                          <p className="text-[14px] text-muted-foreground">거래 정보 없음</p>
+                          <p className="text-sm text-muted-foreground">거래 정보 없음</p>
                         )}
-                        <div className="flex items-center gap-1.5">
-                          {apt.recentTradeCount > 0 && (
-                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 text-muted-foreground border-muted-foreground/20">
-                              최근 {apt.recentTradeCount}건
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className={cn('text-xs px-2 py-0.5', color.bg, color.text, 'border-0')}>
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            {apt.tradeCount}건
-                          </Badge>
-                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                          {apt.tradeCount}건{apt.recentTradeCount > 0 ? ` · 최근 ${apt.recentTradeCount}` : ''}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -274,7 +265,7 @@ function ApartmentsContent() {
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
                       className={cn(
-                        'h-8 w-8 rounded-lg text-[13px] font-medium transition-colors',
+                        'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
                         page === pageNum ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
                       )}
                     >
