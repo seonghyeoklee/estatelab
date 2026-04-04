@@ -22,16 +22,23 @@ export async function GET(request: NextRequest) {
     NOT: { name: { startsWith: '(' } },
   };
 
-  // 영역 필터 (파라미터 있을 때만)
-  let limit = 2000;
+  // 영역 필터 + 줌 기반 제한
+  const zoom = sp.get('zoom') ? parseInt(sp.get('zoom')!) : 8;
+  let limit: number;
+
   if (swLat && swLng && neLat && neLng) {
     where.lat = { gte: swLat, lte: neLat };
     where.lng = { gte: swLng, lte: neLng };
-    limit = 3000; // 영역 좁으면 더 많이
+    // 줌 인할수록 영역이 좁아지니 limit 낮아도 됨
+    limit = zoom <= 3 ? 500 : zoom <= 5 ? 1500 : 500;
+  } else {
+    // 첫 로드 — 구별/동별 집계용이라 거래 많은 순으로 제한
+    limit = 2000;
   }
 
   const complexes = await prisma.apartmentComplex.findMany({
     where,
+    orderBy: { trades: { _count: 'desc' } },
     select: {
       id: true,
       name: true,

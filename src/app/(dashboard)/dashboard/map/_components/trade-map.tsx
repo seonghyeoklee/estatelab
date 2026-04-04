@@ -868,7 +868,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       if (level <= 5) {
         const sw = bounds.getSouthWest();
         const ne = bounds.getNorthEast();
-        const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}`;
+        const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}&zoom=${level}`;
         debouncedSetBounds(newBounds);
       }
 
