@@ -134,7 +134,7 @@ function CompareContent() {
         <div>
           {idA && a ? (
             <Card className="border-primary/30">
-              <CardContent className="p-3 flex items-center gap-2">
+              <CardContent className="p-4 flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate">{a.name}</p>
                   <p className="text-xs text-muted-foreground">{a.region.sigungu} {a.dong}</p>
@@ -149,7 +149,7 @@ function CompareContent() {
         <div>
           {idB && b ? (
             <Card className="border-primary/30">
-              <CardContent className="p-3 flex items-center gap-2">
+              <CardContent className="p-4 flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate">{b.name}</p>
                   <p className="text-xs text-muted-foreground">{b.region.sigungu} {b.dong}</p>

@@ -96,7 +96,7 @@ export default function MyPage() {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors"
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors"
                   >
                     <Link
                       href={`/dashboard/apartments/${item.complexId}`}
@@ -142,14 +142,14 @@ export default function MyPage() {
               아직 조회한 단지가 없습니다.
             </p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {history.map((item) => {
                 const latest = item.complex.trades[0];
                 return (
                   <Link
                     key={item.id}
                     href={`/dashboard/apartments/${item.complexId}`}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors"
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors"
                   >
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="min-w-0 flex-1">
