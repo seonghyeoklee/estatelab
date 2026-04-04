@@ -8,11 +8,10 @@ import {
   Map,
   Building2,
   Landmark,
-  TrendingUp,
-  CalendarDays,
   Search,
   MapPin,
   Heart,
+  Clock,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
@@ -40,8 +39,6 @@ const MENU_ITEMS = [
   { label: '시장 개요', href: '/dashboard/overview', icon: LayoutDashboard },
   { label: '아파트', href: '/dashboard/apartments', icon: Building2 },
   { label: '금리 동향', href: '/dashboard/rates', icon: Landmark },
-  { label: '가격지수', href: '/dashboard/indices', icon: TrendingUp },
-  { label: '청약', href: '/dashboard/subscriptions', icon: CalendarDays },
   { label: '관심 단지', href: '/dashboard/my', icon: Heart },
 ];
 
@@ -50,6 +47,21 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<{ id: string; name: string; dong: string; sigungu?: string }[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem('estatelab_recent_searches') || '[]');
+    } catch { return []; }
+  });
+
+  const addRecentSearch = useCallback((item: { id: string; name: string; dong: string; sigungu?: string }) => {
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((r) => r.id !== item.id);
+      const updated = [item, ...filtered].slice(0, 5);
+      try { localStorage.setItem('estatelab_recent_searches', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  }, []);
 
   // 단지 검색 debounce
   useEffect(() => {
@@ -91,13 +103,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }, []);
 
   const go = useCallback(
-    (href: string) => {
+    (href: string, recent?: { id: string; name: string; dong: string; sigungu?: string }) => {
+      if (recent) addRecentSearch(recent);
       onOpenChange(false);
       setQuery('');
       setResults([]);
       router.push(href);
     },
-    [router, onOpenChange]
+    [router, onOpenChange, addRecentSearch]
   );
 
   const handleOpenChange = useCallback((value: boolean) => {
@@ -141,6 +154,24 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               {loading ? '검색 중...' : query.length < 2 ? '2글자 이상 입력하세요' : '검색 결과가 없습니다'}
             </Command.Empty>
 
+            {/* 최근 검색 */}
+            {query.length < 2 && recentSearches.length > 0 && (
+              <Command.Group heading="최근 검색">
+                {recentSearches.map((r) => (
+                  <Command.Item
+                    key={r.id}
+                    value={`recent-${r.name}`}
+                    onSelect={() => go(`/dashboard/apartments/${r.id}`)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm cursor-pointer aria-selected:bg-accent"
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="flex-1 truncate">{r.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{r.sigungu} {r.dong}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
             {/* 단지 검색 결과 */}
             {results.length > 0 && (
               <Command.Group heading="아파트 단지">
@@ -148,7 +179,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Item
                     key={r.id}
                     value={`${r.name} ${r.dong} ${r.region?.sigungu || ''}`}
-                    onSelect={() => go(`/dashboard/apartments/${r.id}`)}
+                    onSelect={() => go(`/dashboard/apartments/${r.id}`, { id: r.id, name: r.name, dong: r.dong, sigungu: r.region?.sigungu })}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm cursor-pointer aria-selected:bg-accent"
                   >
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />

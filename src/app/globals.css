@@ -108,3 +108,8 @@
   z-index: 9999 !important;
   position: relative;
 }
+/* 단지 선택 시 다른 마커 투명하게 */
+.markers-dimmed [data-complex-id]:not(.marker-selected):not(.marker-bounce) {
+  opacity: 0.4 !important;
+  transition: opacity 0.3s;
+}

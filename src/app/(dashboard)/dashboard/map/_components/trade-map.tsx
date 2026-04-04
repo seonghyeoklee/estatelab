@@ -1031,7 +1031,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   }
 
   return (
-    <div className="relative h-full">
+    <div className={cn('relative h-full', selectedComplex && 'markers-dimmed')}>
       {/* 지도 내 검색 */}
       <MapSearchBar
         complexes={complexes}

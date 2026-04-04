@@ -13,6 +13,7 @@ import { TradeTable } from './_components/trade-table';
 import { AreaComparison } from './_components/area-comparison';
 import { WatchlistButton } from '@/components/watchlist-button';
 import { ShareButton } from '@/components/share-button';
+import { CompareButton } from '@/components/compare-button';
 import { HistoryTracker } from './_components/history-tracker';
 import { NearbyFacilities } from './_components/nearby-facilities';
 import { RankCard } from './_components/rank-card';
@@ -128,6 +129,7 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
             <div className="flex items-center gap-2 sm:gap-3">
               <h1 className="text-xl sm:text-3xl font-bold tracking-tight truncate">{complex.name}</h1>
               <WatchlistButton complexId={id} />
+              <CompareButton complexId={id} complexName={complex.name} />
               <ShareButton title={`${complex.name} - EstateLab`} />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-muted-foreground">
