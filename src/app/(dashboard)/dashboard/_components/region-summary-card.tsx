@@ -73,12 +73,13 @@ export function RegionSummaryCards() {
     );
   }
 
-  // 전체 최대값 (바 차트 비율용)
-  const maxPpp = Math.max(...data.data.map((r) => r.avgPricePerPyeong));
+  // TOP 6만 표시
+  const regions = data.data.slice(0, 6);
+  const maxPpp = regions.length > 0 ? Math.max(...regions.map((r) => r.avgPricePerPyeong)) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {data.data.map((region) => {
+      {regions.map((region) => {
         const barPct = (region.avgPricePerPyeong / maxPpp) * 100;
         const accent = priceAccent(region.avgPrice);
 

@@ -29,11 +29,18 @@ export async function StatsCards() {
     ? Math.round(((tradesThisMonth - tradesLastMonth) / tradesLastMonth) * 100)
     : null;
 
+  // 평균 매매가
+  const avgPriceResult = await prisma.apartmentTrade.aggregate({
+    where: { dealDate: { gte: thisMonth } },
+    _avg: { price: true },
+  });
+  const avgPrice = avgPriceResult._avg.price ? Math.round(avgPriceResult._avg.price) : null;
+
   const stats = [
     {
-      label: '수집 지역',
-      value: regionCount.toLocaleString(),
-      unit: '개 시군구',
+      label: '평균 매매가',
+      value: avgPrice ? `${(avgPrice / 10000).toFixed(1)}억` : '—',
+      unit: avgPrice ? `${regionCount}개 지역 기준` : '',
       icon: MapPin,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-500/10',
