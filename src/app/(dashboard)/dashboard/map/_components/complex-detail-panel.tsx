@@ -311,7 +311,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
               <div className="flex items-center gap-1 shrink-0">
                 <Link
                   href={`/dashboard/apartments/${complexId}`}
-                  className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/5 transition-colors inline-flex items-center gap-1"
+                  className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors inline-flex items-center gap-1"
                 >
                   상세보기 <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -403,7 +403,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                           <span className="text-primary">{rankData.data.myRank}</span>
                           <span className="text-[13px] font-normal text-muted-foreground">/{rankData.data.totalInRegion}</span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground">상위 {rankData.data.percentile}%</p>
+                        <p className="text-xs text-muted-foreground">상위 {rankData.data.percentile}%</p>
                       </div>
                       {/* 평당가 */}
                       <div className="text-center">
@@ -411,7 +411,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                         <p className="text-xl font-bold mt-0.5">
                           {rankData.data.myAvgPpp.toLocaleString()}
                         </p>
-                        <p className="text-[11px] text-muted-foreground">만원/평</p>
+                        <p className="text-xs text-muted-foreground">만원/평</p>
                       </div>
                       {/* 회전율 */}
                       <div className="text-center">
@@ -419,7 +419,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                         {rankData.data.turnoverRate !== null ? (
                           <>
                             <p className="text-xl font-bold mt-0.5">{rankData.data.turnoverRate}%</p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               {rankData.data.recentTrades}건/{rankData.data.totalUnits}세대
                             </p>
                           </>
@@ -600,7 +600,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                           <span className="text-muted-foreground text-[13px] w-[82px] shrink-0 tabular-nums">
                             {trade.dealDate.slice(0, 10)}
                           </span>
-                          <Badge variant="outline" className="text-[11px] px-2 py-0.5">
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">
                             {trade.area}㎡ · {trade.floor}층
                           </Badge>
                         </div>
@@ -617,7 +617,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   <div className="px-5 py-4 border-t bg-muted/20">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[15px] font-bold">주변 단지 비교</h3>
-                      <Badge variant="outline" className="text-[11px]">
+                      <Badge variant="outline" className="text-xs">
                         {compareData.data.mainArea}㎡ 기준
                       </Badge>
                     </div>
@@ -646,7 +646,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                           <div className="text-right shrink-0 ml-3">
                             <p className="text-[16px] font-bold">{formatPrice(c.avgPrice)}</p>
                             <span className={cn(
-                              'inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold mt-0.5',
+                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold mt-0.5',
                               c.diff > 0 ? 'bg-red-50 text-red-600' : c.diff < 0 ? 'bg-blue-50 text-blue-600' : 'bg-muted text-muted-foreground'
                             )}>
                               {c.diff > 0 ? '+' : ''}{c.diff}%
@@ -717,16 +717,16 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                 {trade.dealDate.slice(0, 10)}
                               </p>
                               <div className="flex items-center gap-1.5">
-                                <Badge variant="outline" className="text-[11px] px-2 py-0.5">
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
                                   {trade.area}㎡ ({pyeong}평)
                                 </Badge>
-                                <Badge variant="outline" className="text-[11px] px-2 py-0.5">
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
                                   {trade.floor}층
                                 </Badge>
                                 {trade.dealType && (
                                   <Badge
                                     variant={trade.dealType === '직거래' ? 'secondary' : 'outline'}
-                                    className="text-[11px] px-2 py-0.5"
+                                    className="text-xs px-2 py-0.5"
                                   >
                                     {trade.dealType}
                                   </Badge>
@@ -769,7 +769,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   <div className="flex flex-col items-center gap-2 py-8 px-4">
                     <Building2 className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">건축물대장 정보를 찾을 수 없습니다.</p>
-                    <p className="text-[10px] text-muted-foreground text-center">
+                    <p className="text-xs text-muted-foreground text-center">
                       법정동코드 매핑이 되지 않았거나 데이터가 없을 수 있습니다.
                     </p>
                   </div>
@@ -786,7 +786,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                       <div className="px-4 mb-4">
                         <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border p-4">
                           {bldNm && (
-                            <p className="text-[11px] text-muted-foreground mb-1">건축물대장명</p>
+                            <p className="text-xs text-muted-foreground mb-1">건축물대장명</p>
                           )}
                           {bldNm && (
                             <p className="text-sm font-bold mb-3">{bldNm}</p>
@@ -794,23 +794,23 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                           <div className="grid grid-cols-4 gap-2">
                             <div className="text-center">
                               <p className="text-lg font-black text-blue-600">{totalDong}</p>
-                              <p className="text-[10px] text-muted-foreground">총 동수</p>
+                              <p className="text-xs text-muted-foreground">총 동수</p>
                             </div>
                             <div className="text-center">
                               <p className="text-lg font-black text-emerald-600">{totalHhld.toLocaleString()}</p>
-                              <p className="text-[10px] text-muted-foreground">총 세대</p>
+                              <p className="text-xs text-muted-foreground">총 세대</p>
                             </div>
                             <div className="text-center">
                               <p className="text-lg font-black text-violet-600">{maxFloor}</p>
-                              <p className="text-[10px] text-muted-foreground">최고 층수</p>
+                              <p className="text-xs text-muted-foreground">최고 층수</p>
                             </div>
                             <div className="text-center">
                               <p className="text-lg font-black text-amber-600">{totalElvt}</p>
-                              <p className="text-[10px] text-muted-foreground">승강기</p>
+                              <p className="text-xs text-muted-foreground">승강기</p>
                             </div>
                           </div>
                           {hasEarthquake && (
-                            <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-600">
+                            <div className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
                               <span className="font-medium">내진설계 적용 — {units.find((u) => u.rserthqkAblty)?.rserthqkAblty}</span>
                             </div>
                           )}
@@ -834,15 +834,15 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-[11px] font-bold text-blue-600">
+                                    <span className="rounded-lg bg-blue-500/10 px-2 py-1 text-xs font-bold text-blue-600">
                                       {unit.dongNm}
                                     </span>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                       {unit.mainPurpsCdNm}
                                     </span>
                                   </div>
                                   {unit.rideUseElvtCnt > 0 && (
-                                    <span className="text-[9px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                       승강기 {unit.rideUseElvtCnt}대
                                     </span>
                                   )}
@@ -850,27 +850,27 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
 
                                 <div className="grid grid-cols-3 gap-2 text-center">
                                   <div>
-                                    <p className="text-[10px] text-muted-foreground">층수</p>
+                                    <p className="text-xs text-muted-foreground">층수</p>
                                     <p className="text-[12px] font-bold">
                                       {unit.grndFlrCnt}F
                                       {unit.ugrndFlrCnt > 0 && (
-                                        <span className="text-[9px] font-normal text-muted-foreground"> / B{unit.ugrndFlrCnt}</span>
+                                        <span className="text-xs font-normal text-muted-foreground"> / B{unit.ugrndFlrCnt}</span>
                                       )}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-muted-foreground">세대수</p>
+                                    <p className="text-xs text-muted-foreground">세대수</p>
                                     <p className="text-[12px] font-bold">{unit.hhldCnt}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-muted-foreground">연면적</p>
+                                    <p className="text-xs text-muted-foreground">연면적</p>
                                     <p className="text-[12px] font-bold">{Math.round(unit.totArea).toLocaleString()}㎡</p>
                                   </div>
                                 </div>
 
                                 {/* 층수 바 */}
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[9px] text-muted-foreground w-8">층수</span>
+                                  <span className="text-xs text-muted-foreground w-8">층수</span>
                                   <div className="flex-1 h-1.5 rounded-full bg-muted">
                                     <div
                                       className="h-1.5 rounded-full bg-blue-500/50"
@@ -879,7 +879,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[9px] text-muted-foreground w-8">세대</span>
+                                  <span className="text-xs text-muted-foreground w-8">세대</span>
                                   <div className="flex-1 h-1.5 rounded-full bg-muted">
                                     <div
                                       className="h-1.5 rounded-full bg-emerald-500/50"
@@ -893,7 +893,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                         </div>
                       </div>
 
-                      <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
+                      <p className="text-xs text-muted-foreground text-center mt-3 px-4">
                         국토교통부 건축물대장 · 건축HUB API
                       </p>
                     </>
@@ -955,7 +955,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                 )}
                                 <div className="flex items-center gap-1.5">
                                   {t.data.within500m > 0 && (
-                                    <Badge className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-600 border-0">
+                                    <Badge className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-600 border-0">
                                       500m 이내 {t.data.within500m}
                                     </Badge>
                                   )}
@@ -977,12 +977,12 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                           {idx === 0 && (
-                                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">
+                                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-xs font-bold text-primary">
                                               최근접
                                             </span>
                                           )}
                                           {isNear && idx !== 0 && (
-                                            <span className="shrink-0 rounded bg-emerald-500/10 px-1 py-0.5 text-[10px] font-bold text-emerald-600">
+                                            <span className="shrink-0 rounded bg-emerald-500/10 px-1 py-0.5 text-xs font-bold text-emerald-600">
                                               도보권
                                             </span>
                                           )}
@@ -1020,7 +1020,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                         })}
                       </div>
 
-                      <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
+                      <p className="text-xs text-muted-foreground text-center mt-3 px-4">
                         반경 1.5km · 도보 분당 80m 기준 · 카카오 로컬 API
                       </p>
                     </>
@@ -1089,7 +1089,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                       {isNearest && (
-                                        <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                        <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                                           최근접
                                         </span>
                                       )}
@@ -1116,7 +1116,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                         </p>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground text-center py-3 px-5">
+                    <p className="text-xs text-muted-foreground text-center py-3 px-5">
                       반경 1km · 도보 분당 80m 기준 · 카카오 로컬 API
                     </p>
                   </>

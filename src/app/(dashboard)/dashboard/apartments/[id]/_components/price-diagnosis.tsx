@@ -102,7 +102,7 @@ export function PriceDiagnosis({ complexId }: { complexId: string }) {
                 className="h-5 rounded-full bg-primary flex items-center justify-end pr-2"
                 style={{ width: `${(myAvgPrice / maxPrice) * 100}%` }}
               >
-                <span className="text-[10px] font-bold text-white">{formatPrice(myAvgPrice)}</span>
+                <span className="text-xs font-bold text-white">{formatPrice(myAvgPrice)}</span>
               </div>
             </div>
           </div>
@@ -119,7 +119,7 @@ export function PriceDiagnosis({ complexId }: { complexId: string }) {
                     className="h-5 rounded-full bg-muted-foreground/20 flex items-center justify-end pr-2"
                     style={{ width: `${(c.avgPrice / maxPrice) * 100}%` }}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">{formatPrice(c.avgPrice)}</span>
+                    <span className="text-xs font-medium text-muted-foreground">{formatPrice(c.avgPrice)}</span>
                   </div>
                 </div>
                 <span className={cn(

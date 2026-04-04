@@ -93,7 +93,7 @@ function ValueInput({
               autoFocus
               className="w-20 rounded-md border px-2 py-0.5 text-[13px] font-bold text-right outline-none focus:ring-1 focus:ring-primary/30"
             />
-            <span className="text-[11px] text-muted-foreground">{unit}</span>
+            <span className="text-xs text-muted-foreground">{unit}</span>
           </div>
         ) : (
           <button
@@ -120,7 +120,7 @@ function ValueInput({
               key={p.value}
               onClick={() => onChange(p.value)}
               className={cn(
-                'rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors',
+                'rounded-full px-2 py-0.5 text-xs font-medium transition-colors',
                 value === p.value ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
               )}
             >
@@ -246,29 +246,29 @@ function CalculatorContent() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="border-primary/30">
           <CardContent className="p-4 text-center">
-            <p className="text-[11px] text-muted-foreground">월 상환액</p>
+            <p className="text-xs text-muted-foreground">월 상환액</p>
             <p className="text-2xl font-bold text-primary mt-1">{result.monthlyFirst.toLocaleString()}<span className="text-sm">만</span></p>
             {type === 'equalPrincipal' && (
-              <p className="text-[10px] text-muted-foreground">→ {result.monthlyLast.toLocaleString()}만</p>
+              <p className="text-xs text-muted-foreground">→ {result.monthlyLast.toLocaleString()}만</p>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-[11px] text-muted-foreground">대출금</p>
+            <p className="text-xs text-muted-foreground">대출금</p>
             <p className="text-lg font-bold mt-1">{formatPrice(result.loanAmount)}</p>
-            <p className="text-[10px] text-muted-foreground">LTV {result.ltv}%</p>
+            <p className="text-xs text-muted-foreground">LTV {result.ltv}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-[11px] text-muted-foreground">총 이자</p>
+            <p className="text-xs text-muted-foreground">총 이자</p>
             <p className="text-lg font-bold text-amber-600 mt-1">{formatPrice(result.totalInterest)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-[11px] text-muted-foreground">총 상환액</p>
+            <p className="text-xs text-muted-foreground">총 상환액</p>
             <p className="text-lg font-bold mt-1">{formatPrice(result.totalPayment)}</p>
           </CardContent>
         </Card>
@@ -338,15 +338,15 @@ function CalculatorContent() {
           />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-xl bg-primary/5 p-4 text-center">
-              <p className="text-[11px] text-muted-foreground">DSR 40% 대출 한도</p>
+              <p className="text-xs text-muted-foreground">DSR 40% 대출 한도</p>
               <p className="text-xl font-bold text-primary mt-1">{formatPrice(maxLoan)}</p>
             </div>
             <div className="rounded-xl bg-emerald-500/5 p-4 text-center">
-              <p className="text-[11px] text-muted-foreground">매수 가능 금액</p>
+              <p className="text-xs text-muted-foreground">매수 가능 금액</p>
               <p className="text-xl font-bold text-emerald-600 mt-1">{formatPrice(maxBuyable)}</p>
             </div>
             <div className={cn('rounded-xl p-4 text-center', maxBuyable >= price ? 'bg-emerald-500/5' : 'bg-red-500/5')}>
-              <p className="text-[11px] text-muted-foreground">현재 매매가 대비</p>
+              <p className="text-xs text-muted-foreground">현재 매매가 대비</p>
               <p className={cn('text-xl font-bold mt-1', maxBuyable >= price ? 'text-emerald-600' : 'text-red-600')}>
                 {maxBuyable >= price ? '매수 가능' : `${formatPrice(price - maxBuyable)} 부족`}
               </p>

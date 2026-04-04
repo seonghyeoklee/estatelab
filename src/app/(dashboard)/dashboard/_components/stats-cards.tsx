@@ -88,10 +88,10 @@ export async function StatsCards() {
             </div>
             <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
             <div className="flex items-center justify-between mt-1">
-              <span className="text-[11px] text-muted-foreground">{stat.unit}</span>
+              <span className="text-xs text-muted-foreground">{stat.unit}</span>
               {stat.change !== null && stat.change !== undefined && stat.change !== 0 && (
                 <span className={cn(
-                  'inline-flex items-center gap-0.5 text-[11px] font-semibold',
+                  'inline-flex items-center gap-0.5 text-xs font-semibold',
                   (stat.changeReverse ? stat.change < 0 : stat.change > 0) ? 'text-red-500' : 'text-blue-500'
                 )}>
                   {stat.change > 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}

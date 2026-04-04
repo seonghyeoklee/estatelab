@@ -29,7 +29,7 @@ export function MapControls({
         <button
           onClick={onToggleMapType}
           className={cn(
-            'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-b border-border/30',
+            'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-b border-border/30',
             mapType === 'skyview' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
           )}
         >
@@ -39,7 +39,7 @@ export function MapControls({
         <button
           onClick={onToggleDistrict}
           className={cn(
-            'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors',
+            'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors',
             showDistrict ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
           )}
         >
@@ -53,15 +53,15 @@ export function MapControls({
 
       {/* 줌 컨트롤 */}
       <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
-        <button onClick={onZoomIn} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors border-b border-border/30">
+        <button onClick={onZoomIn} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
           <ZoomIn className="h-3.5 w-3.5" />
           확대
         </button>
-        <button onClick={onZoomOut} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors border-b border-border/30">
+        <button onClick={onZoomOut} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
           <ZoomOut className="h-3.5 w-3.5" />
           축소
         </button>
-        <button onClick={onFitBounds} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors">
+        <button onClick={onFitBounds} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors">
           <Locate className="h-3.5 w-3.5" />
           전체 보기
         </button>

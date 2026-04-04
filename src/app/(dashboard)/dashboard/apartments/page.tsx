@@ -114,7 +114,7 @@ function ApartmentsContent() {
           <button
             onClick={() => { setDongFilter(''); setPage(1); }}
             className={cn(
-              'rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+              'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
               !dongFilter ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
             )}
           >
@@ -125,7 +125,7 @@ function ApartmentsContent() {
               key={d.dong}
               onClick={() => { setDongFilter(d.dong); setPage(1); }}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+                'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                 dongFilter === d.dong ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
               )}
             >
@@ -193,7 +193,7 @@ function ApartmentsContent() {
                           <div className="flex items-center gap-1.5 min-w-0">
                             <h3 className="text-[16px] font-bold leading-tight line-clamp-1">{apt.name}</h3>
                             {isHot && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-bold text-orange-600 shrink-0">
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/10 px-1.5 py-0.5 text-xs font-bold text-orange-600 shrink-0">
                                 <Flame className="h-2.5 w-2.5" />
                                 활발
                               </span>
@@ -234,11 +234,11 @@ function ApartmentsContent() {
                         )}
                         <div className="flex items-center gap-1.5">
                           {apt.recentTradeCount > 0 && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 text-muted-foreground border-muted-foreground/20">
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 text-muted-foreground border-muted-foreground/20">
                               최근 {apt.recentTradeCount}건
                             </Badge>
                           )}
-                          <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5', color.bg, color.text, 'border-0')}>
+                          <Badge variant="outline" className={cn('text-xs px-2 py-0.5', color.bg, color.text, 'border-0')}>
                             <TrendingUp className="h-3 w-3 mr-1" />
                             {apt.tradeCount}건
                           </Badge>

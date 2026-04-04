@@ -110,7 +110,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
           <SlidersHorizontal className="h-3.5 w-3.5" />
           필터
           {activeCount > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] bg-white/20 text-inherit">
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-white/20 text-inherit">
               {activeCount}
             </Badge>
           )}
@@ -124,7 +124,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
               key={opt.value}
               onClick={() => onChange({ ...filters, sort: opt.value })}
               className={cn(
-                'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                 filters.sort === opt.value
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent'
@@ -138,7 +138,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
         {activeCount > 0 && (
           <button
             onClick={reset}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3 w-3" />
             초기화
@@ -157,7 +157,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                 <button
                   onClick={() => onChange({ ...filters, sido: '', regionCode: '' })}
                   className={cn(
-                    'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                    'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                     !filters.sido ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                   )}
                 >
@@ -168,7 +168,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                     key={sido}
                     onClick={() => onChange({ ...filters, sido, regionCode: '' })}
                     className={cn(
-                      'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                      'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                       filters.sido === sido ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                     )}
                   >
@@ -181,7 +181,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                   <button
                     onClick={() => onChange({ ...filters, regionCode: '' })}
                     className={cn(
-                      'rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors',
+                      'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                       !filters.regionCode ? 'bg-primary/80 text-primary-foreground' : 'bg-muted/80 hover:bg-accent'
                     )}
                   >
@@ -192,7 +192,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                       key={r.code}
                       onClick={() => onChange({ ...filters, regionCode: r.code })}
                       className={cn(
-                        'rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors',
+                        'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                         filters.regionCode === r.code ? 'bg-primary/80 text-primary-foreground' : 'bg-muted/80 hover:bg-accent'
                       )}
                     >
@@ -214,7 +214,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                       key={opt.label}
                       onClick={() => onChange({ ...filters, minPrice: opt.min, maxPrice: opt.max })}
                       className={cn(
-                        'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                        'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                         active ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                       )}
                     >
@@ -236,7 +236,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                       key={opt.label}
                       onClick={() => onChange({ ...filters, minArea: opt.min, maxArea: opt.max })}
                       className={cn(
-                        'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                        'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                         active ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                       )}
                     >
@@ -256,7 +256,7 @@ export function ApartmentFilters({ filters, onChange }: Props) {
                     key={opt.label}
                     onClick={() => onChange({ ...filters, minYear: opt.value })}
                     className={cn(
-                      'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                      'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                       filters.minYear === opt.value ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'
                     )}
                   >

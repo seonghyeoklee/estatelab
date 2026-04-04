@@ -73,7 +73,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
           <span className="text-[15px] font-semibold tracking-tight leading-none">
             EstateLab
           </span>
-          <span className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mt-0.5">
+          <span className="text-xs font-medium text-muted-foreground tracking-widest uppercase mt-0.5">
             Real Estate Intelligence
           </span>
         </div>
@@ -87,7 +87,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 text-left">단지, 지역 검색...</span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 font-mono text-[10px] bg-muted px-1 py-0.5 rounded">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 font-mono text-xs bg-muted px-1 py-0.5 rounded">
             ⌘K
           </kbd>
         </button>
@@ -97,7 +97,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
       <nav className="flex-1 overflow-y-auto px-3 pt-1 pb-2 space-y-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            <p className="text-[10px] font-semibold text-foreground/40 uppercase tracking-widest px-2.5 mb-1">
+            <p className="text-xs font-semibold text-foreground/40 uppercase tracking-widest px-2.5 mb-1">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -122,7 +122,7 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
                     <item.icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-foreground' : '')} />
                     <span className="flex-1">{item.label}</span>
                     {item.badge && !isActive && (
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                         {item.badge}
                       </span>
                     )}

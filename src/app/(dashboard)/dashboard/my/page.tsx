@@ -115,7 +115,7 @@ export default function MyPage() {
                           <p className="text-sm font-semibold text-primary">
                             {formatPrice(latest.price)}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {item.complex._count.trades}건
                           </p>
                         </div>
@@ -159,11 +159,11 @@ export default function MyPage() {
                       </p>
                     </div>
                     {latest && (
-                      <Badge variant="secondary" className="text-[10px] shrink-0">
+                      <Badge variant="secondary" className="text-xs shrink-0">
                         {formatPrice(latest.price)}
                       </Badge>
                     )}
-                    <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                    <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                       {item.viewedAt.slice(5, 10)}
                     </span>
                   </Link>

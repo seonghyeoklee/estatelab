@@ -24,7 +24,7 @@ export default function GlobalError({
           페이지를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.
         </p>
         {error.digest && (
-          <p className="text-[10px] text-muted-foreground/50 font-mono">
+          <p className="text-xs text-muted-foreground/50 font-mono">
             Error ID: {error.digest}
           </p>
         )}

@@ -83,7 +83,7 @@ export function InsightsCards() {
               </div>
               <div>
                 <CardTitle className="text-sm">평당가 TOP</CardTitle>
-                <p className="text-[11px] text-muted-foreground">최근 3개월 거래 기준</p>
+                <p className="text-xs text-muted-foreground">최근 3개월 거래 기준</p>
               </div>
             </div>
           </CardHeader>
@@ -95,7 +95,7 @@ export function InsightsCards() {
                 <Link key={item.complexId} href={`/dashboard/apartments/${item.complexId}`}>
                   <div className="group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent/50 transition-colors">
                     <span className={cn(
-                      'text-[11px] font-bold w-5 text-center',
+                      'text-xs font-bold w-5 text-center',
                       idx < 3 ? 'text-violet-600' : 'text-muted-foreground'
                     )}>
                       {idx + 1}
@@ -103,7 +103,7 @@ export function InsightsCards() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[13px] font-medium truncate">{item.name}</span>
-                        <span className="text-[10px] text-muted-foreground shrink-0">{item.sigungu}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{item.sigungu}</span>
                       </div>
                       <div className="mt-0.5 h-1 rounded-full bg-muted/60">
                         <div
@@ -133,7 +133,7 @@ export function InsightsCards() {
               </div>
               <div>
                 <CardTitle className="text-sm">전세가율 TOP</CardTitle>
-                <p className="text-[11px] text-muted-foreground">전세 보증금 / 매매가 (높을수록 갭 작음)</p>
+                <p className="text-xs text-muted-foreground">전세 보증금 / 매매가 (높을수록 갭 작음)</p>
               </div>
             </div>
           </CardHeader>
@@ -142,7 +142,7 @@ export function InsightsCards() {
               <Link key={item.complexId} href={`/dashboard/apartments/${item.complexId}`}>
                 <div className="group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent/50 transition-colors">
                   <span className={cn(
-                    'text-[11px] font-bold w-5 text-center',
+                    'text-xs font-bold w-5 text-center',
                     idx < 3 ? 'text-amber-600' : 'text-muted-foreground'
                   )}>
                     {idx + 1}
@@ -150,16 +150,16 @@ export function InsightsCards() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[13px] font-medium truncate">{item.name}</span>
-                      <span className="text-[10px] text-muted-foreground shrink-0">{item.sigungu}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{item.sigungu}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       매매 {formatPrice(item.avgTrade)} · 전세 {formatPrice(item.avgDeposit)}
                     </p>
                   </div>
                   <Badge
                     variant="secondary"
                     className={cn(
-                      'text-[11px] font-bold shrink-0',
+                      'text-xs font-bold shrink-0',
                       item.ratio >= 70 ? 'text-red-600 bg-red-500/10' : 'text-amber-600 bg-amber-500/10'
                     )}
                   >
@@ -182,7 +182,7 @@ export function InsightsCards() {
               </div>
               <div>
                 <CardTitle className="text-sm">거래량 변화</CardTitle>
-                <p className="text-[11px] text-muted-foreground">이번 달 vs 지난 달 (구별)</p>
+                <p className="text-xs text-muted-foreground">이번 달 vs 지난 달 (구별)</p>
               </div>
             </div>
           </CardHeader>
@@ -191,12 +191,12 @@ export function InsightsCards() {
               <div key={item.sigungu} className="flex items-center gap-3 rounded-lg px-2 py-1.5">
                 <span className="text-[13px] font-medium w-20 truncate">{item.sigungu}</span>
                 <div className="flex-1 flex items-center gap-2">
-                  <span className="text-[11px] text-muted-foreground tabular-nums">{item.lastMonth}건</span>
-                  <span className="text-[11px] text-muted-foreground">→</span>
-                  <span className="text-[11px] font-semibold tabular-nums">{item.thisMonth}건</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{item.lastMonth}건</span>
+                  <span className="text-xs text-muted-foreground">→</span>
+                  <span className="text-xs font-semibold tabular-nums">{item.thisMonth}건</span>
                 </div>
                 <span className={cn(
-                  'inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums',
+                  'inline-flex items-center gap-0.5 text-xs font-bold tabular-nums',
                   item.changePct > 0 ? 'text-red-500' : item.changePct < 0 ? 'text-blue-500' : 'text-muted-foreground'
                 )}>
                   {item.changePct > 0 ? <ArrowUpRight className="h-3 w-3" /> : item.changePct < 0 ? <ArrowDownRight className="h-3 w-3" /> : null}
@@ -218,7 +218,7 @@ export function InsightsCards() {
               </div>
               <div>
                 <CardTitle className="text-sm">가격 변동 TOP</CardTitle>
-                <p className="text-[11px] text-muted-foreground">이번 달 vs 지난 달 평균가</p>
+                <p className="text-xs text-muted-foreground">이번 달 vs 지난 달 평균가</p>
               </div>
             </div>
           </CardHeader>
@@ -235,9 +235,9 @@ export function InsightsCards() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[13px] font-medium truncate">{item.name}</span>
-                        <span className="text-[10px] text-muted-foreground shrink-0">{item.sigungu}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{item.sigungu}</span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {formatPrice(item.lastAvg)} → {formatPrice(item.thisAvg)}
                       </p>
                     </div>

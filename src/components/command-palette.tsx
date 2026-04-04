@@ -130,7 +130,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               placeholder="단지명, 지역, 메뉴 검색..."
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border bg-muted px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
               ESC
             </kbd>
           </div>
@@ -156,14 +156,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       <div className="flex items-center gap-1.5">
                         <span className="font-medium truncate">{r.name}</span>
                         {r.region && (
-                          <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-0.5">
+                          <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-0.5">
                             <MapPin className="h-2.5 w-2.5" />
                             {r.region.sigungu} {r.dong}
                           </span>
                         )}
                       </div>
                       {r.latestTrade && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {formatPrice(r.latestTrade.price)} · {r.latestTrade.area}㎡ · {r.latestTrade.dealDate.slice(0, 10)}
                           {r.tradeCount ? ` · ${r.tradeCount}건` : ''}
                         </p>
@@ -196,7 +196,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </Command.List>
 
           {/* 하단 힌트 */}
-          <div className="border-t px-4 py-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+          <div className="border-t px-4 py-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <kbd className="rounded border bg-muted px-1 py-0.5 font-mono">↑↓</kbd>
               이동

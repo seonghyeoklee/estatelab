@@ -16,7 +16,7 @@ export function SidoTabs({ sidoList, selectedSido, onSelect }: SidoTabsProps) {
           key={sido}
           onClick={() => onSelect(sido)}
           className={cn(
-            'rounded-lg px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition-all shrink-0',
+            'rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all shrink-0',
             selectedSido === sido
               ? 'bg-primary text-primary-foreground'
               : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'

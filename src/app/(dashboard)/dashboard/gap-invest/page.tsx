@@ -130,7 +130,7 @@ export default function GapInvestPage() {
               key={opt.label}
               onClick={() => { setRatioFilter({ min: opt.min, max: opt.max }); setPage(1); }}
               className={cn(
-                'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors',
+                'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
                 ratioFilter.min === opt.min && ratioFilter.max === opt.max
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted hover:bg-accent'
@@ -150,7 +150,7 @@ export default function GapInvestPage() {
                 key={opt.label}
                 onClick={() => { setAreaFilter({ min: opt.min, max: opt.max }); setPage(1); }}
                 className={cn(
-                  'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors',
+                  'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
                   areaFilter.min === opt.min && areaFilter.max === opt.max
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-accent'
@@ -166,7 +166,7 @@ export default function GapInvestPage() {
                 key={opt.value}
                 onClick={() => { setSort(opt.value); setPage(1); }}
                 className={cn(
-                  'rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors',
+                  'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                   sort === opt.value
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent'
@@ -189,7 +189,7 @@ export default function GapInvestPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <label className="text-[11px] text-muted-foreground shrink-0">대출금리</label>
+                <label className="text-xs text-muted-foreground shrink-0">대출금리</label>
                 <input
                   type="number"
                   value={loanRate}
@@ -199,10 +199,10 @@ export default function GapInvestPage() {
                   max="10"
                   className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
                 />
-                <span className="text-[11px] text-muted-foreground">%</span>
+                <span className="text-xs text-muted-foreground">%</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <label className="text-[11px] text-muted-foreground shrink-0">대출비율</label>
+                <label className="text-xs text-muted-foreground shrink-0">대출비율</label>
                 <input
                   type="number"
                   value={loanRatio}
@@ -212,12 +212,12 @@ export default function GapInvestPage() {
                   max="100"
                   className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
                 />
-                <span className="text-[11px] text-muted-foreground">%</span>
+                <span className="text-xs text-muted-foreground">%</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <label className="text-[11px] text-muted-foreground shrink-0">보유기간</label>
+                <label className="text-xs text-muted-foreground shrink-0">보유기간</label>
                 <input
                   type="number"
                   value={holdYears}
@@ -226,10 +226,10 @@ export default function GapInvestPage() {
                   max="30"
                   className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
                 />
-                <span className="text-[11px] text-muted-foreground">년</span>
+                <span className="text-xs text-muted-foreground">년</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <label className="text-[11px] text-muted-foreground shrink-0">연 상승률</label>
+                <label className="text-xs text-muted-foreground shrink-0">연 상승률</label>
                 <input
                   type="number"
                   value={growthRate}
@@ -239,7 +239,7 @@ export default function GapInvestPage() {
                   max="20"
                   className="w-16 rounded-md border px-2 py-1.5 text-[12px] text-center outline-none focus:ring-1 focus:ring-primary/30"
                 />
-                <span className="text-[11px] text-muted-foreground">%</span>
+                <span className="text-xs text-muted-foreground">%</span>
               </div>
             </div>
           </div>
@@ -285,7 +285,7 @@ export default function GapInvestPage() {
                         >
                           {item.name}
                         </Link>
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
+                        <Badge variant="secondary" className="text-xs shrink-0">
                           {item.area}㎡
                         </Badge>
                       </div>
@@ -303,22 +303,22 @@ export default function GapInvestPage() {
                       <p className={cn('text-xl font-bold', ratioColor(item.jeonseRatio).split(' ')[0])}>
                         {item.jeonseRatio}%
                       </p>
-                      <p className={cn('text-[10px] font-medium', risk.color)}>{risk.label}</p>
+                      <p className={cn('text-xs font-medium', risk.color)}>{risk.label}</p>
                     </div>
                   </div>
 
                   {/* 중간: 가격 비교 */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
                     <div className="rounded-lg bg-muted/50 p-2.5 text-center">
-                      <p className="text-[10px] text-muted-foreground">매매</p>
+                      <p className="text-xs text-muted-foreground">매매</p>
                       <p className="text-[14px] font-bold">{formatPrice(item.avgTrade)}</p>
                     </div>
                     <div className="rounded-lg bg-amber-500/5 p-2.5 text-center">
-                      <p className="text-[10px] text-muted-foreground">전세</p>
+                      <p className="text-xs text-muted-foreground">전세</p>
                       <p className="text-[14px] font-bold text-amber-700">{formatPrice(item.avgJeonse)}</p>
                     </div>
                     <div className="rounded-lg bg-primary/5 p-2.5 text-center">
-                      <p className="text-[10px] text-muted-foreground">갭(투자금)</p>
+                      <p className="text-xs text-muted-foreground">갭(투자금)</p>
                       <p className="text-[14px] font-bold text-primary">{formatPrice(item.gapAmount)}</p>
                     </div>
                   </div>
@@ -326,7 +326,7 @@ export default function GapInvestPage() {
                   {/* 시뮬레이션 토글 */}
                   <button
                     onClick={() => setShowCalc(isExpanded ? null : `${item.complexId}-${item.area}`)}
-                    className="flex items-center gap-1 mt-3 text-[11px] font-medium text-primary hover:underline"
+                    className="flex items-center gap-1 mt-3 text-xs font-medium text-primary hover:underline"
                   >
                     <Calculator className="h-3 w-3" />
                     투자 시뮬레이션
@@ -375,7 +375,7 @@ export default function GapInvestPage() {
                           </p>
                         </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         매매 {item.tradeCount}건 · 전세 {item.jeonseCount}건 · 연 {growthRate}% 상승 가정
                       </p>
                     </div>

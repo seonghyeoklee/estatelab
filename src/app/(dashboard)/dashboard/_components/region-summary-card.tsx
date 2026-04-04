@@ -95,11 +95,11 @@ export function RegionSummaryCards() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold">{region.sigungu}</h3>
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-white/60">
+                  <Badge variant="outline" className="text-xs px-1.5 py-0 bg-white/60">
                     {region.sido.replace(/특별시|광역시|특별자치시|특별자치도|도$/, '')}
                   </Badge>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {region.tradeCount.toLocaleString()}건
                 </span>
               </div>
@@ -110,11 +110,11 @@ export function RegionSummaryCards() {
                   <span className={cn('text-xl font-bold', accent.text)}>
                     {formatPrice(region.avgPrice)}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">평균</span>
+                  <span className="text-xs text-muted-foreground">평균</span>
                 </div>
                 {/* 평당가 바 */}
                 <div className="space-y-0.5">
-                  <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">평당가</span>
                     <span className="font-semibold">{region.avgPricePerPyeong.toLocaleString()}만/평</span>
                   </div>
@@ -131,8 +131,8 @@ export function RegionSummaryCards() {
               {region.latestTrade && (
                 <div className="flex items-center gap-2 pt-1 border-t border-border/30">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-muted-foreground">최근 거래</p>
-                    <p className="text-[11px] font-medium truncate">
+                    <p className="text-xs text-muted-foreground">최근 거래</p>
+                    <p className="text-xs font-medium truncate">
                       {region.latestTrade.name} {region.latestTrade.area}㎡
                     </p>
                   </div>

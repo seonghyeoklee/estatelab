@@ -34,7 +34,7 @@ export function RateSummaryCard() {
           금리 현황
         </CardTitle>
         {data?.data?.[0] && (
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {data.data[0].date.slice(0, 10)} 기준
           </span>
         )}
@@ -62,14 +62,14 @@ export function RateSummaryCard() {
               return (
                 <div key={rate.name} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">{rate.nameKr}</span>
+                    <span className="text-xs text-muted-foreground">{rate.nameKr}</span>
                     <div className="flex items-center gap-1.5">
                       <span className={cn('text-sm font-bold tabular-nums', color)}>
                         {rate.rate.toFixed(2)}%
                       </span>
                       {rate.change !== 0 ? (
                         <span className={cn(
-                          'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold',
+                          'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold',
                           rate.change > 0
                             ? 'bg-red-500/10 text-red-500'
                             : 'bg-blue-500/10 text-blue-500'
@@ -78,7 +78,7 @@ export function RateSummaryCard() {
                           {rate.change > 0 ? '+' : ''}{rate.change.toFixed(0)}bp
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium bg-muted text-muted-foreground">
+                        <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
                           <Minus className="h-2.5 w-2.5" />
                           동결
                         </span>

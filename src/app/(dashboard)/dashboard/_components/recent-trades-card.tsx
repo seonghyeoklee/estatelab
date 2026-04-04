@@ -36,7 +36,7 @@ export function RecentTradesCard() {
           최근 실거래 내역
         </CardTitle>
         {data?.data?.length ? (
-          <Badge variant="outline" className="text-[10px]">{data.data.length}건</Badge>
+          <Badge variant="outline" className="text-xs">{data.data.length}건</Badge>
         ) : null}
       </CardHeader>
       <CardContent>
@@ -70,21 +70,21 @@ export function RecentTradesCard() {
                   className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/50 transition-colors"
                 >
                   {/* 순번 + 가격 뱃지 */}
-                  <div className={cn('flex items-center justify-center h-9 w-9 rounded-lg text-[11px] font-bold shrink-0', colorStr)}>
+                  <div className={cn('flex items-center justify-center h-9 w-9 rounded-lg text-xs font-bold shrink-0', colorStr)}>
                     {formatPrice(trade.price).replace('억', '').replace('만', '')}
-                    <span className="text-[9px] ml-0.5">억</span>
+                    <span className="text-xs ml-0.5">억</span>
                   </div>
 
                   {/* 단지 정보 */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-semibold truncate">{trade.complex.name}</p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {trade.area}㎡ · {trade.floor}층 · {trade.complex.dong}
                     </p>
                   </div>
 
                   {/* 날짜 */}
-                  <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                  <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                     {date.slice(5)}
                   </span>
                 </div>

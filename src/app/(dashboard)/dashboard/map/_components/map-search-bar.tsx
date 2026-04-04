@@ -80,11 +80,11 @@ export function MapSearchBar({ complexes, onSelect }: Props) {
             >
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium truncate">{c.name}</p>
-                <p className="text-[11px] text-muted-foreground">{c.dong} · {c._count.trades}건</p>
+                <p className="text-xs text-muted-foreground">{c.dong} · {c._count.trades}건</p>
               </div>
               <div className="text-right shrink-0">
                 <p className="text-[13px] font-bold text-primary">{formatPrice(c.avgPrice)}</p>
-                <p className="text-[10px] text-muted-foreground">{c.avgPricePerPyeong.toLocaleString()}만/평</p>
+                <p className="text-xs text-muted-foreground">{c.avgPricePerPyeong.toLocaleString()}만/평</p>
               </div>
             </button>
           ))}

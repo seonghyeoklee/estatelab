@@ -35,7 +35,7 @@ export function GapInvestSummary() {
         </CardTitle>
         <Link
           href="/dashboard/gap-invest"
-          className="inline-flex items-center gap-1 text-[11px] text-primary font-medium hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
         >
           더보기 <ArrowRight className="h-3 w-3" />
         </Link>
@@ -49,7 +49,7 @@ export function GapInvestSummary() {
             <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/50 transition-colors">
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium truncate">{item.name}</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {item.sigungu} · {item.area}㎡
                 </p>
               </div>
@@ -58,7 +58,7 @@ export function GapInvestSummary() {
                 <Badge
                   variant="secondary"
                   className={cn(
-                    'text-[10px]',
+                    'text-xs',
                     item.jeonseRatio >= 70 ? 'text-red-600 bg-red-500/10' : 'text-amber-600 bg-amber-500/10'
                   )}
                 >

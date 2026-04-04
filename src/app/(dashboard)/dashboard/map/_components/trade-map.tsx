@@ -994,7 +994,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             key={sido}
             onClick={() => moveTo(sido)}
             className={cn(
-              'rounded-lg px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition-all pointer-events-auto',
+              'rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all pointer-events-auto',
               selectedSido === sido
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
@@ -1019,7 +1019,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
               key={opt.label}
               onClick={() => setAreaFilter(opt.value)}
               className={cn(
-                'rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm transition-all',
+                'rounded-lg px-2 py-1 text-xs font-medium shadow-sm transition-all',
                 areaFilter === opt.value
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
@@ -1037,7 +1037,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             if (compareMode) setCompareIds([]);
           }}
           className={cn(
-            'rounded-lg px-2.5 py-1 text-[10px] font-medium shadow-sm transition-all pointer-events-auto',
+            'rounded-lg px-2.5 py-1 text-xs font-medium shadow-sm transition-all pointer-events-auto',
             compareMode
               ? 'bg-primary text-primary-foreground'
               : 'bg-white/95 text-foreground/70 hover:bg-white backdrop-blur-sm border border-border/50'
@@ -1051,7 +1051,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         {compareIds.length === 2 && (
           <Link
             href={`/dashboard/compare?a=${compareIds[0]}&b=${compareIds[1]}`}
-            className="rounded-lg bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium shadow-sm pointer-events-auto"
+            className="rounded-lg bg-primary text-primary-foreground px-2.5 py-1 text-xs font-medium shadow-sm pointer-events-auto"
           >
             비교하기 →
           </Link>
@@ -1066,7 +1066,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             setShowList(!showList);
             setSelectedComplex(null);
           }}
-          className="flex items-center gap-1.5 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 text-[11px] font-medium shadow-sm hover:bg-white transition-all"
+          className="flex items-center gap-1.5 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-white transition-all"
         >
           <List className="h-3.5 w-3.5" />
           목록 보기
@@ -1077,7 +1077,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           <button
             onClick={toggleMapType}
             className={cn(
-              'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-b border-border/30',
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-b border-border/30',
               mapType === 'skyview' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
             )}
           >
@@ -1087,7 +1087,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           <button
             onClick={toggleDistrict}
             className={cn(
-              'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors',
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors',
               showDistrict ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
             )}
           >
@@ -1100,7 +1100,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           <button
             onClick={() => setShowNearby(!showNearby)}
             className={cn(
-              'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-t border-border/30',
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
               showNearby && selectedComplex ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
             )}
           >
@@ -1114,7 +1114,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             <button
               onClick={() => setShowRoadview(!showRoadview)}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors border-t border-border/30',
+                'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
                 showRoadview ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
               )}
             >
@@ -1129,15 +1129,15 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
         {/* 줌 컨트롤 */}
         <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
-          <button onClick={handleZoomIn} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors border-b border-border/30">
+          <button onClick={handleZoomIn} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
             <ZoomIn className="h-3.5 w-3.5" />
             확대
           </button>
-          <button onClick={handleZoomOut} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors border-b border-border/30">
+          <button onClick={handleZoomOut} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
             <ZoomOut className="h-3.5 w-3.5" />
             축소
           </button>
-          <button onClick={handleFitBounds} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium hover:bg-accent transition-colors">
+          <button onClick={handleFitBounds} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors">
             <Locate className="h-3.5 w-3.5" />
             전체 보기
           </button>
@@ -1148,11 +1148,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       <div className="absolute bottom-3 left-3 z-[20] pointer-events-none">
         <div className="flex items-center gap-2 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm px-3 py-1.5 pointer-events-auto">
           <span className="w-2 h-2 rounded-full bg-primary" />
-          <span className="text-[10px] font-medium text-foreground">
+          <span className="text-xs font-medium text-foreground">
             {zoomLevel <= 5 ? '단지별' : zoomLevel <= 7 ? '동별' : '구별'}
           </span>
           {visibleIds.length > 0 && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               · {visibleIds.length}개
             </span>
           )}
@@ -1180,7 +1180,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             >
               <X className="h-4 w-4 text-white" />
             </button>
-            <div className="absolute top-2 left-2 z-10 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] text-white font-medium">
+            <div className="absolute top-2 left-2 z-10 rounded-lg bg-black/60 px-2.5 py-1 text-xs text-white font-medium">
               <Eye className="h-3 w-3 inline mr-1" />
               로드뷰 · {selectedComplex?.name}
             </div>
@@ -1248,7 +1248,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                   <button
                     onClick={() => setListSort('price')}
                     className={cn(
-                      'flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+                      'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors',
                       listSort === 'price' ? 'bg-primary text-primary-foreground' : 'bg-white border hover:bg-accent'
                     )}
                   >
@@ -1258,14 +1258,14 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                   <button
                     onClick={() => setListSort('trades')}
                     className={cn(
-                      'flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+                      'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors',
                       listSort === 'trades' ? 'bg-primary text-primary-foreground' : 'bg-white border hover:bg-accent'
                     )}
                   >
                     <ArrowUpDown className="h-2.5 w-2.5" />
                     거래수순
                   </button>
-                  <span className="ml-auto text-[9px] text-muted-foreground">
+                  <span className="ml-auto text-xs text-muted-foreground">
                     {visibleIds.length}개 표시
                   </span>
                 </div>
@@ -1315,13 +1315,13 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{c.name}</p>
-                          <p className="text-[11px] text-muted-foreground">{c.dong} · {c._count.trades}건</p>
+                          <p className="text-xs text-muted-foreground">{c.dong} · {c._count.trades}건</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-bold text-primary">
                             {formatPrice(c.avgPrice)}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {c.avgPricePerPyeong.toLocaleString()}만/평
                           </p>
                         </div>
@@ -1332,7 +1332,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
               </div>
 
               {/* 하단 카운트 */}
-              <div className="border-t px-4 py-2 bg-slate-50/80 text-[10px] text-muted-foreground">
+              <div className="border-t px-4 py-2 bg-slate-50/80 text-xs text-muted-foreground">
                 현재 지도 영역: {visibleIds.length}개 단지
               </div>
             </CardContent>
@@ -1342,7 +1342,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
       {/* 하단 상태바 */}
       <div className="absolute bottom-8 left-3 z-[20] flex items-center gap-2 pointer-events-none [&>*]:pointer-events-auto">
-        <div className="rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 shadow-sm text-[11px] flex items-center gap-3">
+        <div className="rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 shadow-sm text-xs flex items-center gap-3">
           <span>
             <span className="font-semibold text-primary">{withCoords.length}</span> 단지
           </span>

@@ -101,7 +101,7 @@ export default function RatesPage() {
                     <Badge
                       variant="secondary"
                       className={cn(
-                        'text-[10px]',
+                        'text-xs',
                         rate.change > 0 ? 'text-price-up' : 'text-price-down'
                       )}
                     >
@@ -144,7 +144,7 @@ export default function RatesPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {sorted[0]?.date.slice(0, 7)} ~ {sorted[sorted.length - 1]?.date.slice(0, 7)} · 최저 {minRate.toFixed(2)}% · 최고 {maxRate.toFixed(2)}%
                   </p>
                 </CardHeader>

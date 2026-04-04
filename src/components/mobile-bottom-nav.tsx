@@ -49,7 +49,7 @@ export function MobileBottomNav() {
               )}
             >
               <item.icon className={cn('h-5 w-5', isActive && 'text-primary')} />
-              <span className={cn('text-[10px] font-medium', isActive && 'font-semibold')}>
+              <span className={cn('text-xs font-medium', isActive && 'font-semibold')}>
                 {item.label}
               </span>
             </Link>
