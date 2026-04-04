@@ -271,16 +271,16 @@ export default async function ApartmentDetailPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* 적정가 진단 + 주변 비교 */}
-      <PriceDiagnosis complexId={id} />
+      {/* 적정가 진단 + 동네 순위 (데이터 확실) */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PriceDiagnosis complexId={id} />
+        <RankCard complexId={id} />
+      </div>
 
-      {/* 전월세 현황 + 전세가율 */}
+      {/* 전월세 현황 (데이터 있을 때만 표시) */}
       <JeonseRatioCard complexId={id} />
 
-      {/* 동네 시세 순위 + 회전율 */}
-      <RankCard complexId={id} />
-
-      {/* Nearby facilities */}
+      {/* 주변시설 */}
       <NearbyFacilities complexId={id} />
 
       {/* Trade table */}

@@ -23,23 +23,8 @@ export function JeonseRatioCard({ complexId }: { complexId: string }) {
     `/api/market/apartments/${complexId}/rents`,
   );
 
-  if (!data?.data || data.data.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="rounded-lg bg-amber-500/10 p-2">
-              <Percent className="h-4 w-4 text-amber-600" />
-            </div>
-            <h2 className="text-[16px] font-bold">전월세 현황</h2>
-          </div>
-          <p className="text-[13px] text-muted-foreground">
-            최근 3개월 전월세 거래 데이터가 없습니다. 데이터 수집이 진행되면 전세가율을 확인할 수 있습니다.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // 전월세 데이터 없으면 숨김 (미완성 느낌 방지)
+  if (!data?.data || data.data.length === 0) return null;
 
   const summaries = data.data;
   const totalJeonse = summaries.reduce((s, r) => s + r.jeonseCount, 0);
