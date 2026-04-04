@@ -1,21 +1,35 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/market/map/complexes
- * 지도에 표시할 단지 목록 (좌표 + 평균가)
+ * GET /api/market/map/complexes?swLat=37.4&swLng=126.8&neLat=37.6&neLng=127.1
+ * 지도에 표시할 단지 목록 — 영역 기반 조회 (최대 1000개)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const sp = request.nextUrl.searchParams;
+  const swLat = sp.get('swLat') ? parseFloat(sp.get('swLat')!) : undefined;
+  const swLng = sp.get('swLng') ? parseFloat(sp.get('swLng')!) : undefined;
+  const neLat = sp.get('neLat') ? parseFloat(sp.get('neLat')!) : undefined;
+  const neLng = sp.get('neLng') ? parseFloat(sp.get('neLng')!) : undefined;
+
+  const where: Record<string, unknown> = {
+    lat: { not: null },
+    lng: { not: null },
+    trades: { some: {} },
+    NOT: { name: { startsWith: '(' } },
+  };
+
+  // 영역 필터 (파라미터 있을 때만)
+  if (swLat && swLng && neLat && neLng) {
+    where.lat = { gte: swLat, lte: neLat };
+    where.lng = { gte: swLng, lte: neLng };
+  }
+
   const complexes = await prisma.apartmentComplex.findMany({
-    where: {
-      lat: { not: null },
-      lng: { not: null },
-      trades: { some: {} },
-      NOT: { name: { startsWith: '(' } },
-    },
+    where,
     select: {
       id: true,
       name: true,
@@ -30,7 +44,7 @@ export async function GET() {
         take: 20,
       },
     },
-    take: 500,
+    take: 1000,
   });
 
   const data = complexes.map((c) => {
