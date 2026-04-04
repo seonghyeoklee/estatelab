@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage, buildDailyReport } from '@/lib/telegram';
-import { env } from '@/lib/env';
+import { validateCronAuth, unauthorizedResponse } from '@/lib/auth';
 import { formatPrice } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
-  // CRON_SECRET 인증
-  const authHeader = req.headers.get('authorization');
-  const cronSecret = env('CRON_SECRET');
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!validateCronAuth(req.headers.get('authorization'))) {
+    return unauthorizedResponse();
   }
 
   try {

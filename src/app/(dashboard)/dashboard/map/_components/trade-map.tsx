@@ -9,20 +9,9 @@ import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Sa
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
+import { NEARBY_CATEGORIES } from '@/lib/constants';
 import { ComplexDetailPanel } from './complex-detail-panel';
 import { MapSearchBar } from './map-search-bar';
-
-
-// 주변시설 카테고리 설정
-const NEARBY_CATEGORIES: Record<string, { label: string; color: string; border: string }> = {
-  subway: { label: '지하철', color: '#2563eb', border: '#1d4ed8' },
-  school: { label: '학교', color: '#d97706', border: '#b45309' },
-  convenience: { label: '편의점', color: '#059669', border: '#047857' },
-  mart: { label: '마트', color: '#7c3aed', border: '#6d28d9' },
-  hospital: { label: '병원', color: '#dc2626', border: '#b91c1c' },
-  cafe: { label: '카페', color: '#92400e', border: '#78350f' },
-  bank: { label: '은행', color: '#0369a1', border: '#075985' },
-};
 
 // 주변시설 마커 생성
 function createNearbyMarker(opts: {

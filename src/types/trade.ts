@@ -62,3 +62,44 @@ export interface Rate {
   rate: number;
   change: number;
 }
+
+/** 단지 상세 (API 응답) */
+export interface ComplexDetail {
+  id: string;
+  name: string;
+  dong: string;
+  jibun: string;
+  roadAddress: string | null;
+  builtYear: number | null;
+  totalUnits: number | null;
+  region: { sido: string; sigungu: string };
+  trades: Trade[];
+  rents?: unknown[];
+  areaGroups: AreaGroup[];
+}
+
+/** 주변시설 장소 */
+export interface NearbyPlace {
+  id: string;
+  name: string;
+  category: string;
+  distance: number;
+  lat: number;
+  lng: number;
+  phone?: string;
+}
+
+/** 주변시설 요약 */
+export interface NearbySummary {
+  key: string;
+  label: string;
+  count: number;
+  nearest: NearbyPlace | null;
+}
+
+/** 주변시설 데이터 */
+export interface NearbyData {
+  summary: NearbySummary[];
+  places: Record<string, NearbyPlace[]>;
+  radius: number;
+}
