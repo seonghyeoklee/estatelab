@@ -65,14 +65,9 @@ export function Sidebar({ onNavigate, onCommandOpen }: { onNavigate?: () => void
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Home className="h-4 w-4 text-primary-foreground" />
         </div>
-        <div className="flex flex-col">
-          <span className="text-[15px] font-semibold tracking-tight leading-none">
-            EstateLab
-          </span>
-          <span className="text-xs font-medium text-muted-foreground tracking-widest uppercase mt-0.5">
-            Real Estate Intelligence
-          </span>
-        </div>
+        <span className="text-[15px] font-semibold tracking-tight">
+          EstateLab
+        </span>
       </Link>
 
       {/* Search trigger */}
