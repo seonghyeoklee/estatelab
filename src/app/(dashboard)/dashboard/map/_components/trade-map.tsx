@@ -382,10 +382,19 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
   const { data: regionData } = useSWR<{ data: Region[] }>('/api/market/regions');
   const [mapBounds, setMapBounds] = useState('');
+  const boundsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedSetBounds = useCallback((newBounds: string) => {
+    if (boundsTimerRef.current) clearTimeout(boundsTimerRef.current);
+    boundsTimerRef.current = setTimeout(() => setMapBounds(newBounds), 500);
+  }, []);
+
   const complexUrl = mapBounds
     ? `/api/market/map/complexes?${mapBounds}`
     : '/api/market/map/complexes';
-  const { data: complexData } = useSWR<{ data: MapComplex[] }>(complexUrl);
+  const { data: complexData } = useSWR<{ data: MapComplex[] }>(complexUrl, {
+    keepPreviousData: true,  // 새 데이터 올 때까지 이전 데이터 유지 → 깜빡임 방지
+  });
 
   // 선택된 단지 주변시설 데이터
   interface NearbyPlace { id: string; name: string; category: string; distance: number; lat: number; lng: number; }
@@ -855,11 +864,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setSelectedComplex(null);
       }
 
-      // 지도 영역 변경 시 API 재조회 (디바운스 역할 — 오버레이 갱신과 함께)
+      // 지도 영역 변경 시 API 재조회 (500ms 디바운스)
       const sw = bounds.getSouthWest();
       const ne = bounds.getNorthEast();
       const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}`;
-      setMapBounds(newBounds);
+      debouncedSetBounds(newBounds);
 
       // 줌 ≤ 5: 단지별 라벨
       complexOverlaysRef.current.forEach((overlay, idx) => {
