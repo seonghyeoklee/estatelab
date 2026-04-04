@@ -3,6 +3,8 @@
  * Prisma where 조건을 생성하는 순수 함수 — 테스트 용이
  */
 
+import { APARTMENT_FILTER } from '@/lib/constants';
+
 export interface ApartmentSearchParams {
   q?: string;
   regionCode?: string;
@@ -99,8 +101,8 @@ export function buildWhereClause(params: ApartmentSearchParams): Record<string, 
     where.builtYear = { gte: params.minYear };
   }
 
-  // 지번 형태 이름 제외
-  where.NOT = { name: { startsWith: '(' } };
+  // 비아파트 제외 (지번형태 + 빌라/연립/오피스텔 등)
+  Object.assign(where, APARTMENT_FILTER);
 
   // 거래 있는 단지만
   where.trades = { some: {} };

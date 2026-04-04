@@ -33,7 +33,7 @@ export async function GET() {
     JOIN regions r ON r.code = c.region_code
     JOIN apartment_trades t ON t.complex_id = c.id
     WHERE c.lat IS NOT NULL AND c.lng IS NOT NULL
-      AND c.name NOT LIKE '(%'
+      AND c.name NOT LIKE '(%' AND c.name NOT LIKE '%빌라%' AND c.name NOT LIKE '%연립%' AND c.name NOT LIKE '%다세대%' AND c.name NOT LIKE '%오피스텔%' AND c.name NOT LIKE '%상가%' AND c.name NOT LIKE '%주택%'
       AND c.dong != ''
     GROUP BY c.region_code, c.dong, r.sigungu
     HAVING COUNT(t.id) > 0

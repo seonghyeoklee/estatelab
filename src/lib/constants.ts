@@ -23,6 +23,43 @@ export const MAJOR_CODES = [
 ];
 
 /**
+ * 비아파트 키워드 — 이름에 포함되면 필터링
+ */
+export const NON_APARTMENT_KEYWORDS = [
+  '빌라', '연립', '다세대', '타운하우스', '오피스텔',
+  '상가', '빌딩', '주택', '다가구', '원룸',
+];
+
+/**
+ * Prisma where 조건 — 비아파트 제외
+ */
+export const APARTMENT_FILTER = {
+  NOT: {
+    OR: [
+      { name: { startsWith: '(' } },
+      ...NON_APARTMENT_KEYWORDS.map((kw) => ({ name: { contains: kw } })),
+    ],
+  },
+};
+
+/**
+ * SQL WHERE 조건 — 비아파트 제외
+ */
+export const APARTMENT_SQL_FILTER = `
+  AND c.name NOT LIKE '(%'
+  AND c.name NOT LIKE '%빌라%'
+  AND c.name NOT LIKE '%연립%'
+  AND c.name NOT LIKE '%다세대%'
+  AND c.name NOT LIKE '%타운하우스%'
+  AND c.name NOT LIKE '%오피스텔%'
+  AND c.name NOT LIKE '%상가%'
+  AND c.name NOT LIKE '%빌딩%'
+  AND c.name NOT LIKE '%주택%'
+  AND c.name NOT LIKE '%다가구%'
+  AND c.name NOT LIKE '%원룸%'
+`;
+
+/**
  * 주변시설 카테고리
  */
 export const NEARBY_CATEGORIES: Record<string, { label: string; color: string; border: string }> = {

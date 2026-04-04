@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { APARTMENT_FILTER } from '@/lib/constants';
 import { pricePerPyeong } from '@/lib/calculations';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     lat: { not: null },
     lng: { not: null },
     trades: { some: {} },
-    NOT: { name: { startsWith: '(' } },
+    ...APARTMENT_FILTER,
   };
 
   // 영역 필터 + 줌 기반 제한

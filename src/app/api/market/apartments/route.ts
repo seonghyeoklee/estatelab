@@ -115,7 +115,7 @@ async function handleRawSortQuery(
       FROM apartment_complexes c
       JOIN regions r ON r.code = c.region_code
       JOIN apartment_trades t ON t.complex_id = c.id
-      WHERE c.name NOT LIKE '(%'
+      WHERE c.name NOT LIKE '(%' AND c.name NOT LIKE '%빌라%' AND c.name NOT LIKE '%연립%' AND c.name NOT LIKE '%다세대%' AND c.name NOT LIKE '%오피스텔%' AND c.name NOT LIKE '%상가%' AND c.name NOT LIKE '%주택%'
       GROUP BY c.id, r.sido, r.sigungu
     )
     SELECT
