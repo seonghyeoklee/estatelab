@@ -329,6 +329,49 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       .catch(() => {});
   }, []);
 
+  // 구별 가격 히트맵
+  interface RegionBoundary { regionCode: string; name: string; avgPrice: number; rings: { lat: number; lng: number }[][] }
+  const { data: boundaryData } = useSWR<{ data: RegionBoundary[] }>('/api/market/map/region-boundaries');
+  const heatmapPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
+
+  useEffect(() => {
+    heatmapPolygonsRef.current.forEach((p) => p.setMap(null));
+    heatmapPolygonsRef.current = [];
+
+    const map = mapInstanceRef.current;
+    if (!map || !boundaryData?.data?.length) return;
+
+    // 줌 ≥ 7 에서만 히트맵 표시
+    if (zoomLevel < 7) return;
+
+    const prices = boundaryData.data.map((r) => r.avgPrice);
+    const maxP = Math.max(...prices);
+    const minP = Math.min(...prices);
+    const range = maxP - minP || 1;
+
+    for (const region of boundaryData.data) {
+      // 가격 비율 → 색상 강도 (0.05 ~ 0.25)
+      const ratio = (region.avgPrice - minP) / range;
+      const opacity = 0.05 + ratio * 0.2;
+      // 높을수록 빨강, 낮을수록 파랑
+      const color = ratio > 0.6 ? '#ef4444' : ratio > 0.3 ? '#f59e0b' : '#3b82f6';
+
+      for (const ring of region.rings) {
+        const path = ring.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
+        const polygon = new kakao.maps.Polygon({
+          path,
+          strokeWeight: 1,
+          strokeColor: color,
+          strokeOpacity: 0.3,
+          fillColor: color,
+          fillOpacity: opacity,
+        });
+        polygon.setMap(map);
+        heatmapPolygonsRef.current.push(polygon);
+      }
+    }
+  }, [boundaryData, zoomLevel]);
+
   // 패널 열림/닫힘 시 지도 리사이즈
   useEffect(() => {
     if (mapInstanceRef.current) {
