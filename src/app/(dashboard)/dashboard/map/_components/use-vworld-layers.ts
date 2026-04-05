@@ -150,7 +150,6 @@ export function useVworldLayers({
       }
 
       clearLayer(key);
-      layersRef.current[key].lastBbox = bbox;
 
       const cacheKey = `${config.typeName}:${bbox}`;
       let features: unknown[];
@@ -162,10 +161,16 @@ export function useVworldLayers({
         try {
           const url = `/api/market/map/vworld-proxy?typeName=${config.typeName}&bbox=${bbox}&maxFeatures=100`;
           const res = await fetch(url);
-          if (!res.ok) return;
+          if (!res.ok) {
+            console.warn(`[VWORLD ${config.label}] HTTP ${res.status}`);
+            return;
+          }
           const json = await res.json();
           features = json.features ?? [];
-          cacheRef.current.set(cacheKey, features);
+          // 빈 응답은 캐시하지 않음 — 일시적 실패일 수 있음
+          if (features.length > 0) {
+            cacheRef.current.set(cacheKey, features);
+          }
         } catch (err) {
           console.error(`[VWORLD ${config.label}] 요청 실패:`, err);
           return;
@@ -173,6 +178,9 @@ export function useVworldLayers({
       }
 
       if (!features.length) return;
+
+      // 성공 시에만 lastBbox 저장
+      layersRef.current[key].lastBbox = bbox;
 
       // 현재 지도가 여전히 존재하는지 확인
       if (!map) return;
