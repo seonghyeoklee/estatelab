@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { formatPrice, formatPriceShort } from '@/lib/format';
 import {
@@ -36,27 +36,53 @@ interface ScatterPoint {
   area: number;
 }
 
-/** 이동평균 계산 */
-function calcMovingAverage(
-  data: ScatterPoint[],
-  windowSize: number
-): { dateNum: number; ma: number }[] {
-  if (data.length < windowSize) return [];
+/** LOESS 회귀선 계산 (locally weighted scatterplot smoothing) */
+function calcLoess(data: ScatterPoint[], bandwidth = 0.3): { dateNum: number; smooth: number }[] {
+  if (data.length < 4) return [];
   const sorted = [...data].sort((a, b) => a.dateNum - b.dateNum);
-  const result: { dateNum: number; ma: number }[] = [];
-  for (let i = windowSize - 1; i < sorted.length; i++) {
-    const window = sorted.slice(i - windowSize + 1, i + 1);
-    const avg = Math.round(window.reduce((s, d) => s + d.price, 0) / window.length);
-    result.push({ dateNum: sorted[i].dateNum, ma: avg });
+  const xs = sorted.map((d) => d.dateNum);
+  const ys = sorted.map((d) => d.price);
+  const n = xs.length;
+
+  // 약 30개 포인트로 보간
+  const steps = Math.min(30, n);
+  const xMin = xs[0], xMax = xs[n - 1];
+  const result: { dateNum: number; smooth: number }[] = [];
+
+  for (let s = 0; s < steps; s++) {
+    const x = xMin + (xMax - xMin) * (s / (steps - 1));
+    const h = bandwidth * (xMax - xMin);
+
+    let sumW = 0, sumWX = 0, sumWY = 0, sumWXX = 0, sumWXY = 0;
+    for (let i = 0; i < n; i++) {
+      const u = Math.abs(xs[i] - x) / h;
+      if (u > 1) continue;
+      const w = (1 - u * u * u);
+      const weight = w * w * w; // tricube kernel
+      sumW += weight;
+      sumWX += weight * xs[i];
+      sumWY += weight * ys[i];
+      sumWXX += weight * xs[i] * xs[i];
+      sumWXY += weight * xs[i] * ys[i];
+    }
+
+    if (sumW === 0) continue;
+    // weighted linear regression
+    const denom = sumW * sumWXX - sumWX * sumWX;
+    if (Math.abs(denom) < 1e-10) {
+      result.push({ dateNum: x, smooth: sumWY / sumW });
+    } else {
+      const b = (sumW * sumWXY - sumWX * sumWY) / denom;
+      const a = (sumWY - b * sumWX) / sumW;
+      result.push({ dateNum: x, smooth: Math.round(a + b * x) });
+    }
   }
   return result;
 }
 
 export function PriceChart({ trades, className }: Props) {
-  const [activeIdx, setActiveIdx] = useState<number | null>(null);
-
-  const { scatterData, trendData, recentAvg, recentCount, maxIdx, minIdx, tradeCount, yMin, yMax, changePct } = useMemo(() => {
-    if (trades.length === 0) return { scatterData: [], trendData: [], recentAvg: 0, recentCount: 0, maxIdx: -1, minIdx: -1, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
+  const { scatterData, loessData, recentAvg, recentCount, maxIdx, minIdx, tradeCount, yMin, yMax, changePct } = useMemo(() => {
+    if (trades.length === 0) return { scatterData: [], loessData: [], recentAvg: 0, recentCount: 0, maxIdx: -1, minIdx: -1, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
 
     const sorted = [...trades].sort((a, b) => a.dealDate.localeCompare(b.dealDate));
 
@@ -68,8 +94,7 @@ export function PriceChart({ trades, className }: Props) {
       area: t.area,
     }));
 
-    const windowSize = Math.min(5, Math.max(3, Math.floor(scatterData.length / 8)));
-    const trendData = calcMovingAverage(scatterData, windowSize);
+    const loessData = calcLoess(scatterData, 0.25);
 
     const now = new Date();
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -98,11 +123,8 @@ export function PriceChart({ trades, className }: Props) {
       if (scatterData[i].price < scatterData[minIdx].price) minIdx = i;
     }
 
-    return { scatterData, trendData, recentAvg, recentCount, maxIdx, minIdx, tradeCount: trades.length, yMin, yMax, changePct };
+    return { scatterData, loessData, recentAvg, recentCount, maxIdx, minIdx, tradeCount: trades.length, yMin, yMax, changePct };
   }, [trades]);
-
-  const handleMouseOver = useCallback((_: unknown, idx: number) => setActiveIdx(idx), []);
-  const handleMouseOut = useCallback(() => setActiveIdx(null), []);
 
   if (scatterData.length === 0) {
     return (
@@ -112,34 +134,21 @@ export function PriceChart({ trades, className }: Props) {
     );
   }
 
-  const activePoint = activeIdx !== null ? scatterData[activeIdx] : null;
-
   return (
     <div className={cn('space-y-1', className)}>
-      {/* 헤더 */}
+      {/* 헤더 — 항상 고정 */}
       <div>
-        {activePoint ? (
-          // 호버 시 해당 거래 정보
-          <div>
-            <p className="text-xs text-muted-foreground">{activePoint.date} · {activePoint.area}㎡ · {activePoint.floor}층</p>
-            <p className="text-2xl font-extrabold tracking-tight">{formatPrice(activePoint.price)}</p>
-          </div>
-        ) : (
-          // 기본: 최근 평균
-          <div>
-            <p className="text-xs text-muted-foreground">
-              최근 실거래 기준 {recentCount > 0 ? '1개월' : ''} 평균
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-extrabold tracking-tight">{formatPrice(recentAvg)}</p>
-              {changePct !== null && (
-                <span className={cn('text-sm font-bold', changePct >= 0 ? 'text-red-500' : 'text-blue-500')}>
-                  {changePct >= 0 ? '▲' : '▼'} {Math.abs(changePct)}%
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground">
+          최근 실거래 기준 {recentCount > 0 ? '1개월' : ''} 평균
+        </p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-2xl font-extrabold tracking-tight">{formatPrice(recentAvg)}</p>
+          {changePct !== null && (
+            <span className={cn('text-sm font-bold', changePct >= 0 ? 'text-red-500' : 'text-blue-500')}>
+              {changePct >= 0 ? '▲' : '▼'} {Math.abs(changePct)}%
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 차트 */}
@@ -168,37 +177,44 @@ export function PriceChart({ trades, className }: Props) {
             tickFormatter={(v: number) => formatPriceShort(v)}
             width={40}
           />
-          <Tooltip content={() => null} />
 
-          {/* 추세선 — Scatter 위에 Line으로 별도 데이터 */}
+          {/* 말풍선 툴팁 */}
+          <Tooltip
+            cursor={{ stroke: '#e2e8f0', strokeDasharray: '3 3' }}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const d = payload[0]?.payload;
+              if (!d?.price || !d?.area) return null;
+              return (
+                <div className="rounded-lg border bg-white px-3 py-2 shadow-lg text-xs space-y-0.5">
+                  <p className="font-bold text-sm">{formatPrice(d.price)}</p>
+                  <p className="text-muted-foreground">{d.area}㎡ · {d.floor}층</p>
+                  <p className="text-muted-foreground">{d.date}</p>
+                </div>
+              );
+            }}
+          />
+
+          {/* LOESS 회귀선 */}
           <Scatter
-            data={trendData}
-            dataKey="ma"
+            data={loessData}
+            dataKey="smooth"
             fill="none"
-            line={{ stroke: '#4338ca', strokeWidth: 2 }}
+            line={{ stroke: '#4338ca', strokeWidth: 2.5 }}
             shape={() => null}
             isAnimationActive={false}
           />
 
-          {/* 산점도 — 개별 거래 점 */}
-          <Scatter
-            data={scatterData}
-            dataKey="price"
-            isAnimationActive={false}
-            onMouseOver={handleMouseOver}
-            onMouseOut={handleMouseOut}
-          >
+          {/* 산점도 */}
+          <Scatter data={scatterData} dataKey="price" isAnimationActive={false}>
             {scatterData.map((_, idx) => {
               const isMax = idx === maxIdx;
               const isMin = idx === minIdx;
-              const isActive = idx === activeIdx;
               return (
                 <Cell
                   key={idx}
                   fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#059669'}
-                  r={isActive ? 5 : isMax || isMin ? 4 : 2.5}
-                  stroke={isActive ? '#059669' : 'none'}
-                  strokeWidth={isActive ? 2 : 0}
+                  r={isMax || isMin ? 4.5 : 2.5}
                   cursor="pointer"
                 />
               );
@@ -225,7 +241,7 @@ export function PriceChart({ trades, className }: Props) {
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-0.5 bg-indigo-700 rounded" />
-            추세
+            시세
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-primary" />
