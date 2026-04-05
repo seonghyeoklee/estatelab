@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Wallet, Info, Search, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatPriceShort } from '@/lib/format';
 import { calculateMortgage, maxLoanByIncome } from '@/lib/mortgage';
 import {
   ResponsiveContainer,
@@ -202,7 +202,7 @@ function CalculatorContent() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatPrice(v)} width={45} />
+                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatPriceShort(v)} width={45} />
                 <Tooltip formatter={(value) => [formatPrice(Number(value)), '잔금']} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }} />
                 <Area type="monotone" dataKey="balance" stroke="#059669" strokeWidth={2} fill="url(#balGrad)" dot={false} />
               </AreaChart>
