@@ -169,8 +169,8 @@ export function PriceChart({ trades, className }: Props) {
         <ComposedChart margin={{ top: 15, right: 8, left: -10, bottom: 0 }}>
           <defs>
             <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.08} />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.08} />
+              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.18} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -248,8 +248,8 @@ export function PriceChart({ trades, className }: Props) {
                 <Cell
                   key={idx}
                   fill={isMax ? '#dc2626' : isMin ? '#2563eb' : '#f87171'}
-                  r={isMax || isMin ? 4 : 1.8}
-                  opacity={isMax || isMin ? 1 : 0.5}
+                  r={isMax || isMin ? 3.5 : 1.2}
+                  opacity={isMax || isMin ? 1 : 0.6}
                   cursor="pointer"
                 />
               );
