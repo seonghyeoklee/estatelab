@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Building2, List, X, ZoomIn, ZoomOut, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows } from 'lucide-react';
+import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
@@ -1251,19 +1251,31 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           )}
         </div>
 
-        {/* 줌 컨트롤 */}
-        <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
-          <button onClick={handleZoomIn} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
-            <ZoomIn className="h-3.5 w-3.5" />
-            확대
+      </div>
+
+      {/* 줌 컨트롤 — 우측 하단 */}
+      <div className="absolute bottom-12 right-3 z-[20] flex flex-col gap-1.5">
+        <button
+          onClick={handleFitBounds}
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent transition-colors"
+          title="전체 보기"
+        >
+          <Locate className="h-4 w-4 text-foreground" />
+        </button>
+        <div className="flex flex-col rounded-full bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
+          <button
+            onClick={handleZoomIn}
+            className="flex items-center justify-center w-9 h-9 hover:bg-accent transition-colors border-b border-border/30"
+            title="확대"
+          >
+            <Plus className="h-4 w-4 text-foreground" />
           </button>
-          <button onClick={handleZoomOut} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors border-b border-border/30">
-            <ZoomOut className="h-3.5 w-3.5" />
-            축소
-          </button>
-          <button onClick={handleFitBounds} className="flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-accent transition-colors">
-            <Locate className="h-3.5 w-3.5" />
-            전체 보기
+          <button
+            onClick={handleZoomOut}
+            className="flex items-center justify-center w-9 h-9 hover:bg-accent transition-colors"
+            title="축소"
+          >
+            <Minus className="h-4 w-4 text-foreground" />
           </button>
         </div>
       </div>
