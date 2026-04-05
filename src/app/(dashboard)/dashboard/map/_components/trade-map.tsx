@@ -292,10 +292,10 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           path,
           strokeWeight: 3,
           strokeColor: '#059669',
-          strokeOpacity: 0.7,
+          strokeOpacity: 0.8,
           strokeStyle: 'solid',
           fillColor: '#059669',
-          fillOpacity: 0.05,
+          fillOpacity: 0.03,
         });
         polygon.setMap(map);
         boundaryPolygonsRef.current.push(polygon);
@@ -329,45 +329,35 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       .catch(() => {});
   }, []);
 
-  // 구별 가격 히트맵
+  // 구별 경계선 (줌 ≥ 7에서 자동 표시)
   interface RegionBoundary { regionCode: string; name: string; avgPrice: number; rings: { lat: number; lng: number }[][] }
   const { data: boundaryData } = useSWR<{ data: RegionBoundary[] }>('/api/market/map/region-boundaries');
-  const heatmapPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
+  const regionLinePolygonsRef = useRef<kakao.maps.Polygon[]>([]);
 
   useEffect(() => {
-    heatmapPolygonsRef.current.forEach((p) => p.setMap(null));
-    heatmapPolygonsRef.current = [];
+    regionLinePolygonsRef.current.forEach((p) => p.setMap(null));
+    regionLinePolygonsRef.current = [];
 
     const map = mapInstanceRef.current;
     if (!map || !boundaryData?.data?.length) return;
 
-    // 줌 ≥ 7 에서만 히트맵 표시
+    // 줌 ≥ 7 (구별 모드)에서만 경계선 표시
     if (zoomLevel < 7) return;
 
-    const prices = boundaryData.data.map((r) => r.avgPrice);
-    const maxP = Math.max(...prices);
-    const minP = Math.min(...prices);
-    const range = maxP - minP || 1;
-
     for (const region of boundaryData.data) {
-      // 가격 비율 → 색상 강도 (0.05 ~ 0.25)
-      const ratio = (region.avgPrice - minP) / range;
-      const opacity = 0.05 + ratio * 0.2;
-      // 높을수록 빨강, 낮을수록 파랑
-      const color = ratio > 0.6 ? '#ef4444' : ratio > 0.3 ? '#f59e0b' : '#3b82f6';
-
       for (const ring of region.rings) {
         const path = ring.map((c) => new kakao.maps.LatLng(c.lat, c.lng));
         const polygon = new kakao.maps.Polygon({
           path,
-          strokeWeight: 1,
-          strokeColor: color,
-          strokeOpacity: 0.3,
-          fillColor: color,
-          fillOpacity: opacity,
+          strokeWeight: 2,
+          strokeColor: '#64748b',
+          strokeOpacity: 0.5,
+          strokeStyle: 'solid',
+          fillColor: 'transparent',
+          fillOpacity: 0,
         });
         polygon.setMap(map);
-        heatmapPolygonsRef.current.push(polygon);
+        regionLinePolygonsRef.current.push(polygon);
       }
     }
   }, [boundaryData, zoomLevel]);
@@ -824,6 +814,15 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       });
       content.dataset.complexId = complex.id;
 
+      // 선택된 단지면 marker-selected 클래스 복원
+      if (selectedComplex?.id === complex.id) {
+        content.classList.add('marker-selected');
+        content.style.outline = '3px solid white';
+        content.style.border = `2px solid ${color.border}`;
+        content.style.zIndex = '9999';
+        selectedOverlayRef.current = content;
+      }
+
       // NEW 뱃지 — 최근 30일 내 거래
       if (complex.latestDealDate) {
         const daysDiff = (Date.now() - new Date(complex.latestDealDate).getTime()) / 86400000;
@@ -1074,7 +1073,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   }
 
   return (
-    <div className={cn('relative h-full', selectedComplex && 'markers-dimmed')}>
+    <div className="relative h-full">
       {/* 지도 내 검색 */}
       <MapSearchBar
         complexes={complexes}

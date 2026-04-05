@@ -23,9 +23,15 @@ const SEOUL_CODES = [
   '11530', '11545', '11560', '11590', '11620', '11650', '11680', '11710', '11740',
 ];
 
-const MAJOR_CODES = [
-  ...SEOUL_CODES,
+const GYEONGGI_CODES = [
+  '41192', '41194', '41196',
   '41117', '41135', '41173', '41190', '41285', '41465', '41570',
+];
+
+const SEOUL_GYEONGGI_CODES = [...SEOUL_CODES, ...GYEONGGI_CODES];
+
+const MAJOR_CODES = [
+  ...SEOUL_GYEONGGI_CODES,
   '26350', '26260', '28185', '28260',
 ];
 
@@ -42,7 +48,9 @@ function getRecentMonths(count: number): string[] {
 async function main() {
   const monthCount = parseInt(process.argv.find(a => a.startsWith('--months='))?.split('=')[1] || '12', 10);
   const regionArg = process.argv.find(a => a.startsWith('--regions='))?.split('=')[1] || 'seoul';
-  const codes = regionArg === 'all' ? MAJOR_CODES : SEOUL_CODES;
+  const codes = regionArg === 'all' ? MAJOR_CODES
+    : regionArg === 'seoul-gyeonggi' ? SEOUL_GYEONGGI_CODES
+    : SEOUL_CODES;
   const months = getRecentMonths(monthCount);
 
   const pool = new Pool({
