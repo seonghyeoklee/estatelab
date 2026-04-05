@@ -262,6 +262,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
     const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=50`;
 
+    // 단지명에서 괄호 앞 부분 추출 — "덕유마을(주공4)" → "덕유마을"
+    const baseName = selectedComplex.name.replace(/\(.*\)/, '').trim();
+
     fetch(proxyUrl)
       .then((r) => r.ok ? r.json() : null)
       .then((geojson) => {
@@ -270,6 +273,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         const buildings: { lat: number; lng: number }[][] = [];
         for (const f of geojson.features) {
           try {
+            // 건물명이 단지명을 포함하는 건물만 필터
+            const buldNm = f.properties?.buld_nm || '';
+            const buldNmDc = f.properties?.buld_nm_dc || '';
+            if (buldNm && !buldNm.includes(baseName) && !buldNmDc.includes(baseName)) continue;
+
             const coords = f.geometry.type === 'MultiPolygon'
               ? f.geometry.coordinates[0][0]
               : f.geometry.coordinates[0];
