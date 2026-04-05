@@ -5,7 +5,8 @@ import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus, Construction, GraduationCap, TreePine, Store } from 'lucide-react';
+import { Building2, List, X, Locate, Search, ArrowUpDown, Eye, GitCompareArrows, Plus, Minus, Settings2 } from 'lucide-react';
+import { MapSettingsPanel } from './map-settings-panel';
 import { cn } from '@/lib/utils';
 import { formatPrice, formatPriceShort } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
@@ -243,6 +244,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [showGreenbelt, setShowGreenbelt] = useState(false);
   const [showLandUse, setShowLandUse] = useState(false);
   const [showCommercial, setShowCommercial] = useState(false);
+  const [showBuildingPolygon, setShowBuildingPolygon] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
   const polygonCacheRef = useRef<Map<string, { lat: number; lng: number }[][]>>(new Map());
@@ -264,7 +267,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     buildingPolygonsRef.current = [];
 
     const map = mapInstanceRef.current;
-    if (!map || !selectedComplex?.lat || !selectedComplex?.lng) return;
+    if (!showBuildingPolygon || !map || !selectedComplex?.lat || !selectedComplex?.lng) return;
 
     const cacheKey = selectedComplex.id;
 
@@ -328,7 +331,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         renderPolygons(buildings);
       })
       .catch(() => {});
-  }, [selectedComplex]);
+  }, [selectedComplex, showBuildingPolygon]);
 
   // 구/동 클릭 시 행정구역 경계선 표시
   const boundaryPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
@@ -1272,127 +1275,45 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           목록 보기
         </button>
 
-        {/* 지도 타입 + 지적편집도 */}
-        <div className="flex flex-col rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm overflow-hidden">
-          <button
-            onClick={toggleMapType}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-b border-border/30',
-              mapType === 'skyview' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
-            )}
-          >
-            {mapType === 'road' ? <Satellite className="h-3.5 w-3.5" /> : <MapIcon className="h-3.5 w-3.5" />}
-            {mapType === 'road' ? '위성지도' : '일반지도'}
-          </button>
-          <button
-            onClick={toggleDistrict}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors',
-              showDistrict ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
-            )}
-          >
-            <Layers className="h-3.5 w-3.5" />
-            지적편집도
-            {showDistrict && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowRedevelopment(!showRedevelopment)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showRedevelopment ? 'bg-orange-50 text-orange-600' : 'hover:bg-accent'
-            )}
-          >
-            <Construction className="h-3.5 w-3.5" />
-            재개발
-            {showRedevelopment && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-orange-500" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowSchoolZone(!showSchoolZone)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showSchoolZone ? 'bg-yellow-50 text-yellow-600' : 'hover:bg-accent'
-            )}
-          >
-            <GraduationCap className="h-3.5 w-3.5" />
-            학군
-            {showSchoolZone && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-yellow-500" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowGreenbelt(!showGreenbelt)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showGreenbelt ? 'bg-green-50 text-green-600' : 'hover:bg-accent'
-            )}
-          >
-            <TreePine className="h-3.5 w-3.5" />
-            그린벨트
-            {showGreenbelt && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowLandUse(!showLandUse)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showLandUse ? 'bg-violet-50 text-violet-600' : 'hover:bg-accent'
-            )}
-          >
-            <MapIcon className="h-3.5 w-3.5" />
-            용도지역
-            {showLandUse && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-500" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowCommercial(!showCommercial)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showCommercial ? 'bg-pink-50 text-pink-600' : 'hover:bg-accent'
-            )}
-          >
-            <Store className="h-3.5 w-3.5" />
-            상권
-            {showCommercial && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-pink-500" />
-            )}
-          </button>
-          <button
-            onClick={() => setShowNearby(!showNearby)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-              showNearby && selectedComplex ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
-            )}
-          >
-            <MapPinned className="h-3.5 w-3.5" />
-            주변시설
-            {showNearby && selectedComplex && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-            )}
-          </button>
-          {selectedComplex && roadviewAvailable && (
-            <button
-              onClick={() => setShowRoadview(!showRoadview)}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
-                showRoadview ? 'bg-primary/10 text-primary' : 'hover:bg-accent'
-              )}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              로드뷰
-              {showRoadview && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-              )}
-            </button>
+        {/* 설정 버튼 */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={cn(
+            'flex items-center gap-1.5 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-white transition-all',
+            showSettings && 'bg-primary/10 text-primary'
           )}
-        </div>
-
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+          설정
+        </button>
       </div>
+
+      {/* 설정 패널 */}
+      <MapSettingsPanel
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        mapType={mapType}
+        onToggleMapType={toggleMapType}
+        showDistrict={showDistrict}
+        onToggleDistrict={toggleDistrict}
+        showRedevelopment={showRedevelopment}
+        onToggleRedevelopment={() => setShowRedevelopment(!showRedevelopment)}
+        showSchoolZone={showSchoolZone}
+        onToggleSchoolZone={() => setShowSchoolZone(!showSchoolZone)}
+        showGreenbelt={showGreenbelt}
+        onToggleGreenbelt={() => setShowGreenbelt(!showGreenbelt)}
+        showLandUse={showLandUse}
+        onToggleLandUse={() => setShowLandUse(!showLandUse)}
+        showCommercial={showCommercial}
+        onToggleCommercial={() => setShowCommercial(!showCommercial)}
+        showNearby={showNearby}
+        onToggleNearby={() => setShowNearby(!showNearby)}
+        showBuildingPolygon={showBuildingPolygon}
+        onToggleBuildingPolygon={() => setShowBuildingPolygon(!showBuildingPolygon)}
+        showRoadview={showRoadview}
+        onToggleRoadview={() => setShowRoadview(!showRoadview)}
+        roadviewAvailable={roadviewAvailable && !!selectedComplex}
+      />
 
       {/* 줌 컨트롤 — 우측 하단 */}
       <div className="absolute bottom-12 right-3 z-[20] flex flex-col gap-1.5">
