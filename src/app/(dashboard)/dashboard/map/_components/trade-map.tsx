@@ -212,11 +212,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     buildingPolygonsRef.current = [];
 
     const map = mapInstanceRef.current;
-    const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
-    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !vworldKey) {
-      if (!vworldKey) console.warn('[건물폴리곤] NEXT_PUBLIC_VWORLD_API_KEY 미설정');
-      return;
-    }
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng) return;
 
     const cacheKey = selectedComplex.id;
 
@@ -251,17 +247,15 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`;
-    console.log('[건물폴리곤] 요청:', selectedComplex.name, bbox);
+    const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=50`;
 
-    fetch(url)
+    fetch(proxyUrl)
       .then((r) => {
-        if (!r.ok) { console.warn('[건물폴리곤] HTTP 오류:', r.status, r.statusText); return null; }
+        if (!r.ok) { console.warn('[건물폴리곤] HTTP 오류:', r.status); return null; }
         return r.json();
       })
       .then((geojson) => {
         if (!geojson) return;
-        console.log('[건물폴리곤] 응답:', geojson.features?.length ?? 0, '건');
         if (!geojson.features?.length) return;
 
         const buildings: { lat: number; lng: number }[][] = [];
@@ -286,8 +280,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
   const showBoundary = useCallback((lat: number, lng: number, type: 'sigg' | 'emd') => {
     const map = mapInstanceRef.current;
-    const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
-    if (!map || !vworldKey) return;
+    if (!map) return;
 
     // 이전 경계 제거
     boundaryPolygonsRef.current.forEach((p) => p.setMap(null));
@@ -319,7 +312,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const r = 0.005;
     const bbox = `${lng - r},${lat - r},${lng + r},${lat + r}`;
 
-    fetch(`https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=${layerName}&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=1&key=${vworldKey}`)
+    fetch(`/api/market/map/vworld-proxy?typeName=${layerName}&bbox=${bbox}&maxFeatures=1`)
       .then((res) => res.json())
       .then((geojson) => {
         if (!geojson.features?.length) return;
