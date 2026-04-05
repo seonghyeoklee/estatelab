@@ -192,9 +192,9 @@ export function PriceChart({ trades, className }: Props) {
               return (
                 <Cell
                   key={idx}
-                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#94a3b8'}
-                  r={isMax || isMin ? 5 : 2.5}
-                  opacity={isMax || isMin ? 1 : 0.5}
+                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#059669'}
+                  r={isMax || isMin ? 6 : 3.5}
+                  opacity={isMax || isMin ? 1 : 0.85}
                 />
               );
             })}
@@ -233,7 +233,7 @@ export function PriceChart({ trades, className }: Props) {
             추세
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400" />
+            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
             거래
           </span>
         </div>

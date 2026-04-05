@@ -246,14 +246,6 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
     return trades.filter((t) => t.area === areaFilter);
   }, [trades, areaFilter]);
 
-  // 통계 (필터된 거래 기준)
-  const tradeCount = filteredTrades.length;
-  const avgPrice = tradeCount
-    ? Math.round(filteredTrades.reduce((s, t) => s + t.price, 0) / tradeCount)
-    : 0;
-  const maxPrice = tradeCount ? Math.max(...filteredTrades.map((t) => t.price)) : 0;
-  const minPrice = tradeCount ? Math.min(...filteredTrades.map((t) => t.price)) : 0;
-
   // 가격 변동률
   const priceChange = useMemo(() => calcPriceChange(filteredTrades), [filteredTrades]);
 
@@ -321,26 +313,6 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                 >
                   <X className="h-4 w-4" />
                 </button>
-              </div>
-            </div>
-
-            {/* 핵심 통계 */}
-            <div className="grid grid-cols-4 gap-2 mt-4">
-              <div className="rounded-xl bg-primary/5 p-3 text-center">
-                <p className="text-[12px] text-muted-foreground">평균</p>
-                <p className="text-lg font-bold text-primary">{formatPrice(avgPrice)}</p>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-3 text-center">
-                <p className="text-[12px] text-muted-foreground">최고</p>
-                <p className="text-lg font-bold">{formatPrice(maxPrice)}</p>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-3 text-center">
-                <p className="text-[12px] text-muted-foreground">최저</p>
-                <p className="text-lg font-bold">{formatPrice(minPrice)}</p>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-3 text-center">
-                <p className="text-[12px] text-muted-foreground">거래</p>
-                <p className="text-lg font-bold">{tradeCount}건</p>
               </div>
             </div>
 
