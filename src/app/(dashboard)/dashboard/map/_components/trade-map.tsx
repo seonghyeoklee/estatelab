@@ -70,13 +70,14 @@ const MARKER_COLOR_CLUSTER = { bg: '#065f46', text: '#fff', border: '#064e3b' };
 function createPriceLabel(opts: {
   title: string;
   price: string;
+  areaLabel?: string;
   subtitle?: string;
   hoverInfo?: { name: string; tradeCount: number; minPrice: string; maxPrice: string };
   color: { bg: string; text: string; border: string };
   size: 'sm' | 'md' | 'lg';
   onClick?: () => void;
 }): HTMLDivElement {
-  const { title, price, subtitle, hoverInfo, color, size, onClick } = opts;
+  const { title, price, areaLabel, subtitle, hoverInfo, color, size, onClick } = opts;
 
   const priceSize = size === 'lg' ? '13px' : size === 'md' ? '12px' : '11px';
   const pad = size === 'lg' ? '4px 10px' : size === 'md' ? '3px 8px' : '2px 6px';
@@ -89,6 +90,39 @@ function createPriceLabel(opts: {
     box-shadow:0 1px 4px rgba(0,0,0,0.15);border:1.5px solid ${color.border};
     transition:all 0.2s ease;position:relative;
   `;
+
+  // 호버 팝업 — 마커 위에 absolute 표시
+  let popupEl: HTMLDivElement | null = null;
+  if (hoverInfo) {
+    popupEl = document.createElement('div');
+    popupEl.style.cssText = `
+      display:none;flex-direction:column;align-items:center;gap:2px;
+      position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+      background:rgba(0,0,0,0.85);color:white;padding:6px 10px;border-radius:8px;
+      white-space:nowrap;pointer-events:none;z-index:20;
+    `;
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'font-size:12px;font-weight:700;line-height:1.3;max-width:140px;overflow:hidden;text-overflow:ellipsis';
+    nameSpan.textContent = hoverInfo.name;
+    popupEl.appendChild(nameSpan);
+
+    const rangeSpan = document.createElement('span');
+    rangeSpan.style.cssText = 'font-size:11px;opacity:0.9;line-height:1.3';
+    rangeSpan.textContent = `${hoverInfo.minPrice} ~ ${hoverInfo.maxPrice}`;
+    popupEl.appendChild(rangeSpan);
+
+    const countSpan = document.createElement('span');
+    countSpan.style.cssText = 'font-size:10px;opacity:0.7;line-height:1.3';
+    countSpan.textContent = `매매 ${hoverInfo.tradeCount}건`;
+    popupEl.appendChild(countSpan);
+
+    // 팝업 하단 꼬리
+    const popupTail = document.createElement('div');
+    popupTail.style.cssText = 'position:absolute;top:100%;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid rgba(0,0,0,0.85)';
+    popupEl.appendChild(popupTail);
+
+    el.appendChild(popupEl);
+  }
 
   // 클러스터(동별/구별)용 타이틀
   if (subtitle) {
@@ -104,6 +138,14 @@ function createPriceLabel(opts: {
   priceSpan.style.cssText = `font-size:${priceSize};font-weight:800;line-height:1.3;letter-spacing:-0.02em`;
   priceSpan.textContent = price;
   el.appendChild(priceSpan);
+
+  // 면적 (단지 마커용)
+  if (areaLabel) {
+    const areaSpan = document.createElement('span');
+    areaSpan.style.cssText = 'font-size:9px;opacity:0.7;line-height:1;margin-top:1px';
+    areaSpan.textContent = areaLabel;
+    el.appendChild(areaSpan);
+  }
 
   // 클러스터 서브타이틀
   if (subtitle) {
@@ -121,35 +163,7 @@ function createPriceLabel(opts: {
   tailInner.style.cssText = `position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:2px solid transparent;border-right:2px solid transparent;border-top:3px solid ${color.bg}`;
   el.appendChild(tailInner);
 
-  // 호버 확장 영역 (숨김)
-  let expandEl: HTMLDivElement | null = null;
-  if (hoverInfo) {
-    expandEl = document.createElement('div');
-    expandEl.style.cssText = `
-      display:none;flex-direction:column;align-items:center;gap:1px;
-      margin-top:2px;padding-top:3px;border-top:1px solid rgba(255,255,255,0.3);
-      width:100%;
-    `;
-    const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-size:10px;font-weight:700;line-height:1.2;max-width:100px;overflow:hidden;text-overflow:ellipsis';
-    nameSpan.textContent = hoverInfo.name;
-    expandEl.appendChild(nameSpan);
-
-    const rangeSpan = document.createElement('span');
-    rangeSpan.style.cssText = 'font-size:9px;opacity:0.85;line-height:1.2';
-    rangeSpan.textContent = `${hoverInfo.minPrice}~${hoverInfo.maxPrice}`;
-    expandEl.appendChild(rangeSpan);
-
-    const countSpan = document.createElement('span');
-    countSpan.style.cssText = 'font-size:8px;opacity:0.7;line-height:1.2';
-    countSpan.textContent = `${hoverInfo.tradeCount}건`;
-    expandEl.appendChild(countSpan);
-
-    el.appendChild(expandEl);
-  }
-
   el.onmouseenter = () => {
-    // 색 반전
     el.style.background = color.text;
     el.style.color = color.bg;
     el.style.borderColor = color.bg;
@@ -158,7 +172,7 @@ function createPriceLabel(opts: {
     el.style.zIndex = '10';
     tail.style.borderTopColor = color.bg;
     tailInner.style.borderTopColor = color.text;
-    if (expandEl) expandEl.style.display = 'flex';
+    if (popupEl) popupEl.style.display = 'flex';
   };
   el.onmouseleave = () => {
     if (!el.classList.contains('marker-selected')) {
@@ -170,7 +184,7 @@ function createPriceLabel(opts: {
       el.style.zIndex = '';
       tail.style.borderTopColor = color.border;
       tailInner.style.borderTopColor = color.bg;
-      if (expandEl) expandEl.style.display = 'none';
+      if (popupEl) popupEl.style.display = 'none';
     }
   };
 
@@ -877,12 +891,16 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         void content.offsetWidth;
         content.classList.add('marker-bounce');
         content.style.zIndex = '9999';
+        // 색 반전 (선택 상태)
+        content.style.background = color.text;
+        content.style.color = color.bg;
+        content.style.borderColor = color.bg;
         setTimeout(() => {
           content.classList.remove('marker-bounce');
           content.classList.add('marker-selected');
         }, 600);
         content.style.outline = '3px solid white';
-        content.style.border = `2px solid ${color.border}`;
+        content.style.border = `2px solid ${color.bg}`;
         selectedOverlayRef.current = content;
         setTimeout(() => panToWithOffset(complex.lat!, complex.lng!), 50);
       };
@@ -892,9 +910,16 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       const minP = allPrices.length > 0 ? Math.min(...allPrices) : complex.avgPrice;
       const maxP = allPrices.length > 0 ? Math.max(...allPrices) : complex.avgPrice;
 
+      // 대표 면적 라벨 (가장 거래 많은 면적)
+      const mainArea = complex.areas?.length
+        ? complex.areas.reduce((m, a) => a.count > m.count ? a : m, complex.areas[0])
+        : null;
+      const areaLabel = mainArea ? `${mainArea.area}㎡` : undefined;
+
       const content = createPriceLabel({
         title: complex.name,
         price: priceLabel,
+        areaLabel,
         hoverInfo: {
           name: complex.name,
           tradeCount: complex._count.trades,
