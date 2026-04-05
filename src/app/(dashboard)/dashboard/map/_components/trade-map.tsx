@@ -1275,17 +1275,6 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           목록 보기
         </button>
 
-        {/* 설정 버튼 */}
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className={cn(
-            'flex items-center gap-1.5 rounded-lg bg-white/95 backdrop-blur-sm border border-border/50 px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-white transition-all',
-            showSettings && 'bg-primary/10 text-primary'
-          )}
-        >
-          <Settings2 className="h-3.5 w-3.5" />
-          설정
-        </button>
       </div>
 
       {/* 설정 패널 */}
@@ -1315,8 +1304,21 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         roadviewAvailable={roadviewAvailable && !!selectedComplex}
       />
 
-      {/* 줌 컨트롤 — 우측 하단 */}
+      {/* 줌 컨트롤 + 설정 — 우측 하단 */}
       <div className="absolute bottom-12 right-3 z-[20] flex flex-col gap-1.5">
+        {/* 설정 버튼 */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={cn(
+            'flex items-center justify-center w-9 h-9 rounded-full backdrop-blur-sm border shadow-sm transition-colors',
+            showSettings
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-white/95 border-border/50 hover:bg-accent text-foreground'
+          )}
+          title="지도 설정"
+        >
+          <Settings2 className="h-4 w-4" />
+        </button>
         <button
           onClick={handleFitBounds}
           className="flex items-center justify-center w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent transition-colors"
