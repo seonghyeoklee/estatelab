@@ -63,50 +63,48 @@ const MARKER_COLOR_CLUSTER = { bg: '#065f46', text: '#fff', border: '#064e3b' };
 
 
 
-// 가격 라벨 엘리먼트 생성 — 단일 컬러, 가격 텍스트 강조
+/**
+ * 단지 마커 생성 — 기본: 가격만, 호버: 반전 + 상세 정보
+ */
 function createPriceLabel(opts: {
   title: string;
   price: string;
   subtitle?: string;
+  hoverInfo?: { name: string; tradeCount: number; minPrice: string; maxPrice: string };
   color: { bg: string; text: string; border: string };
   size: 'sm' | 'md' | 'lg';
   onClick?: () => void;
 }): HTMLDivElement {
-  const { title, price, subtitle, color, size, onClick } = opts;
+  const { title, price, subtitle, hoverInfo, color, size, onClick } = opts;
 
-  const pad = size === 'lg' ? '5px 12px' : size === 'md' ? '4px 10px' : '3px 8px';
-  const titleSize = size === 'lg' ? '12px' : size === 'md' ? '11px' : '10px';
-  const priceSize = size === 'lg' ? '14px' : size === 'md' ? '13px' : '11px';
-  const radius = '10px';
-  const maxTitleWidth = size === 'lg' ? '120px' : '90px';
+  const priceSize = size === 'lg' ? '13px' : size === 'md' ? '12px' : '11px';
+  const pad = size === 'lg' ? '4px 10px' : size === 'md' ? '3px 8px' : '2px 6px';
 
   const el = document.createElement('div');
   el.style.cssText = `
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: ${color.bg};
-    color: ${color.text};
-    padding: ${pad};
-    border-radius: ${radius};
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.18);
-    border: 1.5px solid ${color.border};
-    transition: transform 0.15s, box-shadow 0.15s;
-    position: relative;
+    display:flex;flex-direction:column;align-items:center;
+    background:${color.bg};color:${color.text};
+    padding:${pad};border-radius:8px;cursor:pointer;white-space:nowrap;
+    box-shadow:0 1px 4px rgba(0,0,0,0.15);border:1.5px solid ${color.border};
+    transition:all 0.2s ease;position:relative;
   `;
 
-  const titleSpan = document.createElement('span');
-  titleSpan.style.cssText = `font-size:${titleSize};font-weight:600;opacity:0.95;max-width:${maxTitleWidth};overflow:hidden;text-overflow:ellipsis;line-height:1.2`;
-  titleSpan.textContent = title;
-  el.appendChild(titleSpan);
+  // 클러스터(동별/구별)용 타이틀
+  if (subtitle) {
+    const titleSize = size === 'lg' ? '12px' : '11px';
+    const titleSpan = document.createElement('span');
+    titleSpan.style.cssText = `font-size:${titleSize};font-weight:600;opacity:0.95;line-height:1.2;max-width:100px;overflow:hidden;text-overflow:ellipsis`;
+    titleSpan.textContent = title;
+    el.appendChild(titleSpan);
+  }
 
+  // 가격
   const priceSpan = document.createElement('span');
   priceSpan.style.cssText = `font-size:${priceSize};font-weight:800;line-height:1.3;letter-spacing:-0.02em`;
   priceSpan.textContent = price;
   el.appendChild(priceSpan);
 
+  // 클러스터 서브타이틀
   if (subtitle) {
     const subSpan = document.createElement('span');
     subSpan.style.cssText = 'font-size:8px;opacity:0.65;line-height:1';
@@ -114,27 +112,64 @@ function createPriceLabel(opts: {
     el.appendChild(subSpan);
   }
 
-  // NEW 뱃지 슬롯 (외부에서 추가)
-  el.dataset.badgeSlot = 'true';
-
   // 하단 꼬리
   const tail = document.createElement('div');
-  tail.style.cssText = `position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid ${color.border};`;
+  tail.style.cssText = `position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid ${color.border}`;
   el.appendChild(tail);
   const tailInner = document.createElement('div');
-  tailInner.style.cssText = `position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid ${color.bg};`;
+  tailInner.style.cssText = `position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:2px solid transparent;border-right:2px solid transparent;border-top:3px solid ${color.bg}`;
   el.appendChild(tailInner);
 
+  // 호버 확장 영역 (숨김)
+  let expandEl: HTMLDivElement | null = null;
+  if (hoverInfo) {
+    expandEl = document.createElement('div');
+    expandEl.style.cssText = `
+      display:none;flex-direction:column;align-items:center;gap:1px;
+      margin-top:2px;padding-top:3px;border-top:1px solid rgba(255,255,255,0.3);
+      width:100%;
+    `;
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'font-size:10px;font-weight:700;line-height:1.2;max-width:100px;overflow:hidden;text-overflow:ellipsis';
+    nameSpan.textContent = hoverInfo.name;
+    expandEl.appendChild(nameSpan);
+
+    const rangeSpan = document.createElement('span');
+    rangeSpan.style.cssText = 'font-size:9px;opacity:0.85;line-height:1.2';
+    rangeSpan.textContent = `${hoverInfo.minPrice}~${hoverInfo.maxPrice}`;
+    expandEl.appendChild(rangeSpan);
+
+    const countSpan = document.createElement('span');
+    countSpan.style.cssText = 'font-size:8px;opacity:0.7;line-height:1.2';
+    countSpan.textContent = `${hoverInfo.tradeCount}건`;
+    expandEl.appendChild(countSpan);
+
+    el.appendChild(expandEl);
+  }
+
   el.onmouseenter = () => {
-    el.style.transform = 'scale(1.08) translateY(-2px)';
+    // 색 반전
+    el.style.background = color.text;
+    el.style.color = color.bg;
+    el.style.borderColor = color.bg;
+    el.style.transform = 'scale(1.05) translateY(-2px)';
     el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
     el.style.zIndex = '10';
+    tail.style.borderTopColor = color.bg;
+    tailInner.style.borderTopColor = color.text;
+    if (expandEl) expandEl.style.display = 'flex';
   };
   el.onmouseleave = () => {
     if (!el.classList.contains('marker-selected')) {
+      el.style.background = color.bg;
+      el.style.color = color.text;
+      el.style.borderColor = color.border;
       el.style.transform = 'scale(1)';
-      el.style.boxShadow = '0 1px 6px rgba(0,0,0,0.18)';
+      el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.15)';
       el.style.zIndex = '';
+      tail.style.borderTopColor = color.border;
+      tailInner.style.borderTopColor = color.bg;
+      if (expandEl) expandEl.style.display = 'none';
     }
   };
 
@@ -845,9 +880,20 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setTimeout(() => panToWithOffset(complex.lat!, complex.lng!), 50);
       };
 
+      // 가격 범위 계산
+      const allPrices = (complex.areas || []).flatMap((a) => [a.avgPrice]);
+      const minP = allPrices.length > 0 ? Math.min(...allPrices) : complex.avgPrice;
+      const maxP = allPrices.length > 0 ? Math.max(...allPrices) : complex.avgPrice;
+
       const content = createPriceLabel({
         title: complex.name,
         price: priceLabel,
+        hoverInfo: {
+          name: complex.name,
+          tradeCount: complex._count.trades,
+          minPrice: formatPriceShort(minP),
+          maxPrice: formatPriceShort(maxP),
+        },
         color,
         size: 'md',
         onClick: handleSelect,
