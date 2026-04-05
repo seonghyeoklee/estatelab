@@ -213,7 +213,10 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
     const map = mapInstanceRef.current;
     const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY;
-    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !vworldKey) return;
+    if (!map || !selectedComplex?.lat || !selectedComplex?.lng || !vworldKey) {
+      if (!vworldKey) console.warn('[건물폴리곤] NEXT_PUBLIC_VWORLD_API_KEY 미설정');
+      return;
+    }
 
     const cacheKey = selectedComplex.id;
 
@@ -248,9 +251,17 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    fetch(`https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`)
-      .then((r) => r.json())
+    const url = `https://api.vworld.kr/req/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=lt_c_spbd&bbox=${bbox}&srsName=EPSG:4326&outputformat=application/json&maxFeatures=50&key=${vworldKey}`;
+    console.log('[건물폴리곤] 요청:', selectedComplex.name, bbox);
+
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) { console.warn('[건물폴리곤] HTTP 오류:', r.status, r.statusText); return null; }
+        return r.json();
+      })
       .then((geojson) => {
+        if (!geojson) return;
+        console.log('[건물폴리곤] 응답:', geojson.features?.length ?? 0, '건');
         if (!geojson.features?.length) return;
 
         const buildings: { lat: number; lng: number }[][] = [];
@@ -263,11 +274,10 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
           } catch { /* skip */ }
         }
 
-        // 캐시 저장
         polygonCacheRef.current.set(cacheKey, buildings);
         renderPolygons(buildings);
       })
-      .catch(() => {});
+      .catch((err) => console.error('[건물폴리곤] 요청 실패:', err.message));
   }, [selectedComplex]);
 
   // 구/동 클릭 시 행정구역 경계선 표시
