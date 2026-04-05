@@ -44,6 +44,24 @@ const LAYER_CONFIGS: Record<string, LayerConfig> = {
     nameField: 'uname',
     label: '그린벨트',
   },
+  landUse: {
+    typeName: 'lt_c_uq111',
+    strokeColor: '#8b5cf6',
+    fillColor: '#8b5cf6',
+    fillOpacity: 0.1,
+    strokeWeight: 1.5,
+    nameField: 'uname',
+    label: '용도지역',
+  },
+  commercial: {
+    typeName: 'lt_c_dgmainbiz',
+    strokeColor: '#ec4899',
+    fillColor: '#ec4899',
+    fillOpacity: 0.12,
+    strokeWeight: 2,
+    nameField: 'main_gb_nm',
+    label: '주요 상권',
+  },
 };
 
 interface UseVworldLayersParams {
@@ -51,6 +69,8 @@ interface UseVworldLayersParams {
   showRedevelopment: boolean;
   showSchoolZone: boolean;
   showGreenbelt: boolean;
+  showLandUse: boolean;
+  showCommercial: boolean;
   zoomLevel: number;
 }
 
@@ -114,12 +134,16 @@ export function useVworldLayers({
   showRedevelopment,
   showSchoolZone,
   showGreenbelt,
+  showLandUse,
+  showCommercial,
   zoomLevel,
 }: UseVworldLayersParams) {
   const layersRef = useRef<Record<string, LayerState>>({
     redevelopment: { polygons: [], overlays: [], lastBbox: '' },
     schoolZone: { polygons: [], overlays: [], lastBbox: '' },
     greenbelt: { polygons: [], overlays: [], lastBbox: '' },
+    landUse: { polygons: [], overlays: [], lastBbox: '' },
+    commercial: { polygons: [], overlays: [], lastBbox: '' },
   });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 데이터 캐시: bbox → features */
@@ -262,6 +286,8 @@ export function useVworldLayers({
     redevelopment: showRedevelopment,
     schoolZone: showSchoolZone,
     greenbelt: showGreenbelt,
+    landUse: showLandUse,
+    commercial: showCommercial,
   };
 
   // 토글 변경 시 레이어 on/off
@@ -286,7 +312,7 @@ export function useVworldLayers({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRedevelopment, showSchoolZone, showGreenbelt, zoomLevel, map]);
+  }, [showRedevelopment, showSchoolZone, showGreenbelt, showLandUse, showCommercial, zoomLevel, map]);
 
   // bounds 변경 시 debounce 재요청
   useEffect(() => {
@@ -311,7 +337,7 @@ export function useVworldLayers({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, showRedevelopment, showSchoolZone, showGreenbelt, zoomLevel, fetchAndRender]);
+  }, [map, showRedevelopment, showSchoolZone, showGreenbelt, showLandUse, showCommercial, zoomLevel, fetchAndRender]);
 
   // 컴포넌트 언마운트 시 전체 정리
   useEffect(() => {

@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus, Construction, GraduationCap, TreePine } from 'lucide-react';
+import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus, Construction, GraduationCap, TreePine, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice, formatPriceShort } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
@@ -241,6 +241,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [showRedevelopment, setShowRedevelopment] = useState(false);
   const [showSchoolZone, setShowSchoolZone] = useState(false);
   const [showGreenbelt, setShowGreenbelt] = useState(false);
+  const [showLandUse, setShowLandUse] = useState(false);
+  const [showCommercial, setShowCommercial] = useState(false);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
   const polygonCacheRef = useRef<Map<string, { lat: number; lng: number }[][]>>(new Map());
@@ -251,6 +253,8 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     showRedevelopment,
     showSchoolZone,
     showGreenbelt,
+    showLandUse,
+    showCommercial,
     zoomLevel,
   });
 
@@ -1330,6 +1334,32 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             그린벨트
             {showGreenbelt && (
               <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowLandUse(!showLandUse)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
+              showLandUse ? 'bg-violet-50 text-violet-600' : 'hover:bg-accent'
+            )}
+          >
+            <MapIcon className="h-3.5 w-3.5" />
+            용도지역
+            {showLandUse && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowCommercial(!showCommercial)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
+              showCommercial ? 'bg-pink-50 text-pink-600' : 'hover:bg-accent'
+            )}
+          >
+            <Store className="h-3.5 w-3.5" />
+            상권
+            {showCommercial && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-pink-500" />
             )}
           </button>
           <button
