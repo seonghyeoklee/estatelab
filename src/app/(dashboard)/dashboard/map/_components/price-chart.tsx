@@ -36,41 +36,36 @@ interface ScatterPoint {
   area: number;
 }
 
-/** LOESS 회귀선 계산 (locally weighted scatterplot smoothing) */
+/** LOESS 회귀선 */
 function calcLoess(data: ScatterPoint[], bandwidth = 0.3): { dateNum: number; smooth: number }[] {
   if (data.length < 4) return [];
   const sorted = [...data].sort((a, b) => a.dateNum - b.dateNum);
   const xs = sorted.map((d) => d.dateNum);
   const ys = sorted.map((d) => d.price);
   const n = xs.length;
-
-  // 약 30개 포인트로 보간
-  const steps = Math.min(30, n);
+  const steps = Math.min(40, n);
   const xMin = xs[0], xMax = xs[n - 1];
   const result: { dateNum: number; smooth: number }[] = [];
 
   for (let s = 0; s < steps; s++) {
     const x = xMin + (xMax - xMin) * (s / (steps - 1));
     const h = bandwidth * (xMax - xMin);
-
     let sumW = 0, sumWX = 0, sumWY = 0, sumWXX = 0, sumWXY = 0;
     for (let i = 0; i < n; i++) {
       const u = Math.abs(xs[i] - x) / h;
       if (u > 1) continue;
       const w = (1 - u * u * u);
-      const weight = w * w * w; // tricube kernel
+      const weight = w * w * w;
       sumW += weight;
       sumWX += weight * xs[i];
       sumWY += weight * ys[i];
       sumWXX += weight * xs[i] * xs[i];
       sumWXY += weight * xs[i] * ys[i];
     }
-
     if (sumW === 0) continue;
-    // weighted linear regression
     const denom = sumW * sumWXX - sumWX * sumWX;
     if (Math.abs(denom) < 1e-10) {
-      result.push({ dateNum: x, smooth: sumWY / sumW });
+      result.push({ dateNum: x, smooth: Math.round(sumWY / sumW) });
     } else {
       const b = (sumW * sumWXY - sumWX * sumWY) / denom;
       const a = (sumWY - b * sumWX) / sumW;
@@ -85,7 +80,6 @@ export function PriceChart({ trades, className }: Props) {
     if (trades.length === 0) return { scatterData: [], loessData: [], recentAvg: 0, recentCount: 0, maxIdx: -1, minIdx: -1, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
 
     const sorted = [...trades].sort((a, b) => a.dealDate.localeCompare(b.dealDate));
-
     const scatterData: ScatterPoint[] = sorted.map((t) => ({
       date: t.dealDate.slice(0, 10),
       dateNum: new Date(t.dealDate).getTime(),
@@ -113,7 +107,7 @@ export function PriceChart({ trades, className }: Props) {
     const changePct = prev3Avg > 0 ? Math.round(((recent3Avg - prev3Avg) / prev3Avg) * 1000) / 10 : null;
 
     const prices = scatterData.map((d) => d.price);
-    const padding = Math.max((Math.max(...prices) - Math.min(...prices)) * 0.1, 1000);
+    const padding = Math.max((Math.max(...prices) - Math.min(...prices)) * 0.12, 1000);
     const yMin = Math.floor((Math.min(...prices) - padding) / 1000) * 1000;
     const yMax = Math.ceil((Math.max(...prices) + padding) / 1000) * 1000;
 
@@ -136,7 +130,7 @@ export function PriceChart({ trades, className }: Props) {
 
   return (
     <div className={cn('space-y-1', className)}>
-      {/* 헤더 — 항상 고정 */}
+      {/* 헤더 */}
       <div>
         <p className="text-xs text-muted-foreground">
           최근 실거래 기준 {recentCount > 0 ? '1개월' : ''} 평균
@@ -180,7 +174,7 @@ export function PriceChart({ trades, className }: Props) {
 
           {/* 말풍선 툴팁 */}
           <Tooltip
-            cursor={{ stroke: '#e2e8f0', strokeDasharray: '3 3' }}
+            cursor={{ stroke: '#cbd5e1', strokeDasharray: '3 3' }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const d = payload[0]?.payload;
@@ -195,17 +189,17 @@ export function PriceChart({ trades, className }: Props) {
             }}
           />
 
-          {/* LOESS 회귀선 */}
+          {/* LOESS 시세 곡선 */}
           <Scatter
             data={loessData}
             dataKey="smooth"
             fill="none"
-            line={{ stroke: '#4338ca', strokeWidth: 2.5 }}
+            line={{ stroke: '#3730a3', strokeWidth: 2 }}
             shape={() => null}
             isAnimationActive={false}
           />
 
-          {/* 산점도 */}
+          {/* 산점도 — 작은 점 */}
           <Scatter data={scatterData} dataKey="price" isAnimationActive={false}>
             {scatterData.map((_, idx) => {
               const isMax = idx === maxIdx;
@@ -213,8 +207,9 @@ export function PriceChart({ trades, className }: Props) {
               return (
                 <Cell
                   key={idx}
-                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#059669'}
-                  r={isMax || isMin ? 4.5 : 2.5}
+                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#94a3b8'}
+                  r={isMax || isMin ? 4 : 1.8}
+                  opacity={isMax || isMin ? 1 : 0.6}
                   cursor="pointer"
                 />
               );
@@ -224,12 +219,12 @@ export function PriceChart({ trades, className }: Props) {
           {/* 최고/최저 라벨 */}
           {maxIdx >= 0 && (
             <ReferenceDot x={scatterData[maxIdx].dateNum} y={scatterData[maxIdx].price} r={0}>
-              <Label value="최고" position="top" offset={8} style={{ fontSize: 10, fontWeight: 700, fill: '#ef4444' }} />
+              <Label value="최고" position="top" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#ef4444' }} />
             </ReferenceDot>
           )}
           {minIdx >= 0 && (
             <ReferenceDot x={scatterData[minIdx].dateNum} y={scatterData[minIdx].price} r={0}>
-              <Label value="최저" position="bottom" offset={8} style={{ fontSize: 10, fontWeight: 700, fill: '#3b82f6' }} />
+              <Label value="최저" position="bottom" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#3b82f6' }} />
             </ReferenceDot>
           )}
         </ScatterChart>
@@ -240,12 +235,12 @@ export function PriceChart({ trades, className }: Props) {
         <span>실거래 {tradeCount}건</span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-0.5 bg-indigo-700 rounded" />
+            <span className="inline-block w-3 h-0.5 bg-indigo-900 rounded" />
             시세
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-            거래
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400" />
+            실거래
           </span>
         </div>
       </div>
