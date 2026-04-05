@@ -79,28 +79,30 @@ export async function geocodeComplex(params: {
   const { name, dong, sido, sigungu, roadAddress } = params;
 
   try {
-    // 1순위: 도로명주소
-    if (roadAddress && roadAddress.includes(' ')) {
-      const result = await searchAddress(`${sido} ${sigungu} ${roadAddress}`);
-      if (result) return result;
-    }
-
-    // 2순위: 지번주소
-    if (dong && params.jibun) {
-      const result = await searchAddress(`${sido} ${sigungu} ${dong} ${params.jibun}`);
-      if (result) return result;
-    }
-
-    // 3순위: 키워드 검색
+    // 1순위: 키워드 검색 (단지명 → 건물 정확 좌표)
     const aptName = name.includes('아파트') ? name : `${name}아파트`;
     if (dong) {
       const result = await searchKeyword(`${sido} ${sigungu} ${dong} ${aptName}`);
       if (result) return result;
     }
 
-    // 4순위: 시군구 + 단지명
-    const result = await searchKeyword(`${sigungu} ${aptName}`);
-    if (result) return result;
+    // 2순위: 시군구 + 단지명
+    {
+      const result = await searchKeyword(`${sigungu} ${aptName}`);
+      if (result) return result;
+    }
+
+    // 3순위: 도로명주소
+    if (roadAddress && roadAddress.includes(' ')) {
+      const result = await searchAddress(`${sido} ${sigungu} ${roadAddress}`);
+      if (result) return result;
+    }
+
+    // 4순위: 지번주소 (같은 지번에 여러 단지가 있을 수 있어 최후 수단)
+    if (dong && params.jibun) {
+      const result = await searchAddress(`${sido} ${sigungu} ${dong} ${params.jibun}`);
+      if (result) return result;
+    }
   } catch {
     // 전체 실패 — null 반환, 수집 중단하지 않음
   }
