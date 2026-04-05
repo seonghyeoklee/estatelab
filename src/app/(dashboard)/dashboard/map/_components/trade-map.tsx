@@ -5,13 +5,14 @@ import useSWR from 'swr';
 import { useKakaoLoaded, useKakaoError } from '@/components/kakao-map-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus } from 'lucide-react';
+import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus, Construction, GraduationCap, TreePine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice, formatPriceShort } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
 import { NEARBY_CATEGORIES } from '@/lib/constants';
 import { ComplexDetailPanel } from './complex-detail-panel';
 import { MapSearchBar } from './map-search-bar';
+import { useVworldLayers } from './use-vworld-layers';
 
 // 주변시설 마커 생성
 function createNearbyMarker(opts: {
@@ -202,9 +203,21 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const [areaFilter, setAreaFilter] = useState<number | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showRedevelopment, setShowRedevelopment] = useState(false);
+  const [showSchoolZone, setShowSchoolZone] = useState(false);
+  const [showGreenbelt, setShowGreenbelt] = useState(false);
   const selectedOverlayRef = useRef<HTMLDivElement | null>(null);
   const buildingPolygonsRef = useRef<kakao.maps.Polygon[]>([]);
   const polygonCacheRef = useRef<Map<string, { lat: number; lng: number }[][]>>(new Map());
+
+  // VWORLD 오버레이 레이어 (재개발, 학군, 그린벨트)
+  useVworldLayers({
+    map: mapInstanceRef.current,
+    showRedevelopment,
+    showSchoolZone,
+    showGreenbelt,
+    zoomLevel,
+  });
 
   // 선택 단지 건물 폴리곤 표시 — 캐시 + VWORLD WFS
   useEffect(() => {
@@ -1224,6 +1237,45 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
             지적편집도
             {showDistrict && (
               <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowRedevelopment(!showRedevelopment)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
+              showRedevelopment ? 'bg-orange-50 text-orange-600' : 'hover:bg-accent'
+            )}
+          >
+            <Construction className="h-3.5 w-3.5" />
+            재개발
+            {showRedevelopment && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-orange-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowSchoolZone(!showSchoolZone)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
+              showSchoolZone ? 'bg-yellow-50 text-yellow-600' : 'hover:bg-accent'
+            )}
+          >
+            <GraduationCap className="h-3.5 w-3.5" />
+            학군
+            {showSchoolZone && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-yellow-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowGreenbelt(!showGreenbelt)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors border-t border-border/30',
+              showGreenbelt ? 'bg-green-50 text-green-600' : 'hover:bg-accent'
+            )}
+          >
+            <TreePine className="h-3.5 w-3.5" />
+            그린벨트
+            {showGreenbelt && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
             )}
           </button>
           <button
