@@ -784,9 +784,6 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       const displayPrice = matchedAreas.length > 0
         ? Math.round(matchedAreas.reduce((s, a) => s + a.avgPrice * a.count, 0) / totalCount)
         : complex.avgPrice;
-      const displayPpp = matchedAreas.length > 0
-        ? Math.round(matchedAreas.reduce((s, a) => s + a.avgPpp * a.count, 0) / totalCount)
-        : complex.avgPricePerPyeong;
       const priceLabel = formatPriceShort(displayPrice);
 
       const handleSelect = () => {
@@ -824,14 +821,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setTimeout(() => panToWithOffset(complex.lat!, complex.lng!), 50);
       };
 
-      const pppLabel = displayPpp > 0
-        ? `${displayPpp.toLocaleString()}만/평`
-        : undefined;
-
       const content = createPriceLabel({
         title: complex.name,
         price: priceLabel,
-        subtitle: pppLabel,
         color,
         size: 'md',
         onClick: handleSelect,
@@ -1466,9 +1458,6 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
                         <div className="text-right shrink-0">
                           <p className="text-sm font-bold text-primary">
                             {formatPrice(c.avgPrice)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {c.avgPricePerPyeong.toLocaleString()}만/평
                           </p>
                         </div>
                       </button>
