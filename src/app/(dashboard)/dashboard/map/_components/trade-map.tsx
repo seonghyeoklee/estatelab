@@ -263,13 +263,9 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=50`;
 
     fetch(proxyUrl)
-      .then((r) => {
-        if (!r.ok) { console.warn('[건물폴리곤] HTTP 오류:', r.status); return null; }
-        return r.json();
-      })
+      .then((r) => r.ok ? r.json() : null)
       .then((geojson) => {
-        if (!geojson) return;
-        if (!geojson.features?.length) return;
+        if (!geojson?.features?.length) return;
 
         const buildings: { lat: number; lng: number }[][] = [];
         for (const f of geojson.features) {
@@ -284,7 +280,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         polygonCacheRef.current.set(cacheKey, buildings);
         renderPolygons(buildings);
       })
-      .catch((err) => console.error('[건물폴리곤] 요청 실패:', err.message));
+      .catch(() => {});
   }, [selectedComplex]);
 
   // 구/동 클릭 시 행정구역 경계선 표시
@@ -822,6 +818,10 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         setSelectedComplex(complex);
         setShowList(false);
         setActiveDetailTab('overview');
+        // 해당 단지의 동 경계 표시
+        if (complex.lat && complex.lng) {
+          showBoundary(complex.lat, complex.lng, 'emd');
+        }
         // 바운스 + 선택 표시 + z-index 최상위
         content.classList.remove('marker-bounce');
         void content.offsetWidth;

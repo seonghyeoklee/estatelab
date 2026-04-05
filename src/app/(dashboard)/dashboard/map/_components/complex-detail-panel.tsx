@@ -431,6 +431,48 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   </div>
                 )}
 
+                {/* 최근 거래 — 차트 바로 아래 */}
+                <div className="px-5 py-4 border-b">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-[14px] font-semibold">최근 거래</h3>
+                    </div>
+                    {trades.length > 5 && (
+                      <button
+                        onClick={() => setActiveTab('trades')}
+                        className="text-[13px] text-primary font-medium hover:underline"
+                      >
+                        전체 보기 →
+                      </button>
+                    )}
+                  </div>
+                  {filteredTrades.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">거래 내역이 없습니다.</p>
+                  ) : (
+                    <div className="space-y-0.5">
+                      {filteredTrades.slice(0, 5).map((trade) => (
+                        <div
+                          key={trade.id}
+                          className="flex items-center justify-between rounded-lg px-3 py-2.5 text-[14px] hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-muted-foreground text-[13px] w-[82px] shrink-0 tabular-nums">
+                              {trade.dealDate.slice(0, 10)}
+                            </span>
+                            <Badge variant="outline" className="text-xs px-2 py-0.5">
+                              {trade.area}㎡ · {trade.floor}층
+                            </Badge>
+                          </div>
+                          <span className="font-bold text-primary shrink-0">
+                            {formatPrice(trade.price)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* 면적별 비교 */}
                 {areaGroups.length > 0 && (
                   <div className="px-5 py-4 border-b">
@@ -537,43 +579,6 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   );
                 })()}
 
-                {/* 최근 거래 미리보기 */}
-                <div className="px-5 py-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="text-[14px] font-semibold">최근 거래</h3>
-                    </div>
-                    {trades.length > 5 && (
-                      <button
-                        onClick={() => setActiveTab('trades')}
-                        className="text-[13px] text-primary font-medium hover:underline"
-                      >
-                        전체 보기 →
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-0.5">
-                    {filteredTrades.slice(0, 5).map((trade) => (
-                      <div
-                        key={trade.id}
-                        className="flex items-center justify-between rounded-lg px-3 py-2.5 text-[14px] hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-muted-foreground text-[13px] w-[82px] shrink-0 tabular-nums">
-                            {trade.dealDate.slice(0, 10)}
-                          </span>
-                          <Badge variant="outline" className="text-xs px-2 py-0.5">
-                            {trade.area}㎡ · {trade.floor}층
-                          </Badge>
-                        </div>
-                        <span className="font-bold text-primary shrink-0">
-                          {formatPrice(trade.price)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* 주변 단지 비교 */}
                 {compareData?.data?.comparisons && compareData.data.comparisons.length > 0 && (
