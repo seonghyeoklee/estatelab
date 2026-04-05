@@ -931,10 +931,16 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       }
 
       // 줌 ≤ 5 (단지별 모드)일 때만 영역 기반 재조회
+      // 좌표를 소수점 2자리 그리드로 스냅 (sw 내림, ne 올림) → 캐시 히트율 향상
       if (level <= 5) {
         const sw = bounds.getSouthWest();
         const ne = bounds.getNorthEast();
-        const newBounds = `swLat=${sw.getLat().toFixed(4)}&swLng=${sw.getLng().toFixed(4)}&neLat=${ne.getLat().toFixed(4)}&neLng=${ne.getLng().toFixed(4)}&zoom=${level}`;
+        const grid = 0.01;
+        const snappedSwLat = (Math.floor(sw.getLat() / grid) * grid).toFixed(2);
+        const snappedSwLng = (Math.floor(sw.getLng() / grid) * grid).toFixed(2);
+        const snappedNeLat = (Math.ceil(ne.getLat() / grid) * grid).toFixed(2);
+        const snappedNeLng = (Math.ceil(ne.getLng() / grid) * grid).toFixed(2);
+        const newBounds = `swLat=${snappedSwLat}&swLng=${snappedSwLng}&neLat=${snappedNeLat}&neLng=${snappedNeLng}&zoom=${level}`;
         debouncedSetBounds(newBounds);
       }
 

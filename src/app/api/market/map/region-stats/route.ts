@@ -51,5 +51,7 @@ export async function GET() {
     lng: Number(s.center_lng),
   }));
 
-  return NextResponse.json({ data });
+  return NextResponse.json({ data }, {
+    headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' },
+  });
 }
