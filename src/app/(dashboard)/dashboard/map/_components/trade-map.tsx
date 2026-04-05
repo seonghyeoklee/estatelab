@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Building2, List, X, Locate, Map as MapIcon, Layers, Satellite, Search, ArrowUpDown, MapPinned, Eye, GitCompareArrows, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatPriceShort } from '@/lib/format';
 import type { MapComplex, Region } from '@/types/trade';
 import { NEARBY_CATEGORIES } from '@/lib/constants';
 import { ComplexDetailPanel } from './complex-detail-panel';
@@ -770,14 +770,24 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       const position = new kakao.maps.LatLng(complex.lat!, complex.lng!);
       const color = MARKER_COLOR;
 
-      // 면적 필터 적용 시 해당 면적 가격, 없으면 전체 평균
-      const areaData = areaFilter && complex.areas
-        ? complex.areas.find((a) => a.area === areaFilter)
-        : null;
-      if (areaFilter && !areaData) continue; // 해당 면적 거래 없으면 마커 숨김
-      const displayPrice = areaData ? areaData.avgPrice : complex.avgPrice;
-      const displayPpp = areaData ? areaData.avgPpp : complex.avgPricePerPyeong;
-      const priceLabel = formatPrice(displayPrice);
+      // 면적 필터 적용 시 해당 면적대 가격, 없으면 전체 평균
+      const matchedAreas = areaFilter && complex.areas
+        ? complex.areas.filter((a) => {
+            if (areaFilter === 59) return a.area < 60;
+            if (areaFilter === 84) return a.area >= 60 && a.area < 100;
+            if (areaFilter === 114) return a.area >= 100;
+            return false;
+          })
+        : [];
+      if (areaFilter && matchedAreas.length === 0) continue; // 해당 면적대 거래 없으면 마커 숨김
+      const totalCount = matchedAreas.reduce((s, a) => s + a.count, 0);
+      const displayPrice = matchedAreas.length > 0
+        ? Math.round(matchedAreas.reduce((s, a) => s + a.avgPrice * a.count, 0) / totalCount)
+        : complex.avgPrice;
+      const displayPpp = matchedAreas.length > 0
+        ? Math.round(matchedAreas.reduce((s, a) => s + a.avgPpp * a.count, 0) / totalCount)
+        : complex.avgPricePerPyeong;
+      const priceLabel = formatPriceShort(displayPrice);
 
       const handleSelect = () => {
         // 비교 모드
@@ -867,7 +877,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     for (const group of dongGroups) {
       const position = new kakao.maps.LatLng(group.lat, group.lng);
       const color = MARKER_COLOR_CLUSTER;
-      const priceLabel = formatPrice(group.avgPrice);
+      const priceLabel = formatPriceShort(group.avgPrice);
 
       const handleClick = () => {
         if (mapInstanceRef.current) {
@@ -900,7 +910,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     for (const group of guGroups) {
       const position = new kakao.maps.LatLng(group.lat, group.lng);
       const color = MARKER_COLOR_CLUSTER;
-      const priceLabel = formatPrice(group.avgPrice);
+      const priceLabel = formatPriceShort(group.avgPrice);
 
       const handleClick = () => {
         if (mapInstanceRef.current) {

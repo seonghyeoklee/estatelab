@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
       }[]>(`
         SELECT
           complex_id,
-          ROUND(area)::int AS area,
+          area,
           ROUND(AVG(price))::int AS avg_price,
           ROUND(AVG(price_per_pyeong))::int AS avg_ppp,
           COUNT(*)::int AS cnt
         FROM apartment_trades
         WHERE complex_id = ANY($1)
-        GROUP BY complex_id, ROUND(area)
+        GROUP BY complex_id, area
       `, complexIds);
 
       for (const s of areaStats) {

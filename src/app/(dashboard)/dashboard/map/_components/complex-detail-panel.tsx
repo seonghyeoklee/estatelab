@@ -243,7 +243,7 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
   // 면적 필터 적용
   const filteredTrades = useMemo(() => {
     if (!areaFilter) return trades;
-    return trades.filter((t) => Math.round(t.area) === areaFilter);
+    return trades.filter((t) => t.area === areaFilter);
   }, [trades, areaFilter]);
 
   // 통계 (필터된 거래 기준)

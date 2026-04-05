@@ -36,7 +36,7 @@ export async function GET(
   // 면적별 그룹핑
   const areaGroups = new Map<number, { count: number; avgPrice: number; avgPricePerPyeong: number }>();
   for (const trade of complex.trades) {
-    const areaKey = Math.round(trade.area);
+    const areaKey = trade.area;
     const existing = areaGroups.get(areaKey);
     const ppp = pricePerPyeong(trade.price, trade.area);
 

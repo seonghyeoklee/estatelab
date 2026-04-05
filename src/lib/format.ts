@@ -2,8 +2,19 @@
  * 포맷팅 유틸
  */
 
-/** 가격을 억/만 단위로 표시 */
+/** 가격을 억/만 단위로 표시 — 예: 47500 → "4억 7,500만", 120000 → "12억" */
 export function formatPrice(price: number): string {
+  if (price >= 10000) {
+    const eok = Math.floor(price / 10000);
+    const man = price % 10000;
+    if (man === 0) return `${eok}억`;
+    return `${eok}억 ${man.toLocaleString()}만`;
+  }
+  return price.toLocaleString() + '만';
+}
+
+/** 가격을 짧게 표시 — 마커 라벨용. 예: 47500 → "4.8억" */
+export function formatPriceShort(price: number): string {
   if (price >= 100000) return (price / 10000).toFixed(0) + '억';
   if (price >= 10000) return (price / 10000).toFixed(1) + '억';
   return price.toLocaleString() + '만';
