@@ -2,11 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import useSWR from 'swr';
-import Link from 'next/link';
 import {
   X, Building2, MapPin, Calendar, TrendingUp, TrendingDown,
   BarChart3, Train, GraduationCap, ShoppingCart, Hospital,
-  Landmark, Coffee, Store, Filter, ExternalLink,
+  Landmark, Coffee, Store, Filter,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -300,20 +299,12 @@ export function ComplexDetailPanel({ complexId, onClose, onTabChange }: Props) {
                   <p className="text-[13px] text-muted-foreground mt-1">{detail.roadAddress}</p>
                 )}
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Link
-                  href={`/dashboard/apartments/${complexId}`}
-                  className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors inline-flex items-center gap-1"
-                >
-                  상세보기 <ExternalLink className="h-3 w-3" />
-                </Link>
-                <button
-                  onClick={onClose}
-                  className="rounded-lg p-2 hover:bg-accent transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={onClose}
+                className="rounded-lg p-2 hover:bg-accent transition-colors shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {/* 가격 변동률 */}
