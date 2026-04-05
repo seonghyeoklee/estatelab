@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       WHERE c.lat IS NOT NULL AND c.lng IS NOT NULL
         ${APARTMENT_SQL_FILTER}
         AND c.lat BETWEEN $1 AND $2 AND c.lng BETWEEN $3 AND $4
-        AND t.deal_date >= NOW() - INTERVAL '1 year'
+        AND t.deal_date >= NOW() - INTERVAL '6 months'
       GROUP BY c.id, c.name, c.dong, c.region_code, c.lat, c.lng
       HAVING COUNT(t.id) > 0
       ORDER BY COUNT(t.id) DESC
