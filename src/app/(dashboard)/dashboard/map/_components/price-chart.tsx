@@ -2,23 +2,23 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatPriceShort } from '@/lib/format';
 import {
   ResponsiveContainer,
-  ComposedChart,
-  Area,
-  Line,
+  ScatterChart,
+  Scatter,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
-  ReferenceDot,
+  Cell,
 } from 'recharts';
 
 interface Trade {
   dealDate: string;
   price: number;
   floor: number;
+  area: number;
 }
 
 interface Props {
@@ -27,51 +27,46 @@ interface Props {
 }
 
 export function PriceChart({ trades, className }: Props) {
-  const { chartData, latest, minPoint, maxPoint, tradeCount } = useMemo(() => {
-    if (trades.length === 0) return { chartData: [], latest: null, minPoint: null, maxPoint: null, tradeCount: 0 };
+  const { scatterData, latest, tradeCount, yMin, yMax, changePct } = useMemo(() => {
+    if (trades.length === 0) return { scatterData: [], latest: null, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
 
     const sorted = [...trades].sort((a, b) => a.dealDate.localeCompare(b.dealDate));
 
-    // 월별 집계
-    const monthlyMap = new Map<string, { total: number; count: number; min: number; max: number }>();
-    for (const t of sorted) {
-      const key = t.dealDate.slice(0, 7);
-      const existing = monthlyMap.get(key);
-      if (existing) {
-        existing.total += t.price;
-        existing.count++;
-        existing.min = Math.min(existing.min, t.price);
-        existing.max = Math.max(existing.max, t.price);
-      } else {
-        monthlyMap.set(key, { total: t.price, count: 1, min: t.price, max: t.price });
-      }
-    }
+    // 개별 거래를 산점도 데이터로
+    const scatterData = sorted.map((t) => ({
+      date: t.dealDate.slice(0, 10),
+      dateLabel: t.dealDate.slice(2, 7).replace('-', '.'),
+      // X축 값: 날짜를 숫자로 (정렬/간격용)
+      dateNum: new Date(t.dealDate).getTime(),
+      price: t.price,
+      floor: t.floor,
+      area: t.area,
+    }));
 
-    const chartData = Array.from(monthlyMap.entries())
-      .map(([month, v]) => ({
-        month,
-        label: month.slice(2).replace('-', '.'),
-        avg: Math.round(v.total / v.count),
-        min: v.min,
-        max: v.max,
-        volume: v.count,
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+    const prices = scatterData.map((d) => d.price);
+    const yMin = Math.floor(Math.min(...prices) / 1000) * 1000;
+    const yMax = Math.ceil(Math.max(...prices) / 1000) * 1000;
 
-    const latest = chartData[chartData.length - 1] || null;
+    const latest = scatterData[scatterData.length - 1] || null;
 
-    // 최고/최저 월
-    const minPoint = chartData.length > 0
-      ? chartData.reduce((m, c) => c.avg < m.avg ? c : m, chartData[0])
-      : null;
-    const maxPoint = chartData.length > 0
-      ? chartData.reduce((m, c) => c.avg > m.avg ? c : m, chartData[0])
-      : null;
+    // 변동률: 최근 3개월 평균 vs 그 이전 3개월 평균
+    const now = new Date();
+    const recent = sorted.filter((t) => {
+      const d = new Date(t.dealDate);
+      return d >= new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    });
+    const prev = sorted.filter((t) => {
+      const d = new Date(t.dealDate);
+      return d >= new Date(now.getFullYear(), now.getMonth() - 6, 1) && d < new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    });
+    const recentAvg = recent.length > 0 ? recent.reduce((s, t) => s + t.price, 0) / recent.length : 0;
+    const prevAvg = prev.length > 0 ? prev.reduce((s, t) => s + t.price, 0) / prev.length : 0;
+    const changePct = prevAvg > 0 ? Math.round(((recentAvg - prevAvg) / prevAvg) * 1000) / 10 : null;
 
-    return { chartData, latest, minPoint, maxPoint, tradeCount: trades.length };
+    return { scatterData, latest, tradeCount: trades.length, yMin, yMax, changePct };
   }, [trades]);
 
-  if (chartData.length === 0) {
+  if (scatterData.length === 0) {
     return (
       <div className={cn('flex items-center justify-center py-8 text-sm text-muted-foreground', className)}>
         거래 데이터가 없습니다.
@@ -79,14 +74,9 @@ export function PriceChart({ trades, className }: Props) {
     );
   }
 
-  const allPrices = chartData.flatMap((d) => [d.min, d.max]);
-  const yMin = Math.floor(Math.min(...allPrices) / 1000) * 1000;
-  const yMax = Math.ceil(Math.max(...allPrices) / 1000) * 1000;
-
-  // 변동률
-  const changePct = chartData.length >= 2 && chartData[0].avg > 0
-    ? Math.round(((latest!.avg - chartData[0].avg) / chartData[0].avg) * 1000) / 10
-    : null;
+  // 최고/최저 거래
+  const maxTrade = scatterData.reduce((m, c) => c.price > m.price ? c : m, scatterData[0]);
+  const minTrade = scatterData.reduce((m, c) => c.price < m.price ? c : m, scatterData[0]);
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -94,8 +84,8 @@ export function PriceChart({ trades, className }: Props) {
       {latest && (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">최근 평균</p>
-            <p className="text-xl font-bold text-primary">{formatPrice(latest.avg)}</p>
+            <p className="text-xs text-muted-foreground">최근 거래</p>
+            <p className="text-xl font-bold text-primary">{formatPrice(latest.price)}</p>
           </div>
           <div className="text-right">
             {changePct !== null && (
@@ -103,82 +93,66 @@ export function PriceChart({ trades, className }: Props) {
                 {changePct >= 0 ? '+' : ''}{changePct}%
               </p>
             )}
-            <p className="text-xs text-muted-foreground">{latest.volume}건 · {latest.label}</p>
+            <p className="text-xs text-muted-foreground">{latest.area}㎡ · {latest.floor}층 · {latest.date}</p>
           </div>
         </div>
       )}
 
-      {/* 차트 */}
+      {/* 산점도 차트 */}
       <ResponsiveContainer width="100%" height={180}>
-        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
-          <defs>
-            <linearGradient id="mapChartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#059669" stopOpacity={0.15} />
-              <stop offset="100%" stopColor="#059669" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
+        <ScatterChart margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           <XAxis
-            dataKey="label"
+            dataKey="dateNum"
+            type="number"
+            domain={['dataMin', 'dataMax']}
             tick={{ fontSize: 9, fill: '#94a3b8' }}
             tickLine={false}
             axisLine={{ stroke: '#e2e8f0' }}
-            interval="preserveStartEnd"
+            tickFormatter={(v: number) => {
+              const d = new Date(v);
+              return `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }}
           />
           <YAxis
+            dataKey="price"
+            type="number"
             domain={[yMin, yMax]}
             tick={{ fontSize: 9, fill: '#94a3b8' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v: number) => formatPrice(v)}
+            tickFormatter={(v: number) => formatPriceShort(v)}
             width={40}
           />
           <Tooltip
-            contentStyle={{
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              fontSize: '11px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              padding: '8px 12px',
+            cursor={{ strokeDasharray: '3 3', stroke: '#94a3b8' }}
+            content={({ payload }) => {
+              if (!payload?.length) return null;
+              const d = payload[0].payload;
+              return (
+                <div className="rounded-lg border bg-white px-3 py-2 shadow-md text-xs space-y-0.5">
+                  <p className="font-bold text-primary">{formatPrice(d.price)}</p>
+                  <p className="text-muted-foreground">{d.area}㎡ · {d.floor}층</p>
+                  <p className="text-muted-foreground">{d.date}</p>
+                </div>
+              );
             }}
-            formatter={(value, name) => {
-              const v = Number(value);
-              const label = name === 'avg' ? '평균' : name === 'volume' ? '거래량' : String(name);
-              return [name === 'volume' ? `${v}건` : formatPrice(v), label];
-            }}
-            labelFormatter={(label) => String(label)}
           />
-
-          {/* 거래량 바 */}
-          {/* 거래량은 시각적 참고용 — 높이 고정 */}
-
-          {/* 가격 범위 영역 */}
-          <Area
-            type="monotone"
-            dataKey="max"
-            stroke="none"
-            fill="url(#mapChartGrad)"
-            dot={false}
-          />
-
-          {/* 평균 추세선 */}
-          <Line
-            type="monotone"
-            dataKey="avg"
-            stroke="#059669"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 2, fill: 'white', stroke: '#059669' }}
-          />
-
-          {/* 최고/최저 포인트 */}
-          {maxPoint && (
-            <ReferenceDot x={maxPoint.label} y={maxPoint.avg} r={4} fill="#ef4444" stroke="white" strokeWidth={2} />
-          )}
-          {minPoint && minPoint.label !== maxPoint?.label && (
-            <ReferenceDot x={minPoint.label} y={minPoint.avg} r={4} fill="#3b82f6" stroke="white" strokeWidth={2} />
-          )}
-        </ComposedChart>
+          <Scatter data={scatterData} fill="#059669">
+            {scatterData.map((entry, idx) => {
+              const isMax = entry === maxTrade;
+              const isMin = entry === minTrade;
+              return (
+                <Cell
+                  key={idx}
+                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#059669'}
+                  r={isMax || isMin ? 5 : 3}
+                  opacity={isMax || isMin ? 1 : 0.6}
+                />
+              );
+            })}
+          </Scatter>
+        </ScatterChart>
       </ResponsiveContainer>
 
       {/* 범례 */}
@@ -186,16 +160,16 @@ export function PriceChart({ trades, className }: Props) {
         <span>실거래 {tradeCount}건</span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-0.5 bg-primary rounded" />
-            평균
+            <span className="inline-block w-2 h-2 rounded-full bg-primary opacity-60" />
+            개별 거래
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444]" />
-            최고
+            최고가
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-[#3b82f6]" />
-            최저
+            최저가
           </span>
         </div>
       </div>
