@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { SessionProvider } from '@/components/session-provider';
-import dynamic from 'next/dynamic';
-
-const GoogleAnalytics = dynamic(() => import('@/components/google-analytics').then(m => m.GoogleAnalytics), { ssr: false });
+import { GoogleAnalytics } from '@/components/google-analytics';
 import './globals.css';
 
 export const metadata: Metadata = {

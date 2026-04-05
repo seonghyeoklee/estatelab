@@ -2,7 +2,7 @@
 
 import Script from 'next/script';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, useSyncExternalStore, Suspense } from 'react';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.trim();
 
@@ -19,8 +19,14 @@ function GATracker() {
   return null;
 }
 
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export function GoogleAnalytics() {
-  if (!GA_ID) return null;
+  const isClient = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  if (!isClient || !GA_ID) return null;
 
   return (
     <>
