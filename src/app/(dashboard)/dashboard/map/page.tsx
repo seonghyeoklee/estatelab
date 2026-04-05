@@ -7,7 +7,7 @@ import { TradeMap } from './_components/trade-map';
 
 function MapContent() {
   const searchParams = useSearchParams();
-  const complexId = searchParams.get('complexId');
+  const complexId = searchParams.get('complex') || searchParams.get('complexId');
 
   // 지도 페이지에서는 main 패딩 제거
   useEffect(() => {

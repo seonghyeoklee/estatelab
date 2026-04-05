@@ -67,10 +67,10 @@ export default function SubscriptionsPage() {
                 <ExternalLink className="h-3 w-3" />
               </a>
               <Link
-                href="/dashboard/apartments"
+                href="/dashboard/map"
                 className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-[12px] font-medium hover:bg-accent transition-colors"
               >
-                아파트 검색
+                지도에서 검색
               </Link>
             </div>
           </div>

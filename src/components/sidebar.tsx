@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Building2,
   LayoutDashboard,
   Map,
   Landmark,
@@ -35,7 +34,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: '부동산',
     items: [
-      { href: '/dashboard/apartments', label: '아파트', icon: Building2, exact: true },
       { href: '/dashboard/gap-invest', label: '갭투자 분석', icon: Percent },
     ],
   },

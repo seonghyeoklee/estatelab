@@ -488,6 +488,19 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     }
   }, [focusComplexId, focusApplied, withCoords, handleFocusComplex]);
 
+  // URL에 선택된 단지 ID 반영 (replaceState로 리렌더 방지)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedComplex) {
+      url.searchParams.set('complex', selectedComplex.id);
+    } else {
+      url.searchParams.delete('complex');
+    }
+    if (url.href !== window.location.href) {
+      window.history.replaceState(null, '', url.toString());
+    }
+  }, [selectedComplex]);
+
   // 주변시설 오버레이 표시/제거
   useEffect(() => {
     // 기존 오버레이 정리

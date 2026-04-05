@@ -13,7 +13,7 @@ export default function NotFound() {
           <Link href="/dashboard/map">지도로 이동</Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/apartments">아파트 검색</Link>
+          <Link href="/dashboard/map">지도에서 검색</Link>
         </Button>
       </div>
     </div>

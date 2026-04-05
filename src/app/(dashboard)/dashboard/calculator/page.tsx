@@ -248,7 +248,7 @@ function CalculatorContent() {
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Button asChild className="flex-1">
-              <Link href={`/dashboard/apartments?maxPrice=${maxBuyable}&sort=price`}>
+              <Link href="/dashboard/map">
                 <Search className="h-4 w-4" />
                 {formatPrice(maxBuyable)} 이하 아파트 보기
                 <ArrowRight className="h-4 w-4" />

@@ -168,9 +168,9 @@ function CompareContent() {
         <Card>
           <CardHeader className="pb-2">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <Link href={`/dashboard/apartments/${a.id}`} className="text-sm font-bold text-primary hover:underline truncate">{a.name}</Link>
+              <Link href={`/dashboard/map?complex=${a.id}`} className="text-sm font-bold text-primary hover:underline truncate">{a.name}</Link>
               <span className="text-xs text-muted-foreground self-center">VS</span>
-              <Link href={`/dashboard/apartments/${b.id}`} className="text-sm font-bold text-primary hover:underline truncate">{b.name}</Link>
+              <Link href={`/dashboard/map?complex=${b.id}`} className="text-sm font-bold text-primary hover:underline truncate">{b.name}</Link>
             </div>
           </CardHeader>
           <CardContent>

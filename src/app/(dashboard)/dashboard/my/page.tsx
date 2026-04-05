@@ -99,7 +99,7 @@ export default function MyPage() {
                     className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors"
                   >
                     <Link
-                      href={`/dashboard/apartments/${item.complexId}`}
+                      href={`/dashboard/map?complex=${item.complexId}`}
                       className="flex items-center gap-3 min-w-0 flex-1"
                     >
                       <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -148,7 +148,7 @@ export default function MyPage() {
                 return (
                   <Link
                     key={item.id}
-                    href={`/dashboard/apartments/${item.complexId}`}
+                    href={`/dashboard/map?complex=${item.complexId}`}
                     className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors"
                   >
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />

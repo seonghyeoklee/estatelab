@@ -37,7 +37,6 @@ interface SearchResult {
 const MENU_ITEMS = [
   { label: '지도 탐색', href: '/dashboard/map', icon: Map },
   { label: '시장 개요', href: '/dashboard/overview', icon: LayoutDashboard },
-  { label: '아파트', href: '/dashboard/apartments', icon: Building2 },
   { label: '금리 동향', href: '/dashboard/rates', icon: Landmark },
   { label: '관심 단지', href: '/dashboard/my', icon: Heart },
 ];
@@ -161,7 +160,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Item
                     key={r.id}
                     value={`recent-${r.name}`}
-                    onSelect={() => go(`/dashboard/apartments/${r.id}`)}
+                    onSelect={() => go(`/dashboard/map?complex=${r.id}`)}
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm cursor-pointer aria-selected:bg-accent"
                   >
                     <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -179,7 +178,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Item
                     key={r.id}
                     value={`${r.name} ${r.dong} ${r.region?.sigungu || ''}`}
-                    onSelect={() => go(`/dashboard/apartments/${r.id}`, { id: r.id, name: r.name, dong: r.dong, sigungu: r.region?.sigungu })}
+                    onSelect={() => go(`/dashboard/map?complex=${r.id}`, { id: r.id, name: r.name, dong: r.dong, sigungu: r.region?.sigungu })}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm cursor-pointer aria-selected:bg-accent"
                   >
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />

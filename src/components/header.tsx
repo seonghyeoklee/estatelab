@@ -1,14 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Menu, Map, LayoutDashboard, Building2, Landmark, TrendingUp, CalendarDays, Heart, Percent, Calculator, GitCompareArrows } from 'lucide-react';
+import { Menu, Map, LayoutDashboard, Landmark, TrendingUp, CalendarDays, Heart, Percent, Calculator, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
 
 const PAGE_TITLES: Record<string, { label: string; icon: typeof Map }> = {
   '/dashboard/map': { label: '지도 탐색', icon: Map },
   '/dashboard/overview': { label: '시장 개요', icon: LayoutDashboard },
-  '/dashboard/apartments': { label: '아파트', icon: Building2 },
   '/dashboard/gap-invest': { label: '갭투자 분석', icon: Percent },
   '/dashboard/calculator': { label: '대출 계산기', icon: Calculator },
   '/dashboard/compare': { label: '단지 비교', icon: GitCompareArrows },

@@ -235,7 +235,7 @@ export default function GapInvestPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/dashboard/apartments/${item.complexId}`}
+                          href={`/dashboard/map?complex=${item.complexId}`}
                           className="text-[15px] font-bold hover:text-primary transition-colors truncate"
                         >
                           {item.name}
