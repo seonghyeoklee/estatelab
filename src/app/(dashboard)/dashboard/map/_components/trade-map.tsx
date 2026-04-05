@@ -158,6 +158,7 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
   const guOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const initialFitDoneRef = useRef(false);
   const listenersAttachedRef = useRef(false);
+  const visibilityListenerRef = useRef<(() => void) | null>(null);
 
   // 패널 오프셋 보정 panTo — 좌측 패널(420px) / 모바일 하단 시트 감안
   const panToWithOffset = useCallback((lat: number, lng: number) => {
@@ -1006,11 +1007,15 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
 
     updateOverlayVisibility();
 
-    if (!listenersAttachedRef.current) {
-      kakao.maps.event.addListener(map, 'zoom_changed', updateOverlayVisibility);
-      kakao.maps.event.addListener(map, 'bounds_changed', updateOverlayVisibility);
-      listenersAttachedRef.current = true;
+    // 리스너를 매번 교체 — 클로저가 최신 dongGroups/guGroups를 참조하도록
+    if (listenersAttachedRef.current) {
+      kakao.maps.event.removeListener(map, 'zoom_changed', visibilityListenerRef.current!);
+      kakao.maps.event.removeListener(map, 'bounds_changed', visibilityListenerRef.current!);
     }
+    visibilityListenerRef.current = updateOverlayVisibility;
+    kakao.maps.event.addListener(map, 'zoom_changed', updateOverlayVisibility);
+    kakao.maps.event.addListener(map, 'bounds_changed', updateOverlayVisibility);
+    listenersAttachedRef.current = true;
 
     // 데이터 있는 영역으로 자동 fit (최초 1회만)
     if (!initialFitDoneRef.current) {
