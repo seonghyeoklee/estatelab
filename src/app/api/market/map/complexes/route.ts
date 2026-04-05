@@ -101,7 +101,11 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ data }, {
-      headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' },
+      headers: {
+        'Cache-Control': data.length > 0
+          ? 's-maxage=300, stale-while-revalidate=600'
+          : 'no-store',
+      },
     });
   } catch (error) {
     console.error('complexes API 오류:', error);

@@ -54,6 +54,10 @@ export async function GET() {
   }));
 
   return NextResponse.json({ data }, {
-    headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' },
+    headers: {
+      'Cache-Control': data.length > 0
+        ? 's-maxage=300, stale-while-revalidate=600'
+        : 'no-store',
+    },
   });
 }
