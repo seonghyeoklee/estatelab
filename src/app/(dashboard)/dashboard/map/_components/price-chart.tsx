@@ -5,8 +5,10 @@ import { cn } from '@/lib/utils';
 import { formatPrice, formatPriceShort } from '@/lib/format';
 import {
   ResponsiveContainer,
-  ScatterChart,
+  ComposedChart,
   Scatter,
+  Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -36,8 +38,8 @@ interface ScatterPoint {
   area: number;
 }
 
-/** LOESS 회귀선 */
-function calcLoess(data: ScatterPoint[], bandwidth = 0.3): { dateNum: number; smooth: number }[] {
+/** LOESS 회귀선 + 상하 밴드 */
+function calcLoessWithBand(data: ScatterPoint[], bandwidth = 0.3) {
   if (data.length < 4) return [];
   const sorted = [...data].sort((a, b) => a.dateNum - b.dateNum);
   const xs = sorted.map((d) => d.dateNum);
@@ -45,12 +47,14 @@ function calcLoess(data: ScatterPoint[], bandwidth = 0.3): { dateNum: number; sm
   const n = xs.length;
   const steps = Math.min(40, n);
   const xMin = xs[0], xMax = xs[n - 1];
-  const result: { dateNum: number; smooth: number }[] = [];
+  const result: { dateNum: number; smooth: number; bandUpper: number; bandLower: number }[] = [];
 
   for (let s = 0; s < steps; s++) {
     const x = xMin + (xMax - xMin) * (s / (steps - 1));
     const h = bandwidth * (xMax - xMin);
     let sumW = 0, sumWX = 0, sumWY = 0, sumWXX = 0, sumWXY = 0;
+    const windowPrices: number[] = [];
+
     for (let i = 0; i < n; i++) {
       const u = Math.abs(xs[i] - x) / h;
       if (u > 1) continue;
@@ -61,23 +65,38 @@ function calcLoess(data: ScatterPoint[], bandwidth = 0.3): { dateNum: number; sm
       sumWY += weight * ys[i];
       sumWXX += weight * xs[i] * xs[i];
       sumWXY += weight * xs[i] * ys[i];
+      windowPrices.push(ys[i]);
     }
-    if (sumW === 0) continue;
+
+    if (sumW === 0 || windowPrices.length === 0) continue;
     const denom = sumW * sumWXX - sumWX * sumWX;
+    let smoothVal: number;
     if (Math.abs(denom) < 1e-10) {
-      result.push({ dateNum: x, smooth: Math.round(sumWY / sumW) });
+      smoothVal = Math.round(sumWY / sumW);
     } else {
       const b = (sumW * sumWXY - sumWX * sumWY) / denom;
       const a = (sumWY - b * sumWX) / sumW;
-      result.push({ dateNum: x, smooth: Math.round(a + b * x) });
+      smoothVal = Math.round(a + b * x);
     }
+
+    // 밴드: 윈도우 내 표준편차의 0.8배
+    const mean = windowPrices.reduce((s, v) => s + v, 0) / windowPrices.length;
+    const std = Math.sqrt(windowPrices.reduce((s, v) => s + (v - mean) ** 2, 0) / windowPrices.length);
+    const bandWidth = Math.round(std * 0.8);
+
+    result.push({
+      dateNum: x,
+      smooth: smoothVal,
+      bandUpper: smoothVal + bandWidth,
+      bandLower: smoothVal - bandWidth,
+    });
   }
   return result;
 }
 
 export function PriceChart({ trades, className }: Props) {
-  const { scatterData, loessData, recentAvg, recentCount, maxIdx, minIdx, tradeCount, yMin, yMax, changePct } = useMemo(() => {
-    if (trades.length === 0) return { scatterData: [], loessData: [], recentAvg: 0, recentCount: 0, maxIdx: -1, minIdx: -1, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
+  const { scatterData, bandData, recentAvg, recentCount, maxIdx, minIdx, tradeCount, yMin, yMax, changePct } = useMemo(() => {
+    if (trades.length === 0) return { scatterData: [], bandData: [], recentAvg: 0, recentCount: 0, maxIdx: -1, minIdx: -1, tradeCount: 0, yMin: 0, yMax: 0, changePct: null };
 
     const sorted = [...trades].sort((a, b) => a.dealDate.localeCompare(b.dealDate));
     const scatterData: ScatterPoint[] = sorted.map((t) => ({
@@ -88,7 +107,7 @@ export function PriceChart({ trades, className }: Props) {
       area: t.area,
     }));
 
-    const loessData = calcLoess(scatterData, 0.25);
+    const bandData = calcLoessWithBand(scatterData, 0.25);
 
     const now = new Date();
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -117,7 +136,7 @@ export function PriceChart({ trades, className }: Props) {
       if (scatterData[i].price < scatterData[minIdx].price) minIdx = i;
     }
 
-    return { scatterData, loessData, recentAvg, recentCount, maxIdx, minIdx, tradeCount: trades.length, yMin, yMax, changePct };
+    return { scatterData, bandData, recentAvg, recentCount, maxIdx, minIdx, tradeCount: trades.length, yMin, yMax, changePct };
   }, [trades]);
 
   if (scatterData.length === 0) {
@@ -147,12 +166,18 @@ export function PriceChart({ trades, className }: Props) {
 
       {/* 차트 */}
       <ResponsiveContainer width="100%" height={200}>
-        <ScatterChart margin={{ top: 15, right: 8, left: -10, bottom: 0 }}>
+        <ComposedChart margin={{ top: 15, right: 8, left: -10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.08} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.08} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
           <XAxis
             dataKey="dateNum"
             type="number"
-            domain={['dataMin', 'dataMax']}
+            domain={[scatterData[0].dateNum, scatterData[scatterData.length - 1].dateNum]}
             tick={{ fontSize: 9, fill: '#94a3b8' }}
             tickLine={false}
             axisLine={{ stroke: '#e2e8f0' }}
@@ -162,7 +187,6 @@ export function PriceChart({ trades, className }: Props) {
             }}
           />
           <YAxis
-            dataKey="price"
             type="number"
             domain={[yMin, yMax]}
             tick={{ fontSize: 9, fill: '#94a3b8' }}
@@ -189,17 +213,33 @@ export function PriceChart({ trades, className }: Props) {
             }}
           />
 
-          {/* LOESS 시세 곡선 */}
-          <Scatter
-            data={loessData}
-            dataKey="smooth"
-            fill="none"
-            line={{ stroke: '#3730a3', strokeWidth: 2 }}
-            shape={() => null}
+          {/* 시세 범위 밴드 */}
+          <Area
+            data={bandData}
+            dataKey="bandUpper"
+            stroke="none"
+            fill="url(#bandGrad)"
+            isAnimationActive={false}
+          />
+          <Area
+            data={bandData}
+            dataKey="bandLower"
+            stroke="none"
+            fill="#ffffff"
             isAnimationActive={false}
           />
 
-          {/* 산점도 — 작은 점 */}
+          {/* LOESS 시세 곡선 */}
+          <Line
+            data={bandData}
+            dataKey="smooth"
+            stroke="#4338ca"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+          />
+
+          {/* 산점도 — 연한 빨강 작은 점 */}
           <Scatter data={scatterData} dataKey="price" isAnimationActive={false}>
             {scatterData.map((_, idx) => {
               const isMax = idx === maxIdx;
@@ -207,9 +247,9 @@ export function PriceChart({ trades, className }: Props) {
               return (
                 <Cell
                   key={idx}
-                  fill={isMax ? '#ef4444' : isMin ? '#3b82f6' : '#94a3b8'}
+                  fill={isMax ? '#dc2626' : isMin ? '#2563eb' : '#f87171'}
                   r={isMax || isMin ? 4 : 1.8}
-                  opacity={isMax || isMin ? 1 : 0.6}
+                  opacity={isMax || isMin ? 1 : 0.5}
                   cursor="pointer"
                 />
               );
@@ -219,15 +259,15 @@ export function PriceChart({ trades, className }: Props) {
           {/* 최고/최저 라벨 */}
           {maxIdx >= 0 && (
             <ReferenceDot x={scatterData[maxIdx].dateNum} y={scatterData[maxIdx].price} r={0}>
-              <Label value="최고" position="top" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#ef4444' }} />
+              <Label value="최고" position="top" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#dc2626' }} />
             </ReferenceDot>
           )}
           {minIdx >= 0 && (
             <ReferenceDot x={scatterData[minIdx].dateNum} y={scatterData[minIdx].price} r={0}>
-              <Label value="최저" position="bottom" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#3b82f6' }} />
+              <Label value="최저" position="bottom" offset={6} style={{ fontSize: 9, fontWeight: 700, fill: '#2563eb' }} />
             </ReferenceDot>
           )}
-        </ScatterChart>
+        </ComposedChart>
       </ResponsiveContainer>
 
       {/* 하단 */}
@@ -239,7 +279,7 @@ export function PriceChart({ trades, className }: Props) {
             시세
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400" />
+            <span className="inline-block w-2 h-2 rounded-full bg-red-400 opacity-50" />
             실거래
           </span>
         </div>
