@@ -79,8 +79,8 @@ function createPriceLabel(opts: {
 }): HTMLDivElement {
   const { title, price, areaLabel, subtitle, hoverInfo, color, size, onClick } = opts;
 
-  const priceSize = size === 'lg' ? '13px' : size === 'md' ? '12px' : '11px';
-  const pad = size === 'lg' ? '4px 10px' : size === 'md' ? '3px 8px' : '2px 6px';
+  const priceSize = size === 'lg' ? '14px' : size === 'md' ? '13px' : '12px';
+  const pad = size === 'lg' ? '6px 12px' : size === 'md' ? '5px 10px' : '4px 8px';
 
   const el = document.createElement('div');
   el.style.cssText = `
@@ -126,7 +126,7 @@ function createPriceLabel(opts: {
 
   // 클러스터(동별/구별)용 타이틀
   if (subtitle) {
-    const titleSize = size === 'lg' ? '12px' : '11px';
+    const titleSize = size === 'lg' ? '13px' : '12px';
     const titleSpan = document.createElement('span');
     titleSpan.style.cssText = `font-size:${titleSize};font-weight:600;opacity:0.95;line-height:1.2;max-width:100px;overflow:hidden;text-overflow:ellipsis`;
     titleSpan.textContent = title;
@@ -142,7 +142,7 @@ function createPriceLabel(opts: {
   // 면적 (단지 마커용)
   if (areaLabel) {
     const areaSpan = document.createElement('span');
-    areaSpan.style.cssText = 'font-size:9px;opacity:0.7;line-height:1;margin-top:1px';
+    areaSpan.style.cssText = 'font-size:10px;opacity:0.7;line-height:1;margin-top:2px';
     areaSpan.textContent = areaLabel;
     el.appendChild(areaSpan);
   }
@@ -150,7 +150,7 @@ function createPriceLabel(opts: {
   // 클러스터 서브타이틀
   if (subtitle) {
     const subSpan = document.createElement('span');
-    subSpan.style.cssText = 'font-size:8px;opacity:0.65;line-height:1';
+    subSpan.style.cssText = 'font-size:9px;opacity:0.65;line-height:1;margin-top:1px';
     subSpan.textContent = subtitle;
     el.appendChild(subSpan);
   }
