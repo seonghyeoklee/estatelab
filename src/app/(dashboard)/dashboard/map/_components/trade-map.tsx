@@ -326,28 +326,25 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       .then((geojson) => {
         if (!geojson?.features?.length) return;
 
-        // 디버그: 첫 건물의 properties 확인 (배포 후 제거)
-        console.log('[VWORLD 건물] properties 샘플:', geojson.features[0]?.properties);
-
         const buildings: { lat: number; lng: number }[][] = [];
         for (const f of geojson.features) {
           try {
             const props = f.properties || {};
+            const buldNm = (props.buld_nm || '').replace(/\s/g, '');
+            const buldNmDc = (props.buld_nm_dc || '').replace(/\s/g, '');
+            const floors = props.gro_flo_co || 0;
+            const nameNorm = baseName.replace(/\s/g, '');
 
-            // 아파트만 필터: 주용도명 또는 건물유형 확인
-            const mainPurps = props.mainpurps_nm || props.etcpurps || '';
-            const bdtypCd = props.bdtyp_cd || '';
-            const isApartment =
-              mainPurps.includes('아파트') ||
-              mainPurps.includes('공동주택') ||
-              bdtypCd === '02001';
-            if (mainPurps && !isApartment) continue;
-
-            // 건물명이 단지명을 포함하거나, 단지명이 건물명을 포함 (양방향)
-            const buldNm = props.buld_nm || '';
-            const buldNmDc = props.buld_nm_dc || '';
-            if (buldNm && !buldNm.includes(baseName) && !buldNmDc.includes(baseName)
-              && !baseName.includes(buldNm) && !baseName.includes(buldNmDc)) continue;
+            // 이름 있는 건물: 양방향 매칭 (단지명 ⊃ 건물명 or 건물명 ⊃ 단지명)
+            if (buldNm) {
+              const nameMatch =
+                buldNm.includes(nameNorm) || buldNmDc.includes(nameNorm) ||
+                nameNorm.includes(buldNm) || nameNorm.includes(buldNmDc);
+              if (!nameMatch) continue;
+            } else {
+              // 이름 없는 건물: 10층 이상만 (저층 빌라/상가 제외)
+              if (floors < 10) continue;
+            }
 
             const coords = f.geometry.type === 'MultiPolygon'
               ? f.geometry.coordinates[0][0]
