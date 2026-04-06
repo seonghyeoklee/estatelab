@@ -317,10 +317,11 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=200`;
+    const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_bldginfo&bbox=${bbox}&maxFeatures=200`;
 
     // 단지명에서 괄호 앞 부분 추출 — "덕유마을(주공4)" → "덕유마을"
     const baseName = selectedComplex.name.replace(/\(.*\)/, '').trim();
+    const nameNorm = baseName.replace(/\s/g, '');
 
     fetch(proxyUrl)
       .then((r) => r.ok ? r.json() : null)
@@ -331,20 +332,21 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
         for (const f of geojson.features) {
           try {
             const props = f.properties || {};
-            const buldNm = (props.buld_nm || '').replace(/\s/g, '');
-            const buldNmDc = (props.buld_nm_dc || '').replace(/\s/g, '');
-            const floors = props.gro_flo_co || 0;
-            const nameNorm = baseName.replace(/\s/g, '');
 
-            // 이름 있는 건물: 양방향 매칭 (단지명 ⊃ 건물명 or 건물명 ⊃ 단지명)
-            if (buldNm) {
-              const nameMatch =
-                buldNm.includes(nameNorm) || buldNmDc.includes(nameNorm) ||
-                nameNorm.includes(buldNm) || nameNorm.includes(buldNmDc);
-              if (!nameMatch) continue;
+            // 1차: 아파트 용도(02000)만 통과
+            if (props.usability !== '02000') continue;
+
+            // 2차: 이름 매칭 (양방향, 공백 무시)
+            const bldNm = (props.bld_nm || '').replace(/\s/g, '');
+            const floors = props.grnd_flr || 0;
+            if (bldNm) {
+              const nameMatch = bldNm.includes(nameNorm) || nameNorm.includes(bldNm);
+              // 이름 불일치 + 저층(상가동 등)이면 제외
+              if (!nameMatch && floors < 5) continue;
+              // 이름 불일치 + 고층이면 같은 필지 내 건물일 수 있으므로 통과
             } else {
-              // 이름 없는 건물: 10층 이상만 (저층 빌라/상가 제외)
-              if (floors < 10) continue;
+              // 이름 없는 건물: 5층 이상만
+              if (floors < 5) continue;
             }
 
             const coords = f.geometry.type === 'MultiPolygon'
