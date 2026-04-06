@@ -107,12 +107,12 @@ function createPriceLabel(opts: {
     popupEl.appendChild(nameSpan);
 
     const rangeSpan = document.createElement('span');
-    rangeSpan.style.cssText = 'font-size:11px;opacity:0.9;line-height:1.3';
+    rangeSpan.style.cssText = 'font-size:12px;opacity:0.9;line-height:1.3';
     rangeSpan.textContent = `${hoverInfo.minPrice} ~ ${hoverInfo.maxPrice}`;
     popupEl.appendChild(rangeSpan);
 
     const countSpan = document.createElement('span');
-    countSpan.style.cssText = 'font-size:10px;opacity:0.7;line-height:1.3';
+    countSpan.style.cssText = 'font-size:12px;opacity:0.7;line-height:1.3';
     countSpan.textContent = `매매 ${hoverInfo.tradeCount}건`;
     popupEl.appendChild(countSpan);
 
@@ -308,15 +308,16 @@ export function TradeMap({ focusComplexId }: { focusComplexId?: string | null })
       return;
     }
 
-    // API 호출
+    // API 호출 — 거래 건수 기반 동적 반경 (대단지 커버)
     const lat = selectedComplex.lat;
     const lng = selectedComplex.lng;
-    const radius = 80;
+    const tradeCount = selectedComplex._count?.trades ?? 0;
+    const radius = tradeCount > 50 ? 200 : tradeCount > 20 ? 150 : 100;
     const latD = radius / 111320;
     const lngD = radius / (111320 * Math.cos(lat * Math.PI / 180));
     const bbox = `${lng - lngD},${lat - latD},${lng + lngD},${lat + latD}`;
 
-    const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=50`;
+    const proxyUrl = `/api/market/map/vworld-proxy?typeName=lt_c_spbd&bbox=${bbox}&maxFeatures=200`;
 
     // 단지명에서 괄호 앞 부분 추출 — "덕유마을(주공4)" → "덕유마을"
     const baseName = selectedComplex.name.replace(/\(.*\)/, '').trim();
